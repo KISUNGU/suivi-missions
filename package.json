@@ -1,0 +1,62 @@
+{
+  "name": "pnda-missions-desktop",
+  "version": "1.0.0",
+  "description": "Application desktop PNDA-SE pour le suivi des missions.",
+  "main": "main.js",
+  "author": "PNDA-SE",
+  "homepage": "https://pnda.cd",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win portable"
+  },
+  "build": {
+    "appId": "cd.pnda.missions",
+    "productName": "PNDA Missions",
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "admin.html",
+      "logo_pnda.ico",
+      "logo_ministere.png",
+      "logo_pnda.png",
+      "logo_programme.png",
+      "logo_rdc.png",
+      "pnda_accounts.js",
+      "pnda_reference.js",
+      "pnda_reference.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "icon": "logo_pnda.ico",
+      "verifyUpdateCodeSignature": false,
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "PNDA-Missions-${version}.exe"
+    },
+    "extraMetadata": {
+      "productName": "PNDA Missions"
+    }
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  },
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12",
+    "png-to-ico": "^3.0.1"
+  }
+}

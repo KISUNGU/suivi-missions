@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PNDA-SE — Tableau de Bord Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #123524;
+    --forest-md: #1d4c34;
+    --forest-lt: #2f6a48;
+    --gold: #d3a52c;
+    --gold-lt: #f1c85b;
+    --cream: #f6f1df;
+    --paper: #fffdf7;
+    --mist: #eef5ef;
+    --text: #1b2019;
+    --muted: #5e695f;
+    --border: #d8c88a;
+    --danger: #ad3434;
+    --info: #2563a8;
+    --shadow: 0 14px 36px rgba(18,53,36,0.14);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Source Sans 3', sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(circle at top left, rgba(211,165,44,0.18), transparent 24%),
+      radial-gradient(circle at right, rgba(47,106,72,0.13), transparent 30%),
+      linear-gradient(180deg, #f9f6eb 0%, var(--cream) 48%, #eee3bf 100%);
+  }
+
+  header {
+    background: #ffffff;
+    color: var(--forest);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.14);
+    border-bottom: 1px solid rgba(18,53,36,0.12);
+  }
+  .header-top {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 12px 24px 16px;
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    border-bottom: 3px solid rgba(18,53,36,0.12);
+  }
+  .header-logos-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 18px;
+  }
+  .header-logo-side,
+  .header-logo-center {
+    display: flex;
+    align-items: center;
+  }
+  .header-logo-side.left { justify-content: flex-start; }
+  .header-logo-side.right { justify-content: flex-end; }
+  .header-logo-center { justify-content: center; }
+  .header-logo-shell {
+    background: #ffffff;
+    padding: 4px 8px;
+  }
+  .header-logo-shell img {
+    display: block;
+    object-fit: contain;
+  }
+  .logo-ministere img { width: 200px; height: 84px; }
+  .logo-programme img { width: 200px; height: 92px; }
+  .logo-pnda img { width: 200px; height: 92px; }
+  .header-copy {
+    text-align: center;
+    max-width: 860px;
+  }
+  .header-copy h1 {
+    margin: 0;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.7rem;
+    line-height: 1.15;
+    color: var(--forest);
+  }
+  .header-copy p {
+    margin: 6px 0 0;
+    color: var(--forest-lt);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+  }
+  .header-meta-row {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: flex-end;
+    background: #ffffff;
+  }
+  .header-meta {
+    text-align: right;
+    font-size: 0.84rem;
+    color: var(--muted);
+  }
+  .header-meta strong {
+    display: block;
+    color: var(--forest);
+    font-size: 0.98rem;
+  }
+
+  main {
+    max-width: 1240px;
+    margin: 28px auto 0;
+    padding: 0 24px 48px;
+  }
+
+  .toolbar,
+  .panel,
+  .table-card,
+  .summary-card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+  }
+
+  .toolbar {
+    padding: 18px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .toolbar-left {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  .toolbar-field {
+    display: grid;
+    gap: 4px;
+  }
+  .toolbar-field label {
+    font-size: 0.72rem;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .toolbar-field input {
+    min-width: 180px;
+    padding: 10px 12px;
+    border: 1px solid rgba(18,53,36,0.18);
+    border-radius: 4px;
+    background: #fffefb;
+    font: inherit;
+    color: var(--text);
+  }
+  .toolbar-field select {
+    min-width: 180px;
+    padding: 10px 12px;
+    border: 1px solid rgba(18,53,36,0.18);
+    border-radius: 4px;
+    background: #fffefb;
+    font: inherit;
+    color: var(--text);
+  }
+  .toolbar h2 {
+    margin: 0;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.24rem;
+    color: var(--forest);
+  }
+  .toolbar-note {
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+  .btn,
+  .file-label {
+    appearance: none;
+    border: none;
+    border-radius: 4px;
+    padding: 11px 16px;
+    font: inherit;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.2s, border-color 0.2s;
+  }
+  .btn:active,
+  .file-label:active {
+    transform: scale(0.98);
+  }
+  .btn-primary,
+  .file-label {
+    background: var(--forest);
+    color: white;
+  }
+  .btn-block {
+    width: 100%;
+    margin-top: 16px;
+  }
+  .btn-primary:hover,
+  .file-label:hover {
+    background: var(--forest-lt);
+  }
+  .btn-secondary {
+    background: var(--gold);
+    color: var(--forest);
+  }
+  .btn-secondary:hover {
+    background: var(--gold-lt);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid rgba(173,52,52,0.35);
+  }
+  .btn-ghost:hover {
+    background: rgba(173,52,52,0.08);
+  }
+  #json-files {
+    display: none;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .import-card {
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+  .import-card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .import-card-head h3 {
+    margin: 0;
+    font-family: 'Playfair Display', serif;
+    color: var(--forest);
+    font-size: 1.12rem;
+  }
+  .import-card-head p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .import-list {
+    display: grid;
+    gap: 10px;
+  }
+  .import-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .import-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(18,53,36,0.08);
+    border: 1px solid rgba(18,53,36,0.12);
+    color: var(--forest);
+    font-size: 0.84rem;
+    font-weight: 600;
+  }
+  .import-badge strong {
+    color: var(--forest-lt);
+    font-size: 0.88rem;
+  }
+  .import-item {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 14px;
+    border: 1px solid rgba(18,53,36,0.1);
+    border-radius: 6px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(238,245,239,0.95));
+  }
+  .import-item strong {
+    display: block;
+    color: var(--forest);
+    margin-bottom: 2px;
+  }
+  .import-meta {
+    font-size: 0.86rem;
+    color: var(--muted);
+  }
+  .btn-inline-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid rgba(173,52,52,0.24);
+    border-radius: 4px;
+    padding: 8px 12px;
+    font: inherit;
+    cursor: pointer;
+  }
+  .btn-inline-danger:hover {
+    background: rgba(173,52,52,0.08);
+  }
+  .summary-card {
+    padding: 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(246,241,223,0.96));
+  }
+  .summary-card span {
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .summary-card strong {
+    font-size: 1.55rem;
+    color: var(--forest);
+  }
+
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .tab-btn {
+    border: 1px solid rgba(18,53,36,0.16);
+    background: rgba(255,255,255,0.82);
+    color: var(--forest);
+    border-radius: 999px;
+    padding: 10px 14px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .tab-btn.active {
+    background: var(--forest);
+    color: white;
+    border-color: var(--forest);
+  }
+
+  .panel {
+    display: none;
+    padding: 20px;
+    margin-bottom: 18px;
+  }
+  .panel.active {
+    display: block;
+  }
+  .panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: baseline;
+    margin-bottom: 16px;
+  }
+  .panel-head h3 {
+    margin: 0;
+    font-family: 'Playfair Display', serif;
+    color: var(--forest);
+    font-size: 1.18rem;
+  }
+  .panel-head p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  .panel-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 18px;
+  }
+  .table-card {
+    overflow: hidden;
+  }
+  .table-card h4 {
+    margin: 0;
+    padding: 14px 16px;
+    background: linear-gradient(180deg, #f3e8be 0%, #efe4bc 100%);
+    color: var(--forest);
+    font-size: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+  th, td {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(216,200,138,0.55);
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    color: var(--muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    background: rgba(239,228,188,0.45);
+  }
+  tbody tr:nth-child(even) {
+    background: rgba(246,241,223,0.42);
+  }
+  .empty-state {
+    padding: 18px;
+    font-size: 0.92rem;
+    color: var(--muted);
+  }
+  .pill {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(37,99,168,0.1);
+    color: var(--info);
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  #toast {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    padding: 12px 18px;
+    background: var(--forest);
+    color: white;
+    border-left: 4px solid var(--gold);
+    border-radius: 4px;
+    display: none;
+    z-index: 10000;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.25);
+  }
+
+  @media (max-width: 960px) {
+    .summary-grid,
+    .panel-grid {
+      grid-template-columns: 1fr;
+    }
+    .header-logos-row {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .header-logo-side.left,
+    .header-logo-side.right,
+    .header-logo-center {
+      justify-content: center;
+    }
+    .header-meta-row {
+      justify-content: center;
+    }
+    .header-meta {
+      text-align: center;
+    }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <div class="header-logos-row">
+      <div class="header-logo-side left">
+        <div class="header-logo-shell logo-ministere"><img src="logo_ministere.png" alt="Logo Ministère"></div>
+      </div>
+      <div class="header-logo-center">
+        <div class="header-logo-shell logo-programme"><img src="logo_programme.png" alt="Logo Programme"></div>
+      </div>
+      <div class="header-logo-side right">
+        <div class="header-logo-shell logo-pnda"><img src="logo_pnda.png" alt="Logo PNDA"></div>
+      </div>
+    </div>
+    <div class="header-copy">
+      <h1>PNDA-SE — Tableau de Bord Administratif</h1>
+      <p>RNSE · RAF · Consolidation trimestrielle des missions</p>
+    </div>
+  </div>
+  <div class="header-meta-row">
+    <div class="header-meta">
+      <strong id="session-user">—</strong>
+      <span id="session-date">—</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="toolbar">
+    <div class="toolbar-left">
+      <div>
+        <h2>Suivi consolidé</h2>
+        <div class="toolbar-note">Vue générale, puis détails par province. Les rapports saisis dans le formulaire HTML sont détectés automatiquement.</div>
+      </div>
+    </div>
+    <div class="toolbar-left">
+      <label class="file-label" for="json-files">Importer des fichiers JSON</label>
+      <input id="json-files" type="file" accept="application/json,.json" multiple>
+      <div class="toolbar-field">
+        <label for="signatory-name">Nom signataire</label>
+        <input id="signatory-name" type="text" placeholder="Nom du signataire">
+      </div>
+      <div class="toolbar-field">
+        <label for="signatory-position">Poste du signataire</label>
+        <input id="signatory-position" type="text" placeholder="Poste du signataire">
+      </div>
+      <div class="toolbar-field">
+        <label for="signatory-location">Lieu de signature</label>
+        <input id="signatory-location" type="text" placeholder="Ex. Kinshasa">
+      </div>
+      <div class="toolbar-field">
+        <label for="filter-province">Filtre province</label>
+        <select id="filter-province">
+          <option value="">Toutes les provinces</option>
+        </select>
+      </div>
+      <div class="toolbar-field">
+        <label for="filter-rapporteur">Filtre rapporteur</label>
+        <input id="filter-rapporteur" type="text" placeholder="Nom du rapporteur">
+      </div>
+      <div class="toolbar-field">
+        <label for="filter-start-date">Période du</label>
+        <input id="filter-start-date" type="date">
+      </div>
+      <div class="toolbar-field">
+        <label for="filter-end-date">Période au</label>
+        <input id="filter-end-date" type="date">
+      </div>
+      <button class="btn btn-secondary" onclick="returnToFormLogin()">Retour au formulaire</button>
+      <button class="btn btn-secondary" onclick="exportExcelWorkbook()">Exporter Excel</button>
+      <button class="btn btn-secondary" onclick="refreshDashboard()">Actualiser</button>
+      <button class="btn btn-ghost" onclick="clearImportedReports()">Vider imports JSON</button>
+      <button class="btn btn-ghost" onclick="clearDashboardData()">Vider toutes les données</button>
+      <button class="btn btn-ghost" onclick="logoutAdmin()">Déconnexion</button>
+    </div>
+  </section>
+
+  <section class="import-card toolbar">
+    <div class="import-card-head">
+      <h3>Fichiers JSON importés</h3>
+      <p id="import-summary">Aucun import supplémentaire chargé.</p>
+    </div>
+    <div id="import-badges" class="import-badges"></div>
+    <div id="import-list" class="import-list"></div>
+  </section>
+
+  <section class="summary-grid" id="summary-grid"></section>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="panels"></div>
+</main>
+
+<div id="toast"></div>
+
+<script src="pnda_accounts.js"></script>
+<script src="pnda_reference.js"></script>
+<script>
+const USERS = window.PNDA_USERS || {};
+const REFERENCE = window.PNDA_REFERENCE || { provinces: [] };
+const TAB_ORDER = ['general', ...REFERENCE.provinces.map((province) => province.name)];
+const IMPORT_STORAGE_KEY = 'PNDA_IMPORTED_REPORTS';
+const SIGNATORY_STORAGE_KEY = 'PNDA_EXPORT_SIGNATORY';
+let REPORTS_CACHE = [];
+let importedReports = [];
+let activeTab = 'general';
+
+initialize();
+
+async function initialize() {
+  if (!hydrateSession()) {
+    return;
+  }
+  bindEvents();
+  buildTabs();
+  await refreshDashboard();
+}
+
+function hydrateSession() {
+  const session = getSession();
+  if (session?.role !== 'admin' || !session.user || !USERS[session.user]) {
+    redirectToLogin();
+    return false;
+  }
+
+  openDashboard(session.user);
+  return true;
+}
+
+function bindEvents() {
+  document.getElementById('json-files').addEventListener('change', handleFileImport);
+  document.getElementById('signatory-name').addEventListener('input', persistSignatory);
+  document.getElementById('signatory-position').addEventListener('input', persistSignatory);
+  document.getElementById('signatory-location').addEventListener('input', persistSignatory);
+  document.getElementById('filter-province').addEventListener('change', refreshDashboard);
+  document.getElementById('filter-rapporteur').addEventListener('input', refreshDashboard);
+  document.getElementById('filter-start-date').addEventListener('change', refreshDashboard);
+  document.getElementById('filter-end-date').addEventListener('change', refreshDashboard);
+  window.addEventListener('storage', handleStorageSync);
+  window.addEventListener('PNDA_DATA_UPDATED', refreshDashboard);
+}
+
+function getSession() {
+  try {
+    return JSON.parse(localStorage.getItem('PNDA_SESSION') || 'null');
+  } catch {
+    return null;
+  }
+}
+
+function redirectToLogin() {
+  localStorage.removeItem('PNDA_SESSION');
+  window.location.href = 'index.html?manual-login=1';
+}
+
+function openDashboard(user) {
+  document.getElementById('session-user').textContent = user.toUpperCase();
+  document.getElementById('session-date').textContent = new Date().toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  importedReports = getPersistedImportedReports();
+  hydrateSignatory();
+}
+
+function logoutAdmin() {
+  localStorage.removeItem('PNDA_SESSION');
+  window.location.href = 'index.html?manual-login=1';
+}
+
+function returnToFormLogin() {
+  window.location.href = 'index.html?manual-login=1';
+}
+
+function buildTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+
+  const generalButton = createTabButton('general', 'Général');
+  tabs.appendChild(generalButton);
+
+  REFERENCE.provinces.forEach((province) => {
+    tabs.appendChild(createTabButton(province.name, province.label));
+  });
+}
+
+function createTabButton(key, label) {
+  const button = document.createElement('button');
+  button.className = `tab-btn${key === activeTab ? ' active' : ''}`;
+  button.textContent = label;
+  button.addEventListener('click', () => {
+    activeTab = key;
+    updateActiveTab();
+  });
+  return button;
+}
+
+function updateActiveTab() {
+  document.querySelectorAll('.tab-btn').forEach((button) => {
+    const target = button.textContent === 'Général' ? 'general' : getProvinceNameByLabel(button.textContent);
+    button.classList.toggle('active', target === activeTab);
+  });
+  document.querySelectorAll('.panel').forEach((panel) => {
+    panel.classList.toggle('active', panel.dataset.tab === activeTab);
+  });
+}
+
+function getProvinceNameByLabel(label) {
+  return REFERENCE.provinces.find((province) => province.label === label)?.name || 'general';
+}
+
+async function refreshDashboard() {
+  refreshReportsCache();
+  populateFilterProvinceOptions();
+  renderImportedReportsList();
+  renderSummaryCards();
+  renderPanels();
+  updateActiveTab();
+}
+
+function handleStorageSync(event) {
+  if ([IMPORT_STORAGE_KEY, 'PNDA_REPORTS', 'PNDA_REPORTS_UPDATED_AT', 'PNDA_SESSION'].includes(event.key)) {
+    if (event.key === 'PNDA_SESSION' && !getSession()) {
+      redirectToLogin();
+      return;
+    }
+
+    importedReports = getPersistedImportedReports();
+    refreshDashboard();
+  }
+}
+
+function stableStringify(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+  }
+
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+  }
+
+  return JSON.stringify(value);
+}
+
+function refreshReportsCache() {
+  REPORTS_CACHE = getAllReports();
+}
+
+function getReportProvinceName(report) {
+  if (report?.meta?.province) {
+    return report.meta.province;
+  }
+
+  const provinceLabel = report?.meta?.province_label;
+  return REFERENCE.provinces.find((province) => province.label === provinceLabel)?.name || provinceLabel || '';
+}
+
+function getReportProvinceLabel(report) {
+  const provinceName = getReportProvinceName(report);
+  return REFERENCE.provinces.find((province) => province.name === provinceName)?.label || report?.meta?.province_label || provinceName || '—';
+}
+
+function getReportDateValue(report) {
+  return report?.savedAt || report?.meta?.date_generation || '';
+}
+
+function getReportFingerprint(report) {
+  return stableStringify({ meta: report.meta, missions: report.missions });
+}
+
+function getFilteredReports() {
+  const selectedProvince = document.getElementById('filter-province').value;
+  const rapporteurFilter = document.getElementById('filter-rapporteur').value.trim().toLowerCase();
+  const startDate = document.getElementById('filter-start-date').value;
+  const endDate = document.getElementById('filter-end-date').value;
+
+  return REPORTS_CACHE.filter((report) => {
+    const provinceName = getReportProvinceName(report);
+    const reporteur = String(report?.meta?.rapporteur || '').toLowerCase();
+    const reportDate = getReportDateValue(report);
+
+    if (selectedProvince && provinceName !== selectedProvince) {
+      return false;
+    }
+    if (rapporteurFilter && !reporteur.includes(rapporteurFilter)) {
+      return false;
+    }
+    if (startDate && reportDate && reportDate < startDate) {
+      return false;
+    }
+    if (endDate && reportDate && reportDate > endDate) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+function populateFilterProvinceOptions() {
+  const select = document.getElementById('filter-province');
+  const currentValue = select.value;
+  select.innerHTML = '<option value="">Toutes les provinces</option>';
+
+  REFERENCE.provinces.forEach((province) => {
+    const option = new Option(province.label, province.name);
+    if (province.name === currentValue) {
+      option.selected = true;
+    }
+    select.appendChild(option);
+  });
+}
+
+function getReportFingerprint(report) {
+  return JSON.stringify({ meta: report.meta, missions: report.missions });
+}
+
+function getPersistedImportedReports() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(IMPORT_STORAGE_KEY) || '[]');
+    return raw.map((entry) => normalizeImportedReport(entry)).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function getSignatory() {
+  return {
+    name: document.getElementById('signatory-name').value.trim(),
+    position: document.getElementById('signatory-position').value.trim(),
+    location: document.getElementById('signatory-location').value.trim()
+  };
+}
+
+function hydrateSignatory() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SIGNATORY_STORAGE_KEY) || '{}');
+    document.getElementById('signatory-name').value = raw.name || '';
+    document.getElementById('signatory-position').value = raw.position || '';
+    document.getElementById('signatory-location').value = raw.location || '';
+  } catch {
+    document.getElementById('signatory-name').value = '';
+    document.getElementById('signatory-position').value = '';
+    document.getElementById('signatory-location').value = '';
+  }
+}
+
+function persistSignatory() {
+  localStorage.setItem(SIGNATORY_STORAGE_KEY, JSON.stringify(getSignatory()));
+}
+
+function persistImportedReports() {
+  localStorage.setItem(IMPORT_STORAGE_KEY, JSON.stringify(importedReports));
+}
+
+function normalizeImportedReport(entry) {
+  const normalized = normalizeReport(entry, entry.importLabel || entry.source || 'import manuel');
+  if (!normalized) {
+    return null;
+  }
+
+  return {
+    ...normalized,
+    importId: entry.importId || `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+    importLabel: entry.importLabel || normalized.source || 'import-manuel.json',
+    importedAt: entry.importedAt || new Date().toISOString()
+  };
+}
+
+function getStoredReports() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('PNDA_REPORTS') || '[]');
+    return raw.map((entry) => normalizeReport(entry, entry.source || 'stockage local')).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function getAllReports() {
+  return deduplicateReports([...getStoredReports(), ...importedReports]).sort((left, right) => {
+    return new Date(right.savedAt || right.meta?.date_generation || 0) - new Date(left.savedAt || left.meta?.date_generation || 0);
+  });
+}
+
+function deduplicateReports(reports) {
+  const seen = new Set();
+  return reports.filter((report) => {
+    const fingerprint = getReportFingerprint(report);
+    if (seen.has(fingerprint)) {
+      return false;
+    }
+    seen.add(fingerprint);
+    return true;
+  });
+}
+
+function normalizeReport(candidate, source) {
+  if (candidate?.payload?.meta && Array.isArray(candidate.payload.missions)) {
+    return {
+      ...candidate.payload,
+      savedAt: candidate.savedAt || candidate.payload.meta?.date_generation || new Date().toISOString(),
+      source: candidate.source || source
+    };
+  }
+
+  if (candidate?.meta && Array.isArray(candidate.missions)) {
+    return {
+      ...candidate,
+      savedAt: candidate.meta?.date_generation || new Date().toISOString(),
+      source
+    };
+  }
+
+  return null;
+}
+
+async function handleFileImport(event) {
+  const files = Array.from(event.target.files || []);
+  const loaded = [];
+  const existingFingerprints = new Set(importedReports.map((report) => getReportFingerprint(report)));
+
+  for (const file of files) {
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const normalized = normalizeReport(parsed, file.name);
+      if (!normalized) continue;
+
+      const candidate = {
+        ...normalized,
+        importId: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+        importLabel: file.name,
+        importedAt: new Date().toISOString()
+      };
+      const fingerprint = getReportFingerprint(candidate);
+      if (existingFingerprints.has(fingerprint)) continue;
+      existingFingerprints.add(fingerprint);
+      loaded.push(candidate);
+    } catch (error) {
+      console.error(error);
+      showToast(`Erreur fichier: ${file.name}`);
+    }
+  }
+
+  importedReports = [...importedReports, ...loaded];
+  persistImportedReports();
+  document.getElementById('json-files').value = '';
+  await refreshDashboard();
+  showToast(`${loaded.length} fichier(s) ajouté(s). Total imports: ${importedReports.length}.`);
+}
+
+async function clearImportedReports() {
+  importedReports = [];
+  persistImportedReports();
+  document.getElementById('json-files').value = '';
+  await refreshDashboard();
+  showToast('Imports JSON supprimés du tableau de bord.');
+}
+
+async function clearDashboardData() {
+  importedReports = [];
+  localStorage.removeItem('PNDA_REPORTS');
+  localStorage.removeItem('PNDA_LAST_REPORT_FINGERPRINT');
+  persistImportedReports();
+  document.getElementById('json-files').value = '';
+  await refreshDashboard();
+  showToast('Toutes les données du tableau de bord ont été réinitialisées.');
+}
+
+async function removeImportedReport(importId) {
+  const nextReports = importedReports.filter((report) => report.importId !== importId);
+  if (nextReports.length === importedReports.length) {
+    return;
+  }
+
+  importedReports = nextReports;
+  persistImportedReports();
+  await refreshDashboard();
+  showToast('Import supprimé du tableau de bord.');
+}
+
+function renderImportedReportsList() {
+  const list = document.getElementById('import-list');
+  const summary = document.getElementById('import-summary');
+  const badges = document.getElementById('import-badges');
+
+  if (!importedReports.length) {
+    summary.textContent = 'Aucun import supplémentaire chargé.';
+    badges.innerHTML = '';
+    list.innerHTML = '<div class="empty-state">Importez un ou plusieurs fichiers JSON pour compléter les rapports stockés localement.</div>';
+    return;
+  }
+
+  const provinceCounts = importedReports.reduce((accumulator, report) => {
+    const province = getReportProvinceLabel(report) || 'Non renseignée';
+    accumulator[province] = (accumulator[province] || 0) + 1;
+    return accumulator;
+  }, {});
+
+  summary.textContent = `${importedReports.length} fichier(s) JSON importé(s) et conservé(s) dans le tableau de bord.`;
+  badges.innerHTML = Object.entries(provinceCounts)
+    .sort((left, right) => left[0].localeCompare(right[0], 'fr'))
+    .map(([province, count]) => `<div class="import-badge"><span>${escapeHtml(province)}</span><strong>${count}</strong></div>`)
+    .join('');
+  list.innerHTML = importedReports.map((report) => `
+    <div class="import-item">
+      <div>
+        <strong>${escapeHtml(report.importLabel || report.source || 'import-manuel.json')}</strong>
+        <div class="import-meta">
+          Province: ${escapeHtml(getReportProvinceLabel(report) || '—')} · Rapporteur: ${escapeHtml(report.meta?.rapporteur || '—')} · Missions: ${escapeHtml(String(report.meta?.total_missions || report.missions?.length || 0))} · Ajouté le ${escapeHtml(formatDate(report.importedAt || report.savedAt))}
+        </div>
+      </div>
+      <button class="btn-inline-danger" data-import-id="${escapeHtml(report.importId)}" onclick="removeImportedReport(this.dataset.importId)">Supprimer</button>
+    </div>
+  `).join('');
+}
+
+function renderSummaryCards() {
+  const reports = getFilteredReports();
+  const missions = reports.flatMap((report) => report.missions || []);
+  const totalMontant = missions.reduce((sum, mission) => sum + Number(mission.montant_usd || 0), 0);
+  const totalAvance = missions.reduce((sum, mission) => sum + Number(mission.avance_usd || 0), 0);
+  const totalSolde = missions.reduce((sum, mission) => sum + Number(mission.solde_usd || 0), 0);
+
+  const cards = [
+    { label: 'Rapports consolidés', value: reports.length },
+    { label: 'Missions consolidées', value: missions.length },
+    { label: 'Montant total USD', value: formatCurrency(totalMontant) },
+    { label: 'Solde total USD', value: formatCurrency(totalSolde) }
+  ];
+
+  document.getElementById('summary-grid').innerHTML = cards.map((card) => `
+    <article class="summary-card">
+      <span>${card.label}</span>
+      <strong>${card.value}</strong>
+    </article>
+  `).join('');
+}
+
+function renderPanels() {
+  const filteredReports = getFilteredReports();
+  const panels = document.getElementById('panels');
+  panels.innerHTML = '';
+  panels.appendChild(buildGeneralPanel(filteredReports));
+  REFERENCE.provinces.forEach((province) => panels.appendChild(buildProvincePanel(province, filteredReports)));
+}
+
+function buildGeneralPanel(reports = getFilteredReports()) {
+  const provinceRows = REFERENCE.provinces.map((province) => summarizeProvince(province.name, reports));
+  const panel = document.createElement('section');
+  panel.className = `panel${activeTab === 'general' ? ' active' : ''}`;
+  panel.dataset.tab = 'general';
+  panel.innerHTML = `
+    <div class="panel-head">
+      <h3>Vue générale</h3>
+      <p>${reports.length} rapport(s) disponible(s), toutes sources confondues.</p>
+    </div>
+    <div class="panel-grid">
+      <div class="table-card">
+        <h4>Consolidation par province</h4>
+        ${renderTable(
+          ['Province', 'Rapports', 'Missions', 'Montant USD', 'Solde USD'],
+          provinceRows.map((row) => [row.label, row.reports, row.missions, formatCurrency(row.montant), formatCurrency(row.solde)]),
+          'Aucune donnée consolidée pour le moment.'
+        )}
+      </div>
+      <div class="table-card">
+        <h4>Derniers rapports</h4>
+        ${renderTable(
+          ['Date', 'Province', 'Rapporteur', 'Missions', 'Source'],
+          reports.slice(0, 8).map((report) => [
+            formatDate(report.savedAt),
+            getReportProvinceLabel(report) || '—',
+            report.meta?.rapporteur || '—',
+            String(report.meta?.total_missions || report.missions.length || 0),
+            `<span class="pill">${escapeHtml(report.source || 'stockage local')}</span>`
+          ]),
+          'Aucun rapport disponible.'
+        )}
+      </div>
+    </div>
+  `;
+  return panel;
+}
+
+function buildProvincePanel(province, reportsSource = getFilteredReports()) {
+  const reports = reportsSource.filter((report) => getReportProvinceName(report) === province.name);
+  const missions = reports.flatMap((report) => report.missions || []);
+  const missionGroups = Object.values(missions.reduce((accumulator, mission) => {
+    const key = `${mission.mission_reference_id || mission.nature}__${mission.objectif}`;
+    if (!accumulator[key]) {
+      accumulator[key] = {
+        nature: mission.nature || '—',
+        objectif: mission.objectif || '—',
+        occurrences: 0,
+        montant: 0
+      };
+    }
+    accumulator[key].occurrences += 1;
+    accumulator[key].montant += Number(mission.montant_usd || 0);
+    return accumulator;
+  }, {})).sort((left, right) => right.occurrences - left.occurrences);
+
+  const panel = document.createElement('section');
+  panel.className = `panel${activeTab === province.name ? ' active' : ''}`;
+  panel.dataset.tab = province.name;
+  panel.innerHTML = `
+    <div class="panel-head">
+      <h3>${province.label}</h3>
+      <p>${reports.length} rapport(s) et ${missions.length} mission(s) consolidé(s).</p>
+    </div>
+    <div class="panel-grid">
+      <div class="table-card">
+        <h4>Rapports de la province</h4>
+        ${renderTable(
+          ['Date', 'Rapporteur', 'Trimestre', 'Missions', 'Montant USD'],
+          reports.map((report) => [
+            formatDate(report.savedAt),
+            report.meta?.rapporteur || '—',
+            `${report.meta?.trimestre || '—'} ${report.meta?.annee || ''}`.trim(),
+            String(report.meta?.total_missions || report.missions.length || 0),
+            formatCurrency(Number(report.meta?.total_montant_usd || 0))
+          ]),
+          'Aucun rapport pour cette province.'
+        )}
+      </div>
+      <div class="table-card">
+        <h4>Missions les plus fréquentes</h4>
+        ${renderTable(
+          ['Nature', 'Objectif', 'Occurrences', 'Montant USD'],
+          missionGroups.slice(0, 12).map((group) => [group.nature, group.objectif, String(group.occurrences), formatCurrency(group.montant)]),
+          'Aucune mission consolidée pour cette province.'
+        )}
+      </div>
+    </div>
+  `;
+  return panel;
+}
+
+function summarizeProvince(provinceName, reportsSource = getFilteredReports()) {
+  const reports = reportsSource.filter((report) => getReportProvinceName(report) === provinceName);
+  const missions = reports.flatMap((report) => report.missions || []);
+  return {
+    label: REFERENCE.provinces.find((province) => province.name === provinceName)?.label || provinceName,
+    reports: reports.length,
+    missions: missions.length,
+    montant: missions.reduce((sum, mission) => sum + Number(mission.montant_usd || 0), 0),
+    solde: missions.reduce((sum, mission) => sum + Number(mission.solde_usd || 0), 0)
+  };
+}
+
+async function saveFileDesktop(options) {
+  if (!window.PNDA_DESKTOP?.saveFile) {
+    return { canceled: true, unsupported: true };
+  }
+
+  return window.PNDA_DESKTOP.saveFile(options);
+}
+
+async function exportExcelWorkbook() {
+  const date = new Date().toISOString().slice(0, 10);
+  const signatory = getSignatory();
+  const reports = getFilteredReports();
+
+  if (window.PNDA_DESKTOP?.exportExcelWorkbook) {
+    const result = await window.PNDA_DESKTOP.exportExcelWorkbook({
+      defaultFileName: `PNDA_dashboard_${date}.xlsx`,
+      exportedAt: new Date().toISOString(),
+      exportedBy: document.getElementById('session-user').textContent || '—',
+      signatory,
+      provinces: REFERENCE.provinces,
+      reports
+    });
+
+    if (!result.canceled) {
+      showToast('Export Excel enregistré.');
+    }
+    return;
+  }
+
+  const workbookXml = buildExcelWorkbookXml(signatory, reports);
+  const fileName = `PNDA_dashboard_${date}.xls`;
+
+  const blob = new Blob([workbookXml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+  showToast('Export Excel généré.');
+}
+
+function buildExcelWorkbookXml(signatory = {}, reports = getFilteredReports()) {
+  const worksheets = [
+    buildWorksheetXml('General', buildGeneralSheetRows(signatory, reports), [220, 140, 120, 120, 120]),
+    ...REFERENCE.provinces.map((province) => buildWorksheetXml(sheetNameForProvince(province.label), buildProvinceSheetRows(province, signatory, reports), [120, 120, 110, 90, 260, 260, 130, 130])),
+    buildWorksheetXml('Toutes_Missions', buildAllMissionsSheetRows(signatory, reports), [110, 180, 90, 80, 80, 130, 260, 260, 110, 110, 110])
+  ].join('');
+
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<?mso-application progid="Excel.Sheet"?>',
+    '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"',
+    ' xmlns:o="urn:schemas-microsoft-com:office:office"',
+    ' xmlns:x="urn:schemas-microsoft-com:office:excel"',
+    ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"',
+    ' xmlns:html="http://www.w3.org/TR/REC-html40">',
+    '<Styles>',
+    '<Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Bottom"/><Borders/><Font ss:FontName="Calibri" ss:Size="11"/><Interior/><NumberFormat/><Protection/></Style>',
+    '<Style ss:ID="logoMark"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="18" ss:Color="#FFFFFF"/><Interior ss:Color="#1D4C34" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#2F6A48"/></Borders></Style>',
+    '<Style ss:ID="brandTitle"><Alignment ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Size="16" ss:Color="#123524"/><Interior ss:Color="#DCEEE2" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#8FB89F"/></Borders></Style>',
+    '<Style ss:ID="brandSubtitle"><Alignment ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Size="11" ss:Color="#2F6A48"/><Interior ss:Color="#EDF7F0" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B9D7C3"/></Borders></Style>',
+    '<Style ss:ID="title"><Alignment ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Size="14" ss:Color="#123524"/><Interior ss:Color="#CFE5D6" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#8FB89F"/></Borders></Style>',
+    '<Style ss:ID="subtitle"><Alignment ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Size="12" ss:Color="#123524"/><Interior ss:Color="#EEF7F1" ss:Pattern="Solid"/></Style>',
+    '<Style ss:ID="header"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Color="#123524"/><Interior ss:Color="#B8D7C1" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#7DAA8C"/></Borders></Style>',
+    '<Style ss:ID="text"><Alignment ss:Vertical="Top" ss:WrapText="1"/><Interior ss:Color="#FAFDFC" ss:Pattern="Solid"/></Style>',
+    '<Style ss:ID="integer"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="0"/></Style>',
+    '<Style ss:ID="currency"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="# ##0,00"/></Style>',
+    '<Style ss:ID="date"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><NumberFormat ss:Format="dd/mm/yyyy"/></Style>',
+    '</Styles>',
+    worksheets,
+    '</Workbook>'
+  ].join('');
+}
+
+function buildGeneralSheetRows(signatory = {}, reports = getFilteredReports()) {
+  const missions = reports.flatMap((report) => report.missions || []);
+  const provinceRows = REFERENCE.provinces.map((province) => summarizeProvince(province.name, reports));
+
+  return [
+    ...buildWorkbookHeaderRows('Tableau de bord général', 5),
+    [{ value: 'PNDA-SE - Tableau de bord général', style: 'title', mergeAcross: 4 }],
+    [{ value: 'Date export', style: 'subtitle' }, { value: new Date().toLocaleDateString('fr-FR'), style: 'date' }],
+    [{ value: 'Utilisateur', style: 'subtitle' }, { value: document.getElementById('session-user').textContent || '—', style: 'text' }],
+    [],
+    [{ value: 'Indicateur', style: 'header' }, { value: 'Valeur', style: 'header' }],
+    [{ value: 'Rapports consolidés', style: 'text' }, { value: reports.length, type: 'Number', style: 'integer' }],
+    [{ value: 'Missions consolidées', style: 'text' }, { value: missions.length, type: 'Number', style: 'integer' }],
+    [{ value: 'Montant total USD', style: 'text' }, { value: missions.reduce((sum, mission) => sum + Number(mission.montant_usd || 0), 0), type: 'Number', style: 'currency' }],
+    [{ value: 'Avance totale USD', style: 'text' }, { value: missions.reduce((sum, mission) => sum + Number(mission.avance_usd || 0), 0), type: 'Number', style: 'currency' }],
+    [{ value: 'Solde total USD', style: 'text' }, { value: missions.reduce((sum, mission) => sum + Number(mission.solde_usd || 0), 0), type: 'Number', style: 'currency' }],
+    [],
+    [{ value: 'Consolidation par province', style: 'title', mergeAcross: 4 }],
+    [{ value: 'Province', style: 'header' }, { value: 'Rapports', style: 'header' }, { value: 'Missions', style: 'header' }, { value: 'Montant USD', style: 'header' }, { value: 'Solde USD', style: 'header' }],
+    ...provinceRows.map((row) => [
+      { value: row.label, style: 'text' },
+      { value: row.reports, type: 'Number', style: 'integer' },
+      { value: row.missions, type: 'Number', style: 'integer' },
+      { value: row.montant, type: 'Number', style: 'currency' },
+      { value: row.solde, type: 'Number', style: 'currency' }
+    ]),
+    [],
+    [{ value: 'Derniers rapports', style: 'title', mergeAcross: 4 }],
+    [{ value: 'Date', style: 'header' }, { value: 'Province', style: 'header' }, { value: 'Rapporteur', style: 'header' }, { value: 'Missions', style: 'header' }, { value: 'Source', style: 'header' }],
+    ...reports.slice(0, 20).map((report) => [
+      { value: formatDate(report.savedAt), style: 'date' },
+      { value: getReportProvinceLabel(report) || '—', style: 'text' },
+      { value: report.meta?.rapporteur || '—', style: 'text' },
+      { value: report.meta?.total_missions || report.missions.length || 0, type: 'Number', style: 'integer' },
+      { value: report.source || 'stockage local', style: 'text' }
+    ]),
+    [],
+    ...buildSignatureRows(signatory, 5)
+  ];
+}
+
+function buildProvinceSheetRows(province, signatory = {}, reportsSource = getFilteredReports()) {
+  const reports = reportsSource.filter((report) => getReportProvinceName(report) === province.name);
+  const missions = reports.flatMap((report) => (report.missions || []).map((mission) => ({ ...mission, __report: report })));
+
+  return [
+    ...buildWorkbookHeaderRows(`Province - ${province.label}`, 8),
+    [{ value: `Province - ${province.label}`, style: 'title', mergeAcross: 7 }],
+    [{ value: 'Rapports', style: 'subtitle' }, { value: reports.length, type: 'Number', style: 'integer' }],
+    [{ value: 'Missions', style: 'subtitle' }, { value: missions.length, type: 'Number', style: 'integer' }],
+    [],
+    [{ value: 'Rapports', style: 'title', mergeAcross: 5 }],
+    [{ value: 'Date', style: 'header' }, { value: 'Rapporteur', style: 'header' }, { value: 'Trimestre', style: 'header' }, { value: 'Année', style: 'header' }, { value: 'Montant USD', style: 'header' }, { value: 'Solde USD', style: 'header' }],
+    ...reports.map((report) => [
+      { value: formatDate(report.savedAt), style: 'date' },
+      { value: report.meta?.rapporteur || '—', style: 'text' },
+      { value: report.meta?.trimestre || '—', style: 'text' },
+      { value: report.meta?.annee || '—', style: 'integer' },
+      { value: Number(report.meta?.total_montant_usd || 0), type: 'Number', style: 'currency' },
+      { value: Number(report.meta?.total_solde_usd || 0), type: 'Number', style: 'currency' }
+    ]),
+    [],
+    [{ value: 'Détail des missions', style: 'title', mergeAcross: 7 }],
+    [{ value: 'Date mission', style: 'header' }, { value: 'Numero', style: 'header' }, { value: 'Nature', style: 'header' }, { value: 'Objectif', style: 'header' }, { value: 'Rapporteur', style: 'header' }, { value: 'Montant USD', style: 'header' }, { value: 'Avance USD', style: 'header' }, { value: 'Solde USD', style: 'header' }],
+    ...missions.map((mission) => [
+      { value: mission.date || formatDate(mission.__report.savedAt), style: 'date' },
+      { value: mission.numero || '—', style: 'text' },
+      { value: mission.nature || '—', style: 'text' },
+      { value: mission.objectif || '—', style: 'text' },
+      { value: mission.__report.meta?.rapporteur || '—', style: 'text' },
+      { value: Number(mission.montant_usd || 0), type: 'Number', style: 'currency' },
+      { value: Number(mission.avance_usd || 0), type: 'Number', style: 'currency' },
+      { value: Number(mission.solde_usd || 0), type: 'Number', style: 'currency' }
+    ]),
+    [],
+    ...buildSignatureRows(signatory, 8)
+  ];
+}
+
+function buildAllMissionsSheetRows(signatory = {}, reports = getFilteredReports()) {
+  const missions = reports.flatMap((report) => (report.missions || []).map((mission) => ({ ...mission, __report: report })));
+
+  return [
+    ...buildWorkbookHeaderRows('Toutes les missions', 11),
+    [{ value: 'Toutes les missions', style: 'title', mergeAcross: 10 }],
+    [{ value: 'Province', style: 'header' }, { value: 'Rapporteur', style: 'header' }, { value: 'Trimestre', style: 'header' }, { value: 'Année', style: 'header' }, { value: 'Numero', style: 'header' }, { value: 'Mission ref', style: 'header' }, { value: 'Nature', style: 'header' }, { value: 'Objectif', style: 'header' }, { value: 'Montant USD', style: 'header' }, { value: 'Avance USD', style: 'header' }, { value: 'Solde USD', style: 'header' }],
+    ...missions.map((mission) => [
+      { value: getReportProvinceLabel(mission.__report) || '—', style: 'text' },
+      { value: mission.__report.meta?.rapporteur || '—', style: 'text' },
+      { value: mission.__report.meta?.trimestre || '—', style: 'text' },
+      { value: mission.__report.meta?.annee || '—', style: 'integer' },
+      { value: mission.numero || '—', style: 'text' },
+      { value: mission.mission_reference_id || '—', style: 'text' },
+      { value: mission.nature || '—', style: 'text' },
+      { value: mission.objectif || '—', style: 'text' },
+      { value: Number(mission.montant_usd || 0), type: 'Number', style: 'currency' },
+      { value: Number(mission.avance_usd || 0), type: 'Number', style: 'currency' },
+      { value: Number(mission.solde_usd || 0), type: 'Number', style: 'currency' }
+    ]),
+    [],
+    ...buildSignatureRows(signatory, 11)
+  ];
+}
+
+function buildWorkbookHeaderRows(sheetTitle, totalColumns) {
+  const trailingColumns = Math.max(totalColumns - 2, 0);
+  return [
+    [
+      { value: 'PNDA', style: 'logoMark' },
+      { value: 'PNDA-SE', style: 'brandTitle', mergeAcross: trailingColumns }
+    ],
+    [
+      { value: `Programme National de Développement Agricole - ${sheetTitle}`, style: 'brandSubtitle', mergeAcross: Math.max(totalColumns - 1, 0) }
+    ],
+    []
+  ];
+}
+
+function buildWorksheetXml(name, rows, columnWidths = []) {
+  return [
+    `<Worksheet ss:Name="${xmlEscape(sheetName(name))}">`,
+    buildWorksheetOptionsXml(),
+    '<Table>',
+    columnWidths.map((width) => `<Column ss:AutoFitWidth="0" ss:Width="${width}"/>`).join(''),
+    rows.map((row) => `<Row>${(row || []).map((cell) => buildCellXml(cell)).join('')}</Row>`).join(''),
+    '</Table>',
+    '</Worksheet>'
+  ].join('');
+}
+
+function buildWorksheetOptionsXml() {
+  return [
+    '<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">',
+    '<PageSetup>',
+    '<Layout x:Orientation="Landscape"/>',
+    '<PageMargins x:Bottom="0.45" x:Left="0.25" x:Right="0.25" x:Top="0.35"/>',
+    '</PageSetup>',
+    '<FitToPage/>',
+    '<Print>',
+    '<ValidPrinterInfo/>',
+    '<PaperSizeIndex>9</PaperSizeIndex>',
+    '<FitWidth>1</FitWidth>',
+    '<FitHeight>0</FitHeight>',
+    '</Print>',
+    '<FreezePanes/>',
+    '<FrozenNoSplit/>',
+    '<SplitHorizontal>1</SplitHorizontal>',
+    '<TopRowBottomPane>1</TopRowBottomPane>',
+    '<ActivePane>2</ActivePane>',
+    '</WorksheetOptions>'
+  ].join('');
+}
+
+function buildSignatureRows(signatory, totalColumns) {
+  const name = signatory.name || '................................';
+  const position = signatory.position || '................................';
+  const location = signatory.location || '........................';
+  const exportDate = new Date().toLocaleDateString('fr-FR');
+  const mergeAcross = Math.max(totalColumns - 2, 0);
+
+  return [
+    [{ value: `Fait à ${location}, le ${exportDate}`, style: 'subtitle', mergeAcross }],
+    [{ value: 'Signature', style: 'subtitle', mergeAcross }],
+    [{ value: '_______________________________', style: 'text', mergeAcross }],
+    [],
+    [{ value: `Nom: ${name}`, style: 'text', mergeAcross }],
+    [{ value: `Poste: ${position}`, style: 'text', mergeAcross }]
+  ];
+}
+
+function buildCellXml(cell) {
+  if (!cell) {
+    return '<Cell><Data ss:Type="String"></Data></Cell>';
+  }
+
+  const type = cell.type || inferCellType(cell.value);
+  const style = cell.style ? ` ss:StyleID="${cell.style}"` : '';
+  const mergeAcross = Number.isInteger(cell.mergeAcross) && cell.mergeAcross > 0 ? ` ss:MergeAcross="${cell.mergeAcross}"` : '';
+  return `<Cell${style}${mergeAcross}><Data ss:Type="${type}">${xmlEscape(cell.value)}</Data></Cell>`;
+}
+
+function inferCellType(value) {
+  return typeof value === 'number' ? 'Number' : 'String';
+}
+
+function sheetNameForProvince(label) {
+  return label
+    .replace(/[\\/*?:\[\]]/g, '_')
+    .slice(0, 31);
+}
+
+function sheetName(value) {
+  return String(value || 'Sheet1').replace(/[\\/*?:\[\]]/g, '_').slice(0, 31);
+}
+
+function xmlEscape(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;');
+}
+
+function renderTable(headers, rows, emptyText) {
+  if (!rows.length) {
+    return `<div class="empty-state">${emptyText}</div>`;
+  }
+
+  return `
+    <table>
+      <thead>
+        <tr>${headers.map((header) => `<th>${header}</th>`).join('')}</tr>
+      </thead>
+      <tbody>
+        ${rows.map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join('')}</tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
+}
+
+function formatDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('fr-FR');
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.style.display = 'block';
+  setTimeout(() => {
+    toast.style.display = 'none';
+  }, 2600);
+}
+</script>
+</body>
+</html>

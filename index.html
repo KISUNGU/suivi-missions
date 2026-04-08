@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PNDA-SE — Suivi des Missions</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,500,0,0" rel="stylesheet">
+<style>
+  :root {
+    --forest:    #123524;
+    --forest-md: #1d4c34;
+    --forest-lt: #2f6a48;
+    --gold:      #d3a52c;
+    --gold-lt:   #f1c85b;
+    --cream:     #f6f1df;
+    --parchment: #efe4bc;
+    --text:      #1b2019;
+    --muted:     #566458;
+    --border:    #d8c88a;
+    --error:     #b93232;
+    --white:     #fffdf7;
+    --shadow:    0 8px 30px rgba(18,53,36,0.14);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background:
+      radial-gradient(circle at top left, rgba(211,165,44,0.18), transparent 26%),
+      radial-gradient(circle at top right, rgba(47,106,72,0.14), transparent 32%),
+      linear-gradient(180deg, #f8f5e8 0%, var(--cream) 45%, #efe7cb 100%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ────────────────────────────────────────────────── */
+  header {
+    background: #ffffff;
+    color: var(--forest);
+    padding: 0;
+    /* position: sticky; */
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.14);
+    border-bottom: 1px solid rgba(18,53,36,0.12);
+  }
+  .header-top {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 12px 28px 16px;
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    border-bottom: 3px solid rgba(18,53,36,0.12);
+  }
+  .header-logos-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 18px;
+  }
+  .header-logo-side,
+  .header-logo-center {
+    display: flex;
+    align-items: center;
+  }
+  .header-logo-side.left { justify-content: flex-start; }
+  .header-logo-side.right { justify-content: flex-end; }
+  .header-logo-center { justify-content: center; }
+  .header-logo-shell {
+    background: #ffffff;
+    padding: 4px 8px;
+  }
+  .header-logo-shell img {
+    display: block;
+    object-fit: contain;
+  }
+  .logo-ministere img { width: 205px; height: 84px; }
+  .logo-programme img { width: 200px; height: 92px; }
+  .logo-pnda img { width: 126px; height: 92px; }
+  .header-titles {
+    text-align: center;
+    max-width: 840px;
+  }
+  .header-titles h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    color: var(--forest);
+  }
+  .header-titles span {
+    font-size: 0.8rem;
+    color: var(--forest-lt);
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .header-nav {
+    display: flex; align-items: center; gap: 18px;
+    padding: 12px 28px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: #ffffff;
+    max-width: 1320px;
+    margin: 0 auto;
+  }
+  .header-nav span { color: var(--forest-lt); }
+  .nav-spacer { flex: 1; }
+  .nav-action {
+    border: 1px solid rgba(18,53,36,0.18);
+    background: #ffffff;
+    color: var(--forest);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .nav-action:hover { background: rgba(18,53,36,0.06); }
+  .nav-action[hidden] { display: none; }
+
+  /* ── AUTH OVERLAY ───────────────────────────────────────────── */
+  #auth-screen {
+    position: fixed; inset: 0;
+    background: rgba(26,58,42,0.92);
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+  .auth-card {
+    background: var(--white);
+    border-radius: 4px;
+    width: 380px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    animation: slideUp 0.4s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .auth-header {
+    background: linear-gradient(135deg, var(--forest) 0%, var(--forest-md) 100%);
+    color: var(--white);
+    padding: 28px 32px 22px;
+    border-bottom: 3px solid var(--gold);
+  }
+  .auth-header .logo-row {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 10px;
+  }
+  .auth-header .logo-sm {
+    width: 56px; height: 56px;
+    background: linear-gradient(180deg, #fffefb 0%, #f2ecd5 100%);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 6px;
+    border: 1px solid rgba(211,165,44,0.55);
+  }
+  .auth-header .logo-sm img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .auth-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; line-height: 1.3;
+  }
+  .auth-header p { font-size: 0.76rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
+  .auth-body { padding: 28px 32px 32px; }
+  .auth-body label {
+    display: block;
+    font-size: 0.75rem; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px; margin-top: 18px;
+  }
+  .auth-body label:first-child { margin-top: 0; }
+  .auth-body input, .auth-body select {
+    width: 100%; padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.92rem;
+    background: var(--cream);
+    color: var(--text);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .auth-body input:focus, .auth-body select:focus {
+    border-color: var(--forest-lt);
+    background: var(--white);
+  }
+  #auth-error {
+    display: none; color: var(--error);
+    font-size: 0.8rem; margin-top: 10px; text-align: center;
+  }
+  .btn-primary {
+    width: 100%; margin-top: 24px;
+    padding: 12px;
+    background: var(--forest);
+    color: var(--white);
+    border: none; border-radius: 3px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.88rem; font-weight: 600;
+    letter-spacing: 1.2px; text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-primary:hover  { background: var(--forest-lt); }
+  .btn-primary:active { transform: scale(0.98); }
+
+  /* ── MAIN CONTENT ───────────────────────────────────────────── */
+  main {
+    flex: 1;
+    max-width: 960px;
+    width: 100%;
+    margin: 40px auto;
+    padding: 0 24px 60px;
+  }
+
+  .page-title {
+    display: flex; align-items: baseline; gap: 14px; margin-bottom: 8px;
+  }
+  .page-title h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.7rem; color: var(--forest);
+  }
+  .page-title .trimestre-badge {
+    background: var(--gold);
+    color: var(--forest);
+    font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 2px;
+  }
+  .page-subtitle {
+    font-size: 0.88rem; color: var(--muted); margin-bottom: 32px;
+    border-bottom: 1px solid var(--border); padding-bottom: 20px;
+  }
+
+  /* ── SECTION CARD ───────────────────────────────────────────── */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card-head {
+    background: linear-gradient(180deg, #f3e8be 0%, var(--parchment) 100%);
+    border-bottom: 2px solid var(--border);
+    padding: 14px 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .card-head .step-num {
+    width: 28px; height: 28px;
+    background: var(--forest);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .card-head h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem; color: var(--forest);
+  }
+  .card-body { padding: 24px; }
+
+  /* ── FORM GRID ──────────────────────────────────────────────── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+  .col-full { grid-column: 1 / -1; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 0.73rem; font-weight: 600;
+    letter-spacing: 0.9px; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .field label .req { color: var(--gold); margin-left: 2px; }
+  .field input, .field select, .field textarea {
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.9rem;
+    background: var(--cream);
+    color: var(--text);
+    transition: border-color 0.2s, background 0.2s;
+    outline: none;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--forest-lt);
+    background: var(--white);
+  }
+  .field textarea { resize: vertical; min-height: 72px; }
+  .field-help {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .auth-note {
+    margin-top: 8px;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.5);
+  }
+  .auth-accounts {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 3px;
+    background: rgba(18,53,36,0.07);
+    border: 1px solid rgba(211,165,44,0.28);
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .header-userbox {
+    text-align: right;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .header-user {
+    font-weight: 600;
+    color: var(--forest);
+  }
+  .header-user-province {
+    font-size: 0.72rem;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+  }
+  .nav-separator {
+    color: rgba(18,53,36,0.2);
+  }
+  .nav-spacer {
+    flex: 1;
+  }
+  .header-date {
+    color: var(--muted);
+    font-size: 0.76rem;
+  }
+  .card-note {
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .btn-copy {
+    background: #2563a8;
+  }
+  .btn-copy:hover {
+    background: #1f528a;
+  }
+  .step-num-complete {
+    background: var(--gold);
+    color: var(--forest);
+  }
+
+  /* ── MISSIONS TABLE ─────────────────────────────────────────── */
+  .mission-row {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    position: relative;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .mission-row:hover { border-color: var(--forest-lt); box-shadow: 0 2px 8px rgba(26,58,42,0.08); }
+  .mission-meta {
+    margin-top: 8px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(211,165,44,0.35);
+    border-radius: 3px;
+    padding: 8px 10px;
+  }
+  .mission-row-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+  }
+  .mission-num {
+    background: var(--forest); color: var(--white);
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 700; flex-shrink: 0;
+  }
+  .mission-num-label {
+    font-size: 0.8rem; font-weight: 600; color: var(--forest); flex: 1;
+  }
+  .btn-remove {
+    background: none; border: 1.5px solid #ddd;
+    color: #999; border-radius: 3px;
+    padding: 3px 10px; font-size: 0.78rem; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-remove:hover { border-color: var(--error); color: var(--error); background: #fff0f0; }
+
+  .btn-add {
+    display: flex; align-items: center; gap: 8px;
+    background: none; border: 1.5px dashed var(--forest-lt);
+    color: var(--forest); padding: 10px 18px;
+    border-radius: 3px; font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    width: 100%; justify-content: center;
+    transition: all 0.2s;
+  }
+  .btn-add:hover { background: #eaf4ee; border-style: solid; }
+
+  /* ── ACTIONS ────────────────────────────────────────────────── */
+  .actions {
+    display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px;
+  }
+  .btn-export {
+    flex: 1; min-width: 200px;
+    padding: 13px 24px;
+    background: var(--forest);
+    color: var(--white);
+    border: none; border-radius: 3px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.88rem; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-export:hover  { background: var(--forest-lt); }
+  .btn-export:active { transform: scale(0.98); }
+  .btn-export.gold   { background: var(--gold); color: var(--forest); }
+  .btn-export.gold:hover { background: var(--gold-lt); }
+  .btn-export.sky { background: #dbeafe; color: #12406a; }
+  .btn-export.sky:hover { background: #bfdbfe; }
+  .btn-export.print { background: #ede9fe; color: #432b84; }
+  .btn-export.print:hover { background: #ddd6fe; }
+  .material-symbols-rounded {
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  /* ── SUMMARY TABLE ─────────────────────────────────────────── */
+  .summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .summary-copy h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.08rem;
+    color: var(--forest);
+    margin-bottom: 4px;
+  }
+  .summary-copy p {
+    font-size: 0.84rem;
+    color: var(--muted);
+  }
+  .summary-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .summary-actions .btn-export {
+    flex: 0 0 auto;
+    min-width: 180px;
+    padding: 11px 16px;
+    font-size: 0.82rem;
+  }
+  .summary-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .summary-metric {
+    border: 1px solid rgba(18,53,36,0.12);
+    background: linear-gradient(180deg, #fffef8 0%, #f7f0d7 100%);
+    border-radius: 4px;
+    padding: 12px 14px;
+  }
+  .summary-metric span {
+    display: block;
+    font-size: 0.74rem;
+    letter-spacing: 0.9px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .summary-metric strong {
+    display: block;
+    font-size: 1.15rem;
+    color: var(--forest);
+  }
+  .table-wrap {
+    border: 1px solid rgba(18,53,36,0.12);
+    border-radius: 4px;
+    overflow: auto;
+    background: #fffefb;
+  }
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 980px;
+  }
+  .summary-table th,
+  .summary-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(18,53,36,0.1);
+    text-align: left;
+    vertical-align: top;
+    font-size: 0.86rem;
+  }
+  .summary-table thead th {
+    position: sticky;
+    top: 0;
+    background: linear-gradient(180deg, #eff6f1 0%, #dfeede 100%);
+    color: var(--forest);
+    font-size: 0.75rem;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    z-index: 1;
+  }
+  .summary-table tbody tr:nth-child(even) {
+    background: rgba(239,228,188,0.24);
+  }
+  .summary-table .numeric {
+    text-align: right;
+    white-space: nowrap;
+  }
+  .summary-empty {
+    padding: 22px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  /* ── JSON PREVIEW ───────────────────────────────────────────── */
+  #json-preview-section { display: none; }
+  #json-output {
+    background: #0f1f18;
+    color: #7ec997;
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    padding: 20px;
+    border-radius: 3px;
+    overflow-x: auto;
+    white-space: pre;
+    max-height: 380px;
+    overflow-y: auto;
+    line-height: 1.6;
+  }
+
+  /* ── FOOTER ─────────────────────────────────────────────────── */
+  footer {
+    background: var(--forest);
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    padding: 16px;
+    font-size: 0.76rem;
+    letter-spacing: 0.5px;
+    border-top: 3px solid var(--gold);
+  }
+  footer strong { color: var(--gold-lt); }
+
+  /* ── TOAST ──────────────────────────────────────────────────── */
+  #toast {
+    position: fixed; bottom: 28px; right: 28px;
+    background: var(--forest); color: var(--white);
+    padding: 12px 22px; border-radius: 3px;
+    font-size: 0.84rem; font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    display: none; z-index: 9999;
+    border-left: 4px solid var(--gold);
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform:none; } }
+
+  @media (max-width: 600px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .header-top { padding: 12px 16px 16px; }
+    .header-logos-row { grid-template-columns: 1fr; gap: 10px; }
+    .header-logo-side.left,
+    .header-logo-side.right,
+    .header-logo-center { justify-content: center; }
+    .header-nav { padding: 12px 16px; flex-wrap: wrap; gap: 10px; }
+    .header-userbox { width: 100%; text-align: center; }
+    main { padding: 0 12px 40px; margin-top: 24px; }
+    .summary-metrics { grid-template-columns: 1fr 1fr; }
+    .summary-actions .btn-export { min-width: 100%; }
+  }
+
+  @media print {
+    body {
+      background: #ffffff;
+    }
+    header,
+    footer,
+    #auth-screen,
+    #toast,
+    .card:not(#selected-missions-section),
+    .page-title,
+    .page-subtitle {
+      display: none !important;
+    }
+    main {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+    #selected-missions-section {
+      box-shadow: none;
+      border: none;
+      margin: 0;
+    }
+    .summary-actions {
+      display: none !important;
+    }
+    .table-wrap {
+      overflow: visible;
+      border: none;
+    }
+    .summary-table {
+      min-width: 0;
+    }
+    .summary-table th,
+    .summary-table td {
+      font-size: 11px;
+      padding: 6px 8px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ AUTH OVERLAY ══════════════ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="logo-row">
+        <div class="logo-sm"><img src="logo_pnda.png" alt="Logo PNDA"></div>
+        <div>
+          <h2>PNDA-SE</h2>
+          <p>Programme National de Développement Agricole</p>
+        </div>
+      </div>
+      <p class="auth-note">
+        Connexion requise pour accéder au formulaire de suivi des missions
+      </p>
+    </div>
+    <div class="auth-body">
+      <label>Province</label>
+      <select id="auth-province" title="Province de connexion">
+        <option value="">— Chargement des provinces —</option>
+      </select>
+      <label>Identifiant</label>
+      <input type="text" id="auth-user" placeholder="Nom d'utilisateur" autocomplete="username">
+      <label>Mot de passe</label>
+      <input type="password" id="auth-pass" placeholder="••••••••" autocomplete="current-password">
+      <div id="auth-error">Identifiants incorrects. Veuillez réessayer.</div>
+      <div class="auth-accounts">
+        Comptes province: <strong>compte_kwilu@pnda.cd</strong>, <strong>compte_kasaic@pnda.cd</strong>, <strong>compte_kasai@pnda.cd</strong>, <strong>compte_uncp@pnda.cd</strong>.<br>
+        Les mots de passe temporaires sont fournis par l'administration.<br>
+        Comptes tableau de bord: <strong>rnse@pnda.cd</strong> et <strong>raf@pnda.cd</strong>. La province n'est pas requise pour ces deux comptes.
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Se connecter</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ HEADER ══════════════ -->
+<header>
+  <div class="header-top">
+    <div class="header-logos-row">
+      <div class="header-logo-side left">
+        <div class="header-logo-shell logo-ministere"><img src="logo_ministere.png" alt="Logo Ministère"></div>
+      </div>
+      <div class="header-logo-center">
+        <div class="header-logo-shell logo-programme"><img src="logo_programme.png" alt="Logo Programme"></div>
+      </div>
+      <div class="header-logo-side right">
+        <div class="header-logo-shell logo-pnda"><img src="logo_pnda.png" alt="Logo PNDA"></div>
+      </div>
+    </div>
+    <!-- <div class="header-titles">
+      <h1>PNDA-SE — Programme National de Développement Agricole</h1>
+      <span>Secrétariat Exécutif · Suivi des Missions · Trimestriel</span>
+    </div> -->
+  </div>
+  <div class="header-nav">
+    <span>⊞ Suivi Missions</span>
+    <span class="nav-separator">|</span>
+    <span>Trimestre T4 2025</span>
+    <span class="nav-separator">|</span>
+    <span id="header-province-label">—</span>
+    <span class="nav-separator">|</span>
+    <div class="header-userbox">
+      <div id="display-user" class="header-user">—</div>
+      <div id="display-province" class="header-user-province">—</div>
+    </div>
+    <div class="nav-spacer"></div>
+    <button id="admin-shortcut" class="nav-action" onclick="goToAdmin()" hidden>Tableau Admin</button>
+    <button id="switch-account" class="nav-action" onclick="changeAccount()">Changer de compte</button>
+    <span id="header-date" class="header-date"></span>
+  </div>
+</header>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main>
+
+  <div class="page-title">
+    <h2>Saisie du Budget des Missions</h2>
+    <span class="trimestre-badge">T4 2025</span>
+  </div>
+  <p class="page-subtitle">
+    Remplissez les informations ci-dessous. Le formulaire génère un fichier JSON standardisé pour la saisie, le suivi et la consolidation du budget des missions.
+  </p>
+
+  <!-- ÉTAPE 1 : IDENTIFICATION -->
+  <div class="card">
+    <div class="card-head">
+      <div class="step-num">1</div>
+      <h3>Identification — Contexte budgétaire</h3>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="field">
+          <label>Province <span class="req">*</span></label>
+          <select id="f-province" title="Province concernée" onchange="updateProvinceLabel()">
+            <option value="">— Chargement des provinces —</option>
+          </select>
+          <span class="field-help">Les missions proposées dépendent strictement de la province sélectionnée.</span>
+        </div>
+        <div class="field">
+          <label>Trimestre <span class="req">*</span></label>
+          <select id="f-trimestre" title="Trimestre budgétaire">
+            <option value="T1">T1 — Janvier à Mars</option>
+            <option value="T2">T2 — Avril à Juin</option>
+            <option value="T3">T3 — Juillet à Septembre</option>
+            <option value="T4" selected>T4 — Octobre à Décembre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Année <span class="req">*</span></label>
+          <input type="number" id="f-annee" title="Année budgétaire" placeholder="2025" value="2025" min="2020" max="2030">
+        </div>
+        <div class="field">
+          <label>Rapporteur <span class="req">*</span></label>
+          <input type="text" id="f-rapporteur" placeholder="Nom & prénom">
+        </div>
+        <div class="field">
+          <label>Rôle / Poste</label>
+          <input type="text" id="f-role" placeholder="ex : Coordinateur RNSE">
+        </div>
+        <div class="field">
+          <label>Date de génération</label>
+          <input type="date" id="f-date" title="Date de génération du rapport" placeholder="jj/mm/aaaa">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 2 : MISSIONS -->
+  <div class="card">
+    <div class="card-head">
+      <div class="step-num">2</div>
+      <h3>Missions réalisées au cours du trimestre</h3>
+    </div>
+    <div class="card-body">
+      <div id="missions-container"></div>
+      <button class="btn-add" onclick="addMission()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Ajouter une mission
+      </button>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 3 : ACTIONS -->
+  <div class="card">
+    <div class="card-head">
+      <div class="step-num">3</div>
+      <h3>Générer &amp; Exporter le fichier JSON</h3>
+    </div>
+    <div class="card-body">
+      <p class="card-note">
+        Vérifiez les données saisies, puis générez le fichier JSON. Vous pourrez le télécharger ou copier son contenu pour l'envoyer par e-mail à l'équipe RNSE GLOBAL.
+      </p>
+      <div class="actions">
+        <button class="btn-export" onclick="generateJSON()">
+          <span class="material-symbols-rounded" aria-hidden="true">preview</span>
+          Prévisualiser JSON
+        </button>
+        <button class="btn-export gold" onclick="downloadJSON()">
+          <span class="material-symbols-rounded" aria-hidden="true">download</span>
+          Télécharger .json
+        </button>
+        <button class="btn-export btn-copy" onclick="copyJSON()">
+          <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
+          Copier JSON
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="selected-missions-section">
+    <div class="card-head">
+      <div class="step-num">4</div>
+      <h3>Tableau récapitulatif des missions sélectionnées</h3>
+    </div>
+    <div class="card-body">
+      <div class="summary-header">
+        <div class="summary-copy">
+          <h4>Récapitulatif prêt à imprimer et à exporter</h4>
+          <p>Le tableau se met à jour automatiquement selon les missions et montants saisis dans le formulaire.</p>
+        </div>
+        <div class="summary-actions">
+          <button class="btn-export sky" onclick="exportSelectedMissionsExcel()">
+            <span class="material-symbols-rounded" aria-hidden="true">table_view</span>
+            Exporter Excel
+          </button>
+          <button class="btn-export print" onclick="printSelectedMissions()">
+            <span class="material-symbols-rounded" aria-hidden="true">print</span>
+            Imprimer le tableau
+          </button>
+        </div>
+      </div>
+
+      <div class="summary-metrics" id="selected-missions-metrics"></div>
+      <div class="table-wrap">
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>N°</th>
+              <th>Province</th>
+              <th>Mission</th>
+              <th>Objectif</th>
+              <th>Date</th>
+              <th>Section</th>
+              <th>Hors projet</th>
+              <th>Projet</th>
+              <th>Montant USD</th>
+              <th>Avance USD</th>
+              <th>Solde USD</th>
+            </tr>
+          </thead>
+          <tbody id="selected-missions-body">
+            <tr>
+              <td colspan="11" class="summary-empty">Aucune mission sélectionnée pour le moment.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- JSON PREVIEW -->
+  <div class="card" id="json-preview-section">
+    <div class="card-head">
+      <div class="step-num step-num-complete">✓</div>
+      <h3>Aperçu du fichier JSON généré</h3>
+    </div>
+    <div class="card-body">
+      <pre id="json-output"></pre>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <strong>PNDA-SE</strong> — Programme National de Développement Agricole · Secrétariat Exécutif &nbsp;|&nbsp;
+  Formulaire de Suivi des Missions Trimestriel &nbsp;|&nbsp; République Démocratique du Congo
+</footer>
+
+<div id="toast"></div>
+
+<script src="pnda_accounts.js"></script>
+<script src="pnda_reference.js"></script>
+<script>
+// ─── DONNÉES DE RÉFÉRENCE (chargées depuis pnda_reference.json) ──────────────
+let REFERENCE = { provinces: [] };
+let DATA_READY = false;
+
+const SECTIONS_PNDA = [
+  { val: "1", label: "1 — Coordination & Gestion" },
+  { val: "2", label: "2 — Activités de terrain" },
+  { val: "3", label: "3 — Suivi-évaluation" },
+  { val: "4", label: "4 — Communication" },
+  { val: "5", label: "5 — Formation & Renforcement" },
+  { val: "6", label: "6 — Administration & Finance" }
+];
+
+// ─── AUTH ────────────────────────────────────────────────────────────────────
+const USERS = window.PNDA_USERS || {};
+
+function encodePassword(password) {
+  try {
+    return window.btoa(password);
+  } catch {
+    return password;
+  }
+}
+
+function isPasswordMatch(account, password) {
+  if (!account) {
+    return false;
+  }
+
+  const encodedPassword = encodePassword(password);
+  return account.password === password || account.password === encodedPassword;
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadReferenceData();
+  if (DATA_READY) {
+    hydrateSession();
+  }
+});
+
+function getSession() {
+  try {
+    return JSON.parse(localStorage.getItem('PNDA_SESSION') || 'null');
+  } catch {
+    return null;
+  }
+}
+
+function clearSession() {
+  localStorage.removeItem('PNDA_SESSION');
+}
+
+function isManualLoginRequested() {
+  return new URLSearchParams(window.location.search).get('manual-login') === '1';
+}
+
+function applyDefaultDesktopSession() {
+  const desktopDefault = window.PNDA_DESKTOP?.defaultSession;
+  if (!desktopDefault || isManualLoginRequested()) {
+    return false;
+  }
+
+  const account = USERS[desktopDefault.user];
+  if (!account || account.role !== desktopDefault.role || !account.provinces.includes(desktopDefault.province)) {
+    return false;
+  }
+
+  localStorage.setItem('PNDA_SESSION', JSON.stringify({
+    user: desktopDefault.user,
+    role: desktopDefault.role,
+    province: desktopDefault.province,
+    authenticatedAt: new Date().toISOString()
+  }));
+  return true;
+}
+
+function hydrateSession() {
+  let session = getSession();
+  if (!session && applyDefaultDesktopSession()) {
+    session = getSession();
+  }
+
+  if (!session?.user) {
+    return;
+  }
+
+  const account = USERS[session.user];
+  if (!account) {
+    clearSession();
+    return;
+  }
+
+  if (account.role === 'admin') {
+    window.location.href = 'admin.html';
+    return;
+  }
+
+  if (!session.province || account.provinces === '*' || !account.provinces.includes(session.province)) {
+    clearSession();
+    return;
+  }
+
+  openProvinceSession(session.user, session.province);
+}
+
+async function loadReferenceData() {
+  try {
+    if (window.PNDA_REFERENCE?.provinces?.length) {
+      REFERENCE = window.PNDA_REFERENCE;
+      DATA_READY = true;
+      populateProvinceSelects();
+      return;
+    }
+
+    const response = await fetch('pnda_reference.json');
+    if (!response.ok) throw new Error('Impossible de charger pnda_reference.json');
+    REFERENCE = await response.json();
+    DATA_READY = true;
+    populateProvinceSelects();
+  } catch (error) {
+    console.error(error);
+    document.getElementById('auth-error').textContent = "Chargement des provinces impossible. Vérifiez pnda_reference.json.";
+    document.getElementById('auth-error').style.display = 'block';
+    showToast("Erreur de chargement des données.");
+  }
+}
+
+function populateProvinceSelects() {
+  const authSelect = document.getElementById('auth-province');
+  const formSelect = document.getElementById('f-province');
+
+  authSelect.innerHTML = '<option value="">— Sélectionner une province —</option>';
+  formSelect.innerHTML = '<option value="">— Sélectionner —</option>';
+
+  REFERENCE.provinces.forEach((province) => {
+    authSelect.appendChild(new Option(province.label, province.name));
+    formSelect.appendChild(new Option(province.label, province.name));
+  });
+}
+
+function getProvinceData(provinceName) {
+  return REFERENCE.provinces.find((province) => province.name === provinceName) || null;
+}
+
+function getMissionById(provinceName, missionId) {
+  const province = getProvinceData(provinceName);
+  if (!province) return null;
+  return province.missions.find((mission) => mission.id === missionId) || null;
+}
+
+function getObjectifsForProvince(provinceName) {
+  const province = getProvinceData(provinceName);
+  if (!province) return [];
+  return [...new Set(province.missions.map((mission) => mission.objectif).filter(Boolean))];
+}
+
+function doLogin() {
+  if (!DATA_READY) return;
+  const province = document.getElementById('auth-province').value;
+  const user     = document.getElementById('auth-user').value.trim();
+  const pass     = document.getElementById('auth-pass').value;
+  const err      = document.getElementById('auth-error');
+  const normalizedUser = user.toLowerCase();
+  const account  = USERS[normalizedUser];
+
+  if (!isPasswordMatch(account, pass)) {
+    err.textContent = "Identifiants incorrects. Veuillez réessayer.";
+    err.style.display = 'block'; return;
+  }
+  if (account.role !== 'admin' && !province) { err.textContent = "Veuillez sélectionner une province."; err.style.display = 'block'; return; }
+  if (account.provinces !== '*' && !account.provinces.includes(province)) {
+    err.textContent = "Ce compte n'est pas autorisé pour la province sélectionnée.";
+    err.style.display = 'block'; return;
+  }
+
+  localStorage.setItem('PNDA_SESSION', JSON.stringify({
+    user: normalizedUser,
+    role: account.role,
+    province,
+    authenticatedAt: new Date().toISOString()
+  }));
+
+  if (isManualLoginRequested()) {
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+
+  if (account.role === 'admin') {
+    window.location.href = 'admin.html';
+    return;
+  }
+
+  openProvinceSession(normalizedUser, province);
+}
+
+function openProvinceSession(user, province) {
+  const account = USERS[user];
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('display-user').textContent     = user.toUpperCase();
+  document.getElementById('display-province').textContent  = (getProvinceData(province)?.label || province).toUpperCase();
+  document.getElementById('header-province-label').textContent = getProvinceData(province)?.label || province;
+  document.getElementById('f-rapporteur').value = user;
+  document.getElementById('f-province').value   = province;
+  document.getElementById('f-province').disabled = true;
+  document.getElementById('admin-shortcut').hidden = account?.role !== 'admin';
+
+  initPage();
+}
+
+function changeAccount() {
+  clearSession();
+  window.location.href = 'index.html?manual-login=1';
+}
+
+function goToAdmin() {
+  window.location.href = 'admin.html';
+}
+
+document.getElementById('auth-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+function initPage() {
+  const today = new Date();
+  document.getElementById('f-date').value = today.toISOString().split('T')[0];
+  document.getElementById('header-date').textContent = today.toLocaleDateString('fr-FR', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  updateProvinceLabel();
+  addMission();
+}
+
+function updateProvinceLabel() {
+  const p = document.getElementById('f-province').value;
+  document.getElementById('header-province-label').textContent = getProvinceData(p)?.label || '—';
+  // update all mission selects
+  document.querySelectorAll('.sel-mission').forEach(s => fillMissionOptions(s, p));
+  document.querySelectorAll('.sel-objet').forEach(s => fillObjetOptions(s, p));
+  document.querySelectorAll('.mission-row').forEach(row => syncMissionRow(row));
+  renderSelectedMissionsTable();
+}
+
+function fillMissionOptions(sel, province) {
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Sélectionner —</option>';
+  const opts = getProvinceData(province)?.missions || [];
+  opts.forEach((mission) => {
+    const option = new Option(`${mission.id} — ${mission.nature}`, mission.id);
+    if (mission.id === cur) option.selected = true;
+    sel.appendChild(option);
+  });
+}
+function fillObjetOptions(sel, province) {
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Sélectionner —</option>';
+  const opts = getObjectifsForProvince(province);
+  opts.forEach((objectif) => {
+    const option = new Option(objectif, objectif);
+    if (objectif === cur) option.selected = true;
+    sel.appendChild(option);
+  });
+}
+
+function ensureObjectifOption(select, objectif) {
+  if (!objectif) {
+    return;
+  }
+
+  const hasOption = Array.from(select.options).some((option) => option.value === objectif);
+  if (!hasOption) {
+    select.appendChild(new Option(objectif, objectif));
+  }
+}
+
+function syncMissionRow(row) {
+  const province = document.getElementById('f-province').value;
+  const missionSelect = row.querySelector('.sel-mission');
+  const objectifSelect = row.querySelector('.sel-objet');
+  const natureInput = row.querySelector('.inp-nature');
+  const objectifInput = row.querySelector('.inp-objectif-txt');
+  const missionInfo = row.querySelector('.mission-meta');
+  const mission = getMissionById(province, missionSelect.value);
+
+  if (!mission) {
+    objectifSelect.value = '';
+    natureInput.value = '';
+    objectifInput.value = '';
+    missionInfo.textContent = 'Sélectionnez une mission de la province choisie pour afficher son objectif de référence.';
+    return;
+  }
+
+  natureInput.value = mission.nature || '';
+
+  if (mission.objectif) {
+    ensureObjectifOption(objectifSelect, mission.objectif);
+    objectifSelect.value = mission.objectif;
+    objectifInput.value = mission.objectif;
+  } else {
+    objectifSelect.value = '';
+    objectifInput.value = '';
+  }
+
+  missionInfo.textContent = `Mission de référence: ${mission.id} | Objectif conseillé: ${mission.objectif || 'Non renseigné'}`;
+  renderSelectedMissionsTable();
+}
+
+// ─── MISSIONS ────────────────────────────────────────────────────────────────
+let missionCount = 0;
+
+function addMission() {
+  missionCount++;
+  const prov = document.getElementById('f-province').value;
+  const container = document.getElementById('missions-container');
+  const id = `mission-${missionCount}`;
+
+  const div = document.createElement('div');
+  div.className = 'mission-row';
+  div.id = id;
+
+  div.innerHTML = `
+    <div class="mission-row-header">
+      <div class="mission-num">${missionCount}</div>
+      <span class="mission-num-label">Mission n° ${missionCount}</span>
+      <button class="btn-remove" onclick="removeMission('${id}')">✕ Retirer</button>
+    </div>
+    <div class="grid-2">
+      <div class="field col-full">
+        <label>Nature de la mission <span class="req">*</span></label>
+        <select class="sel-mission">
+          <option value="">— Sélectionner ou saisir ci-dessous —</option>
+        </select>
+      </div>
+      <div class="field col-full">
+        <label>Nature (précision / autre)</label>
+        <input type="text" class="inp-nature" placeholder="Précisez si 'Autre' ou complétez…">
+      </div>
+      <div class="field col-full">
+        <label>Objectif de la mission <span class="req">*</span></label>
+        <select class="sel-objet">
+          <option value="">— Sélectionner ou saisir ci-dessous —</option>
+        </select>
+      </div>
+      <div class="field col-full">
+        <label>Objectif (précision / autre)</label>
+        <input type="text" class="inp-objectif-txt" placeholder="Précisez si 'Autre'…">
+      </div>
+      <div class="field">
+        <label>Section PNDA</label>
+        <select class="sel-section">
+          <option value="">—</option>
+          ${SECTIONS_PNDA.map(s=>`<option value="${s.val}">${s.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label>Date de mission <span class="req">*</span></label>
+        <input type="date" class="inp-date">
+      </div>
+      <div class="field">
+        <label>Nbre participants hors projet</label>
+        <input type="number" class="inp-hors-projet" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>Nbre participants projet</label>
+        <input type="number" class="inp-projet" value="1" min="0">
+      </div>
+      <div class="field">
+        <label>Montant (USD) <span class="req">*</span></label>
+        <input type="number" class="inp-montant" value="0" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label>Avance versée (USD)</label>
+        <input type="number" class="inp-avance" value="0" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="mission-meta">Sélectionnez une mission de la province choisie pour afficher son objectif de référence.</div>
+  `;
+
+  container.appendChild(div);
+
+  const selMission = div.querySelector('.sel-mission');
+  const selObjet   = div.querySelector('.sel-objet');
+  fillMissionOptions(selMission, prov);
+  fillObjetOptions(selObjet, prov);
+  selMission.addEventListener('change', () => syncMissionRow(div));
+  bindMissionRowListeners(div);
+  syncMissionRow(div);
+  renumberMissions();
+  renderSelectedMissionsTable();
+}
+
+function removeMission(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+  renumberMissions();
+  renderSelectedMissionsTable();
+}
+
+function renumberMissions() {
+  document.querySelectorAll('.mission-row').forEach((row, i) => {
+    row.querySelector('.mission-num').textContent = i + 1;
+    row.querySelector('.mission-num-label').textContent = `Mission n° ${i + 1}`;
+  });
+}
+
+function bindMissionRowListeners(row) {
+  row.querySelectorAll('input, select, textarea').forEach((field) => {
+    const eventName = field.tagName === 'SELECT' ? 'change' : 'input';
+    field.addEventListener(eventName, renderSelectedMissionsTable);
+  });
+}
+
+// ─── SECTION numéro auto ────────────────────────────────────────────────────
+function getMissionNum(prov, idx) {
+  const sec = getProvinceData(prov)?.code || "1";
+  return `${sec}.${idx + 1}`;
+}
+
+// ─── JSON ─────────────────────────────────────────────────────────────────────
+function buildData() {
+  const province = document.getElementById('f-province').value;
+  const provinceData = getProvinceData(province);
+  const rows = document.querySelectorAll('.mission-row');
+  const missions = [];
+
+  rows.forEach((row, i) => {
+    const selMissionId = row.querySelector('.sel-mission').value;
+    const inpNature   = row.querySelector('.inp-nature').value.trim();
+    const selObjet    = row.querySelector('.sel-objet').value;
+    const inpObj      = row.querySelector('.inp-objectif-txt').value.trim();
+    const missionRef  = getMissionById(province, selMissionId);
+    const nature      = inpNature || missionRef?.nature || "";
+    const objectif    = inpObj || selObjet || missionRef?.objectif || "";
+
+    const montant = parseFloat(row.querySelector('.inp-montant').value) || 0;
+    const avance  = parseFloat(row.querySelector('.inp-avance').value) || 0;
+
+    missions.push({
+      numero:        getMissionNum(province, i),
+      mission_reference_id: selMissionId || "",
+      section:       row.querySelector('.sel-section').value || "",
+      nature:        nature,
+      objectif:      objectif,
+      date:          row.querySelector('.inp-date').value || "",
+      hors_projet:   parseInt(row.querySelector('.inp-hors-projet').value) || 0,
+      projet:        parseInt(row.querySelector('.inp-projet').value) || 0,
+      montant_usd: montant,
+      avance_usd: avance,
+      solde_usd: montant - avance
+    });
+  });
+
+  return {
+    meta: {
+      systeme:   "PNDA-SE",
+      titre:     `Suivi des Missions ${document.getElementById('f-trimestre').value} ${document.getElementById('f-annee').value}`,
+      province:  province,
+      province_label: provinceData?.label || province,
+      province_code: provinceData?.code || '',
+      trimestre: document.getElementById('f-trimestre').value,
+      annee:     parseInt(document.getElementById('f-annee').value),
+      rapporteur:document.getElementById('f-rapporteur').value.trim(),
+      role:      document.getElementById('f-role').value.trim(),
+      date_generation: document.getElementById('f-date').value,
+      total_missions: missions.length,
+      total_montant_usd: missions.reduce((s, m) => s + m.montant_usd, 0).toFixed(2),
+      total_avance_usd:  missions.reduce((s, m) => s + m.avance_usd, 0).toFixed(2),
+      total_solde_usd:   missions.reduce((s, m) => s + parseFloat(m.solde_usd), 0).toFixed(2)
+    },
+    missions: missions
+  };
+}
+
+function formatCurrencyDisplay(value) {
+  return new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Number(value || 0));
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderSelectedMissionsTable() {
+  const data = buildData();
+  const body = document.getElementById('selected-missions-body');
+  const metrics = document.getElementById('selected-missions-metrics');
+  const provinceLabel = getProvinceData(data.meta.province)?.label || data.meta.province || '—';
+  const totalMontant = data.missions.reduce((sum, mission) => sum + Number(mission.montant_usd || 0), 0);
+  const totalAvance = data.missions.reduce((sum, mission) => sum + Number(mission.avance_usd || 0), 0);
+  const totalSolde = data.missions.reduce((sum, mission) => sum + Number(mission.solde_usd || 0), 0);
+
+  metrics.innerHTML = [
+    { label: 'Province', value: provinceLabel },
+    { label: 'Missions', value: String(data.missions.length) },
+    { label: 'Montant total USD', value: formatCurrencyDisplay(totalMontant) },
+    { label: 'Solde total USD', value: formatCurrencyDisplay(totalSolde) }
+  ].map((item) => `
+    <div class="summary-metric">
+      <span>${escapeHtml(item.label)}</span>
+      <strong>${escapeHtml(item.value)}</strong>
+    </div>
+  `).join('');
+
+  if (!data.missions.length) {
+    body.innerHTML = '<tr><td colspan="11" class="summary-empty">Aucune mission sélectionnée pour le moment.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = data.missions.map((mission) => `
+    <tr>
+      <td>${escapeHtml(mission.numero || '—')}</td>
+      <td>${escapeHtml(provinceLabel)}</td>
+      <td>${escapeHtml(mission.nature || '—')}</td>
+      <td>${escapeHtml(mission.objectif || '—')}</td>
+      <td>${escapeHtml(mission.date || '—')}</td>
+      <td>${escapeHtml(mission.section || '—')}</td>
+      <td class="numeric">${escapeHtml(String(mission.hors_projet || 0))}</td>
+      <td class="numeric">${escapeHtml(String(mission.projet || 0))}</td>
+      <td class="numeric">${escapeHtml(formatCurrencyDisplay(mission.montant_usd))}</td>
+      <td class="numeric">${escapeHtml(formatCurrencyDisplay(mission.avance_usd))}</td>
+      <td class="numeric">${escapeHtml(formatCurrencyDisplay(mission.solde_usd))}</td>
+    </tr>
+  `).join('');
+}
+
+function buildSelectedMissionsWorkbookXml(data) {
+  const provinceLabel = getProvinceData(data.meta.province)?.label || data.meta.province || '—';
+  const rows = [
+    [{ value: 'PNDA-SE - Budget des missions', style: 'title', mergeAcross: 10 }],
+    [{ value: 'Province', style: 'header' }, { value: provinceLabel, style: 'text' }],
+    [{ value: 'Trimestre', style: 'header' }, { value: `${data.meta.trimestre || '—'} ${data.meta.annee || ''}`.trim(), style: 'text' }],
+    [{ value: 'Rapporteur', style: 'header' }, { value: data.meta.rapporteur || '—', style: 'text' }],
+    [{ value: 'Date génération', style: 'header' }, { value: data.meta.date_generation || '—', style: 'text' }],
+    [],
+    [
+      { value: 'N°', style: 'header' },
+      { value: 'Province', style: 'header' },
+      { value: 'Mission', style: 'header' },
+      { value: 'Objectif', style: 'header' },
+      { value: 'Date', style: 'header' },
+      { value: 'Section', style: 'header' },
+      { value: 'Hors projet', style: 'header' },
+      { value: 'Projet', style: 'header' },
+      { value: 'Montant USD', style: 'header' },
+      { value: 'Avance USD', style: 'header' },
+      { value: 'Solde USD', style: 'header' }
+    ],
+    ...data.missions.map((mission) => [
+      { value: mission.numero || '—', style: 'text' },
+      { value: provinceLabel, style: 'text' },
+      { value: mission.nature || '—', style: 'text' },
+      { value: mission.objectif || '—', style: 'text' },
+      { value: mission.date || '—', style: 'text' },
+      { value: mission.section || '—', style: 'text' },
+      { value: Number(mission.hors_projet || 0), type: 'Number', style: 'integer' },
+      { value: Number(mission.projet || 0), type: 'Number', style: 'integer' },
+      { value: Number(mission.montant_usd || 0), type: 'Number', style: 'currency' },
+      { value: Number(mission.avance_usd || 0), type: 'Number', style: 'currency' },
+      { value: Number(mission.solde_usd || 0), type: 'Number', style: 'currency' }
+    ])
+  ];
+
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<?mso-application progid="Excel.Sheet"?>',
+    '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"',
+    ' xmlns:o="urn:schemas-microsoft-com:office:office"',
+    ' xmlns:x="urn:schemas-microsoft-com:office:excel"',
+    ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"',
+    ' xmlns:html="http://www.w3.org/TR/REC-html40">',
+    '<Styles>',
+    '<Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style>',
+    '<Style ss:ID="title"><Alignment ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Size="14" ss:Color="#123524"/><Interior ss:Color="#DCEEE2" ss:Pattern="Solid"/></Style>',
+    '<Style ss:ID="header"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Color="#123524"/><Interior ss:Color="#B8D7C1" ss:Pattern="Solid"/></Style>',
+    '<Style ss:ID="text"><Alignment ss:Vertical="Top" ss:WrapText="1"/></Style>',
+    '<Style ss:ID="integer"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="0"/></Style>',
+    '<Style ss:ID="currency"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="# ##0,00"/></Style>',
+    '</Styles>',
+    '<Worksheet ss:Name="Budget_Missions">',
+    '<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><PageSetup><Layout x:Orientation="Landscape"/></PageSetup><FitToPage/><Print><ValidPrinterInfo/><PaperSizeIndex>9</PaperSizeIndex><FitWidth>1</FitWidth><FitHeight>0</FitHeight></Print></WorksheetOptions>',
+    '<Table>',
+    '<Column ss:AutoFitWidth="0" ss:Width="90"/><Column ss:AutoFitWidth="0" ss:Width="130"/><Column ss:AutoFitWidth="0" ss:Width="220"/><Column ss:AutoFitWidth="0" ss:Width="220"/><Column ss:AutoFitWidth="0" ss:Width="90"/><Column ss:AutoFitWidth="0" ss:Width="90"/><Column ss:AutoFitWidth="0" ss:Width="90"/><Column ss:AutoFitWidth="0" ss:Width="90"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="95"/><Column ss:AutoFitWidth="0" ss:Width="95"/>',
+    rows.map((row) => `<Row>${row.map((cell) => buildWorkbookCellXml(cell)).join('')}</Row>`).join(''),
+    '</Table>',
+    '</Worksheet>',
+    '</Workbook>'
+  ].join('');
+}
+
+function buildWorkbookCellXml(cell) {
+  if (!cell) {
+    return '<Cell><Data ss:Type="String"></Data></Cell>';
+  }
+
+  const type = cell.type || (typeof cell.value === 'number' ? 'Number' : 'String');
+  const style = cell.style ? ` ss:StyleID="${cell.style}"` : '';
+  const mergeAcross = Number.isInteger(cell.mergeAcross) && cell.mergeAcross > 0 ? ` ss:MergeAcross="${cell.mergeAcross}"` : '';
+  return `<Cell${style}${mergeAcross}><Data ss:Type="${type}">${escapeHtml(cell.value)}</Data></Cell>`;
+}
+
+async function exportSelectedMissionsExcel() {
+  const data = buildData();
+  const provinceKey = (data.meta.province || 'province').replace(/\s/g, '_');
+  const content = buildSelectedMissionsWorkbookXml(data);
+  const fileName = `PNDA_budget_missions_${data.meta.trimestre}_${data.meta.annee}_${provinceKey}.xls`;
+
+  if (window.PNDA_DESKTOP?.saveFile) {
+    const result = await saveFileDesktop({
+      title: 'Enregistrer le tableau des missions',
+      defaultPath: fileName,
+      filters: [{ name: 'Fichiers Excel', extensions: ['xls'] }],
+      content
+    });
+
+    if (!result.canceled) {
+      showToast(`✓ Tableau Excel enregistré : ${result.filePath}`);
+    }
+    return;
+  }
+
+  const blob = new Blob([content], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ Tableau Excel téléchargé.');
+}
+
+function printSelectedMissions() {
+  renderSelectedMissionsTable();
+  window.print();
+}
+
+function stableStringify(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+  }
+
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+  }
+
+  return JSON.stringify(value);
+}
+
+function persistReport(data) {
+  const storageKey = 'PNDA_REPORTS';
+  const fingerprintKey = 'PNDA_LAST_REPORT_FINGERPRINT';
+  const fingerprint = stableStringify(data);
+  const previousFingerprint = localStorage.getItem(fingerprintKey);
+  if (previousFingerprint === fingerprint) {
+    return;
+  }
+  const reports = JSON.parse(localStorage.getItem(storageKey) || '[]');
+  reports.unshift({
+    id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+    savedAt: new Date().toISOString(),
+    source: 'formulaire-html',
+    payload: data
+  });
+  localStorage.setItem(storageKey, JSON.stringify(reports.slice(0, 200)));
+  localStorage.setItem(fingerprintKey, fingerprint);
+  localStorage.setItem('PNDA_REPORTS_UPDATED_AT', new Date().toISOString());
+  window.dispatchEvent(new Event('PNDA_DATA_UPDATED'));
+}
+
+function storeReport(data) {
+  persistReport(data);
+}
+
+async function saveFileDesktop(options) {
+  if (!window.PNDA_DESKTOP?.saveFile) {
+    return { canceled: true, unsupported: true };
+  }
+
+  return window.PNDA_DESKTOP.saveFile(options);
+}
+
+async function generateJSON() {
+  const data = buildData();
+  storeReport(data);
+  const json = JSON.stringify(data, null, 2);
+  document.getElementById('json-output').textContent = json;
+  const sec = document.getElementById('json-preview-section');
+  sec.style.display = 'block';
+  sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  showToast("✓ JSON généré avec succès !");
+}
+
+async function downloadJSON() {
+  const data = buildData();
+  storeReport(data);
+  const json = JSON.stringify(data, null, 2);
+  const prov = (data.meta.province || 'province').replace(/\s/g, '_');
+  const fname = `PNDA_missions_${data.meta.trimestre}_${data.meta.annee}_${prov}.json`;
+
+  if (window.PNDA_DESKTOP?.saveFile) {
+    const result = await saveFileDesktop({
+      title: 'Enregistrer le rapport JSON',
+      defaultPath: fname,
+      filters: [{ name: 'Fichiers JSON', extensions: ['json'] }],
+      content: json
+    });
+
+    if (!result.canceled) {
+      showToast(`✓ Fichier enregistré : ${result.filePath}`);
+    }
+    return;
+  }
+
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = fname; a.click();
+  URL.revokeObjectURL(url);
+  showToast(`✓ Fichier "${fname}" téléchargé !`);
+}
+
+async function copyJSON() {
+  const data = buildData();
+  storeReport(data);
+  const json = JSON.stringify(data, null, 2);
+  navigator.clipboard.writeText(json).then(() => showToast("✓ JSON copié dans le presse-papiers !"));
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
+renderSelectedMissionsTable();
+</script>
+</body>
+</html>
