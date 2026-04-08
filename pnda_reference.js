@@ -2,7 +2,7 @@ window.PNDA_REFERENCE = {
   "provinces": [
     {
       "name": "UN",
-      "label": "UNCP (Programme National)",
+      "label": "UNCP (Unité Nationale de Coordination)",
       "code": "1",
       "missions": [
         {
