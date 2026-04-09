@@ -565,12 +565,16 @@
 
 <div id="toast"></div>
 
-<script src="pnda_accounts.js"></script>
-<script src="pnda_reference.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase_config.js"></script>
 <script>
-const USERS = window.PNDA_USERS || {};
-const REFERENCE = window.PNDA_REFERENCE || { provinces: [] };
-const TAB_ORDER = ['general', ...REFERENCE.provinces.map((province) => province.name)];
+// ─── CLIENT SUPABASE ──────────────────────────────────────────────────────────
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let USERS = {};
+let REFERENCE = { provinces: [] };
+let TAB_ORDER = ['general'];
 const IMPORT_STORAGE_KEY = 'PNDA_IMPORTED_REPORTS';
 const SIGNATORY_STORAGE_KEY = 'PNDA_EXPORT_SIGNATORY';
 let REPORTS_CACHE = [];
@@ -580,12 +584,51 @@ let activeTab = 'general';
 initialize();
 
 async function initialize() {
+  await loadReferenceAndUsers();
+  TAB_ORDER = ['general', ...REFERENCE.provinces.map((province) => province.name)];
   if (!hydrateSession()) {
     return;
   }
   bindEvents();
   buildTabs();
   await refreshDashboard();
+}
+
+async function loadReferenceAndUsers() {
+  try {
+    const [
+      { data: provinces, error: provError },
+      { data: missions,  error: misError  },
+      { data: users,     error: usrError  }
+    ] = await Promise.all([
+      db.from('provinces').select('*').order('code'),
+      db.from('missions_ref').select('*').order('ordre'),
+      db.from('users').select('*')
+    ]);
+    if (provError || misError || usrError) throw (provError || misError || usrError);
+
+    REFERENCE = {
+      provinces: (provinces || []).map((prov) => ({
+        name:     prov.name,
+        label:    prov.label,
+        code:     prov.code,
+        missions: (missions || [])
+          .filter((m) => m.province_name === prov.name)
+          .map((m) => ({ id: m.ref_id, nature: m.nature, objectif: m.objectif || '' }))
+      }))
+    };
+
+    USERS = {};
+    (users || []).forEach((u) => {
+      USERS[u.email] = {
+        password:  u.password_b64,
+        provinces: u.provinces === null ? '*' : u.provinces,
+        role:      u.role
+      };
+    });
+  } catch (error) {
+    console.error('Erreur chargement Supabase:', error);
+  }
 }
 
 function hydrateSession() {
@@ -684,7 +727,7 @@ function getProvinceNameByLabel(label) {
 }
 
 async function refreshDashboard() {
-  refreshReportsCache();
+  await refreshReportsCache();
   populateFilterProvinceOptions();
   renderImportedReportsList();
   renderSummaryCards();
@@ -693,12 +736,11 @@ async function refreshDashboard() {
 }
 
 function handleStorageSync(event) {
-  if ([IMPORT_STORAGE_KEY, 'PNDA_REPORTS', 'PNDA_REPORTS_UPDATED_AT', 'PNDA_SESSION'].includes(event.key)) {
+  if ([IMPORT_STORAGE_KEY, 'PNDA_SESSION'].includes(event.key)) {
     if (event.key === 'PNDA_SESSION' && !getSession()) {
       redirectToLogin();
       return;
     }
-
     importedReports = getPersistedImportedReports();
     refreshDashboard();
   }
@@ -716,8 +758,8 @@ function stableStringify(value) {
   return JSON.stringify(value);
 }
 
-function refreshReportsCache() {
-  REPORTS_CACHE = getAllReports();
+async function refreshReportsCache() {
+  REPORTS_CACHE = await getAllReports();
 }
 
 function getReportProvinceName(report) {
@@ -840,17 +882,38 @@ function normalizeImportedReport(entry) {
   };
 }
 
-function getStoredReports() {
+async function getStoredReports() {
   try {
-    const raw = JSON.parse(localStorage.getItem('PNDA_REPORTS') || '[]');
-    return raw.map((entry) => normalizeReport(entry, entry.source || 'stockage local')).filter(Boolean);
-  } catch {
+    const { data, error } = await db
+      .from('reports')
+      .select('*')
+      .order('saved_at', { ascending: false })
+      .limit(500);
+    if (error) throw error;
+    return (data || []).map((row) => ({
+      meta: {
+        ...(row.meta || {}),
+        province:        row.province,
+        province_label:  row.province_label,
+        province_code:   row.province_code,
+        trimestre:       row.trimestre,
+        annee:           row.annee,
+        rapporteur:      row.rapporteur,
+        role:            row.rapporteur_role
+      },
+      missions: row.missions || [],
+      savedAt:  row.saved_at,
+      source:   row.source || 'supabase'
+    }));
+  } catch (error) {
+    console.error('Erreur lecture rapports Supabase:', error);
     return [];
   }
 }
 
-function getAllReports() {
-  return deduplicateReports([...getStoredReports(), ...importedReports]).sort((left, right) => {
+async function getAllReports() {
+  const stored = await getStoredReports();
+  return deduplicateReports([...stored, ...importedReports]).sort((left, right) => {
     return new Date(right.savedAt || right.meta?.date_generation || 0) - new Date(left.savedAt || left.meta?.date_generation || 0);
   });
 }
@@ -932,12 +995,10 @@ async function clearImportedReports() {
 
 async function clearDashboardData() {
   importedReports = [];
-  localStorage.removeItem('PNDA_REPORTS');
-  localStorage.removeItem('PNDA_LAST_REPORT_FINGERPRINT');
   persistImportedReports();
   document.getElementById('json-files').value = '';
   await refreshDashboard();
-  showToast('Toutes les données du tableau de bord ont été réinitialisées.');
+  showToast('Les imports JSON locaux ont été supprimés. Les rapports Supabase sont conservés.');
 }
 
 async function removeImportedReport(importId) {

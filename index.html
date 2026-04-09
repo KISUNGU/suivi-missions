@@ -885,10 +885,14 @@
 
 <div id="toast"></div>
 
-<script src="pnda_accounts.js"></script>
-<script src="pnda_reference.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase_config.js"></script>
 <script>
-// ─── DONNÉES DE RÉFÉRENCE (chargées depuis pnda_reference.json) ──────────────
+// ─── CLIENT SUPABASE ──────────────────────────────────────────────────────────
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ─── DONNÉES DE RÉFÉRENCE (chargées depuis Supabase) ─────────────────────────
 let REFERENCE = { provinces: [] };
 let DATA_READY = false;
 
@@ -902,7 +906,7 @@ const SECTIONS_PNDA = [
 ];
 
 // ─── AUTH ────────────────────────────────────────────────────────────────────
-const USERS = window.PNDA_USERS || {};
+let USERS = {};
 
 function encodePassword(password) {
   try {
@@ -995,21 +999,45 @@ function hydrateSession() {
 
 async function loadReferenceData() {
   try {
-    if (window.PNDA_REFERENCE?.provinces?.length) {
-      REFERENCE = window.PNDA_REFERENCE;
-      DATA_READY = true;
-      populateProvinceSelects();
-      return;
-    }
+    const [
+      { data: provinces, error: provError },
+      { data: missions,  error: misError  },
+      { data: users,     error: usrError  }
+    ] = await Promise.all([
+      db.from('provinces').select('*').order('code'),
+      db.from('missions_ref').select('*').order('ordre'),
+      db.from('users').select('*')
+    ]);
 
-    const response = await fetch('pnda_reference.json');
-    if (!response.ok) throw new Error('Impossible de charger pnda_reference.json');
-    REFERENCE = await response.json();
+    if (provError) throw provError;
+    if (misError)  throw misError;
+    if (usrError)  throw usrError;
+
+    REFERENCE = {
+      provinces: (provinces || []).map((prov) => ({
+        name:     prov.name,
+        label:    prov.label,
+        code:     prov.code,
+        missions: (missions || [])
+          .filter((m) => m.province_name === prov.name)
+          .map((m) => ({ id: m.ref_id, nature: m.nature, objectif: m.objectif || '' }))
+      }))
+    };
+
+    USERS = {};
+    (users || []).forEach((u) => {
+      USERS[u.email] = {
+        password:  u.password_b64,
+        provinces: u.provinces === null ? '*' : u.provinces,
+        role:      u.role
+      };
+    });
+
     DATA_READY = true;
     populateProvinceSelects();
   } catch (error) {
     console.error(error);
-    document.getElementById('auth-error').textContent = "Chargement des provinces impossible. Vérifiez pnda_reference.json.";
+    document.getElementById('auth-error').textContent = "Erreur de connexion à la base de données. Vérifiez supabase_config.js.";
     document.getElementById('auth-error').style.display = 'block';
     showToast("Erreur de chargement des données.");
   }
@@ -1537,29 +1565,39 @@ function stableStringify(value) {
   return JSON.stringify(value);
 }
 
-function persistReport(data) {
-  const storageKey = 'PNDA_REPORTS';
+async function persistReport(data) {
   const fingerprintKey = 'PNDA_LAST_REPORT_FINGERPRINT';
   const fingerprint = stableStringify(data);
-  const previousFingerprint = localStorage.getItem(fingerprintKey);
-  if (previousFingerprint === fingerprint) {
-    return;
+  if (sessionStorage.getItem(fingerprintKey) === fingerprint) return;
+
+  const reportId = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+  try {
+    const { error } = await db.from('reports').insert({
+      id:              reportId,
+      saved_at:        new Date().toISOString(),
+      source:          'formulaire-html',
+      province:        data.meta.province,
+      province_label:  data.meta.province_label,
+      province_code:   data.meta.province_code,
+      trimestre:       data.meta.trimestre,
+      annee:           data.meta.annee,
+      rapporteur:      data.meta.rapporteur,
+      rapporteur_role: data.meta.role,
+      date_generation: data.meta.date_generation || null,
+      missions:        data.missions,
+      meta:            data.meta
+    });
+    if (error) throw error;
+    sessionStorage.setItem(fingerprintKey, fingerprint);
+    window.dispatchEvent(new Event('PNDA_DATA_UPDATED'));
+  } catch (error) {
+    console.error('Erreur enregistrement Supabase:', error);
+    showToast('Erreur de sauvegarde en base de données.');
   }
-  const reports = JSON.parse(localStorage.getItem(storageKey) || '[]');
-  reports.unshift({
-    id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-    savedAt: new Date().toISOString(),
-    source: 'formulaire-html',
-    payload: data
-  });
-  localStorage.setItem(storageKey, JSON.stringify(reports.slice(0, 200)));
-  localStorage.setItem(fingerprintKey, fingerprint);
-  localStorage.setItem('PNDA_REPORTS_UPDATED_AT', new Date().toISOString());
-  window.dispatchEvent(new Event('PNDA_DATA_UPDATED'));
 }
 
-function storeReport(data) {
-  persistReport(data);
+async function storeReport(data) {
+  await persistReport(data);
 }
 
 async function saveFileDesktop(options) {
@@ -1572,7 +1610,7 @@ async function saveFileDesktop(options) {
 
 async function generateJSON() {
   const data = buildData();
-  storeReport(data);
+  await storeReport(data);
   const json = JSON.stringify(data, null, 2);
   document.getElementById('json-output').textContent = json;
   const sec = document.getElementById('json-preview-section');
@@ -1583,7 +1621,7 @@ async function generateJSON() {
 
 async function downloadJSON() {
   const data = buildData();
-  storeReport(data);
+  await storeReport(data);
   const json = JSON.stringify(data, null, 2);
   const prov = (data.meta.province || 'province').replace(/\s/g, '_');
   const fname = `PNDA_missions_${data.meta.trimestre}_${data.meta.annee}_${prov}.json`;
@@ -1612,7 +1650,7 @@ async function downloadJSON() {
 
 async function copyJSON() {
   const data = buildData();
-  storeReport(data);
+  await storeReport(data);
   const json = JSON.stringify(data, null, 2);
   navigator.clipboard.writeText(json).then(() => showToast("✓ JSON copié dans le presse-papiers !"));
 }
