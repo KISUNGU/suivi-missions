@@ -518,6 +518,9 @@
               <button class="btn btn-outline-warning" onclick="returnMissionToMissionnaire()">
                 <i class="bi bi-arrow-return-left me-1"></i>Retourner au missionnaire
               </button>
+              <button class="btn btn-outline-primary" onclick="printCurrentLiquidationBordereau()">
+                <i class="bi bi-printer me-1"></i>Imprimer le bordereau
+              </button>
               <button class="btn btn-success" onclick="saveFinancialCompletion()">
                 <i class="bi bi-lightning-charge-fill me-1"></i>Activer la mission
               </button>
@@ -1274,6 +1277,298 @@ function buildData() {
 function formatCurrencyDisplay(v) { return new Intl.NumberFormat('fr-FR', { minimumFractionDigits:2, maximumFractionDigits:2 }).format(Number(v||0)); }
 function escapeHtml(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
+function formatDateDisplay(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleDateString('fr-FR');
+}
+
+function getMissionTravelDays(mission) {
+  const start = mission?.date_debut ? new Date(mission.date_debut) : null;
+  const end = mission?.date_fin ? new Date(mission.date_fin) : null;
+  if (!start || Number.isNaN(start.getTime())) return 0;
+  if (!end || Number.isNaN(end.getTime())) return 1;
+  const diff = Math.round((end - start) / 86400000);
+  return Math.max(1, diff + 1);
+}
+
+function getLiquidationNumber(report) {
+  const meta = report?.meta || {};
+  const provinceCode = String(meta.province_code || report?.province_code || report?.meta?.province || report?.province || 'PNDA').replace(/\s+/g, '').toUpperCase();
+  const year = String(report?.annee || meta.annee || new Date().getFullYear());
+  const sequence = String(report?.seq_number || meta.seq_number || 0).padStart(3, '0');
+  return `BLM-${provinceCode}-${year}-${sequence}`;
+}
+
+function collectCompletionMissions(report) {
+  const cards = document.querySelectorAll('#completion-missions-list .completion-mission-card');
+  return (report.missions || []).map((mission, index) => {
+    const card = cards[index];
+    if (!card) return mission;
+    const taux = parseFloat(card.querySelector('.cf-taux')?.value) || 0;
+    const montant = parseFloat(card.querySelector('.cf-montant')?.value) || 0;
+    const autres = parseFloat(card.querySelector('.cf-autres-frais')?.value) || 0;
+    const total = +(montant + autres).toFixed(2);
+    const avance = parseFloat(card.querySelector('.cf-avance')?.value) || 0;
+    const solde = +(total - avance).toFixed(2);
+    const section = card.querySelector('.cf-section')?.value || '';
+    const horsProjet = parseInt(card.querySelector('.cf-hors-projet')?.value, 10) || 0;
+    const projet = parseInt(card.querySelector('.cf-projet')?.value, 10) || 0;
+    return {
+      ...mission,
+      taux_per_diem: taux,
+      montant_usd: montant,
+      autres_frais_usd: autres,
+      total_usd: total,
+      avance_usd: avance,
+      solde_usd: solde,
+      section,
+      hors_projet: horsProjet,
+      projet
+    };
+  });
+}
+
+function buildLiquidationSnapshot(report, missionsOverride) {
+  const missions = missionsOverride || report?.missions || [];
+  const totalPerDiem = missions.reduce((sum, mission) => sum + Number(mission.montant_usd || 0), 0);
+  const totalJustificatifs = missions.reduce((sum, mission) => sum + Number(mission.autres_frais_usd || 0), 0);
+  const totalMission = missions.reduce((sum, mission) => sum + Number(mission.total_usd || 0), 0);
+  const totalTravelDays = missions.reduce((sum, mission) => sum + getMissionTravelDays(mission), 0);
+  const totalNights = missions.reduce((sum, mission) => sum + Number(mission.nuitees || 0), 0);
+  const totalParticipants = missions.reduce((sum, mission) => sum + Number(mission.participants || 0), 0);
+  const aPayer = +(totalPerDiem * 0.8 + totalJustificatifs).toFixed(2);
+  const soldeRetour = +(totalPerDiem * 0.2).toFixed(2);
+  return {
+    report: { ...report, missions },
+    missions,
+    totalPerDiem,
+    totalJustificatifs,
+    totalMission,
+    totalTravelDays,
+    totalNights,
+    totalParticipants,
+    aPayer,
+    soldeRetour
+  };
+}
+
+function buildLiquidationPrintHtml(snapshot) {
+  const session = getSession();
+  const report = snapshot.report;
+  const meta = report.meta || {};
+  const provinceLabel = meta.province_label || report.province || '—';
+  const liquidationNumber = getLiquidationNumber(report);
+  const printedAt = new Date();
+  const missionRows = snapshot.missions.map((mission, index) => `
+    <tr>
+      <td>${index + 1}</td>
+      <td>${escapeHtml(mission.nature || '—')}</td>
+      <td>${escapeHtml(mission.objectif || '—')}</td>
+      <td>${escapeHtml(formatDateDisplay(mission.date_debut))} - ${escapeHtml(formatDateDisplay(mission.date_fin))}</td>
+      <td class="num">${getMissionTravelDays(mission)}</td>
+      <td class="num">${Number(mission.nuitees || 0)}</td>
+      <td class="num">${escapeHtml(formatCurrencyDisplay(mission.taux_per_diem || 0))}</td>
+      <td class="num">${escapeHtml(formatCurrencyDisplay(mission.montant_usd || 0))}</td>
+      <td class="num">${escapeHtml(formatCurrencyDisplay(mission.autres_frais_usd || 0))}</td>
+    </tr>
+  `).join('');
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Bordereau de liquidation de mission</title>
+  <style>
+    @page { size: A4 portrait; margin: 9mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; color: #14251b; margin: 0; font-size: 11px; line-height: 1.25; }
+    .sheet { width: 100%; min-height: 277mm; }
+    .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #123524; padding-bottom: 6px; margin-bottom: 8px; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand img { width: 48px; height: 48px; object-fit: contain; }
+    .brand h1 { margin: 0; font-size: 17px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .brand p { margin: 2px 0 0; font-size: 10px; color: #43584b; }
+    .doc-meta { text-align: right; font-size: 10px; }
+    .doc-meta strong { display: block; font-size: 13px; color: #123524; }
+    .title { text-align: center; border: 1px solid #123524; background: #eef4ef; padding: 6px 8px; font-weight: 700; font-size: 13px; text-transform: uppercase; margin-bottom: 8px; }
+    .section { border: 1px solid #bbc8bf; margin-bottom: 7px; }
+    .section-title { background: #f4f7f4; color: #123524; padding: 4px 7px; font-weight: 700; text-transform: uppercase; font-size: 10px; border-bottom: 1px solid #ccd8d0; }
+    .section-body { padding: 6px 7px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+    .grid-3 { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px 10px; }
+    .field strong { display: block; font-size: 9px; text-transform: uppercase; color: #5a6f62; margin-bottom: 2px; }
+    .field span { display: block; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #cad4cd; padding: 4px 5px; vertical-align: top; font-size: 9.5px; }
+    th { background: #f6f7f6; text-transform: uppercase; font-size: 8.8px; }
+    td.num, th.num { text-align: right; white-space: nowrap; }
+    .totals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 7px; }
+    .totals table td { font-size: 10px; }
+    .totals .highlight td { font-weight: 700; background: #f7f0d8; }
+    .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .pay-card { border: 1px solid #123524; padding: 8px; min-height: 66px; }
+    .pay-card h3 { margin: 0 0 6px; font-size: 10px; text-transform: uppercase; color: #123524; }
+    .pay-card .amount { font-size: 18px; font-weight: 700; color: #123524; }
+    .pay-card small { display: block; color: #566b5f; margin-top: 4px; }
+    .sign-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px; }
+    .signature-box { border: 1px solid #bbc8bf; min-height: 92px; padding: 7px; }
+    .signature-box h4 { margin: 0 0 6px; font-size: 10px; text-transform: uppercase; color: #123524; }
+    .signature-line { margin-top: 28px; border-top: 1px solid #8ea293; padding-top: 4px; font-size: 9.5px; color: #5b6e61; }
+    .note { font-size: 9px; color: #495b50; }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="header">
+      <div class="brand">
+        <img src="logo_pnda.png" alt="PNDA">
+        <div>
+          <h1>PNDA-SE</h1>
+          <p>Programme National de Développement Agricole</p>
+        </div>
+      </div>
+      <div class="doc-meta">
+        <strong>${escapeHtml(liquidationNumber)}</strong>
+        <div>Émis le ${escapeHtml(printedAt.toLocaleDateString('fr-FR'))}</div>
+        <div>Par ${escapeHtml(session?.user || '—')}</div>
+      </div>
+    </div>
+
+    <div class="title">Bordereau de liquidation de mission</div>
+
+    <div class="section">
+      <div class="section-title">1. Identité</div>
+      <div class="section-body grid-3">
+        <div class="field"><strong>Missionnaire</strong><span>${escapeHtml(report.rapporteur || meta.rapporteur || '—')}</span></div>
+        <div class="field"><strong>Province / Entité</strong><span>${escapeHtml(provinceLabel)}</span></div>
+        <div class="field"><strong>Période</strong><span>${escapeHtml(`${report.trimestre || meta.trimestre || ''} ${report.annee || meta.annee || ''}`.trim() || '—')}</span></div>
+        <div class="field"><strong>Rôle</strong><span>${escapeHtml(meta.role || report.rapporteur_role || '—')}</span></div>
+        <div class="field"><strong>Participants</strong><span>${snapshot.totalParticipants}</span></div>
+        <div class="field"><strong>Référence rapport</strong><span>${escapeHtml((report.seq_number || meta.seq_number) ? `#${report.seq_number || meta.seq_number}` : '—')}</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">2. Objet de la mission</div>
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr><th style="width:28px">#</th><th>Nature</th><th>Objet / objectif</th><th style="width:110px">Destination</th></tr>
+          </thead>
+          <tbody>
+            ${snapshot.missions.map((mission, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${escapeHtml(mission.nature || '—')}</td>
+                <td>${escapeHtml(mission.objectif || '—')}</td>
+                <td>${escapeHtml(mission.destination_province_label || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">3. Déroulement de la mission</div>
+      <div class="section-body">
+        <div class="grid-2" style="margin-bottom:6px;">
+          <div class="field"><strong>Nombre total de jours de déplacement</strong><span>${snapshot.totalTravelDays}</span></div>
+          <div class="field"><strong>Total nuitées</strong><span>${snapshot.totalNights}</span></div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:24px">#</th>
+              <th>Nature</th>
+              <th>Objet</th>
+              <th style="width:100px">Période</th>
+              <th class="num" style="width:38px">Jrs</th>
+              <th class="num" style="width:40px">Nuitées</th>
+              <th class="num" style="width:62px">Taux</th>
+              <th class="num" style="width:70px">Frais mission</th>
+              <th class="num" style="width:76px">Frais à justifier</th>
+            </tr>
+          </thead>
+          <tbody>${missionRows}</tbody>
+        </table>
+        <div class="totals">
+          <table>
+            <tr><td>Total frais de mission</td><td class="num">${escapeHtml(formatCurrencyDisplay(snapshot.totalPerDiem))} USD</td></tr>
+            <tr><td>Total frais à justifier</td><td class="num">${escapeHtml(formatCurrencyDisplay(snapshot.totalJustificatifs))} USD</td></tr>
+            <tr class="highlight"><td>Total général</td><td class="num">${escapeHtml(formatCurrencyDisplay(snapshot.totalMission))} USD</td></tr>
+          </table>
+          <div class="note">
+            Les frais de mission correspondent au per diem calculé sur base des nuitées et du taux validé. Les frais à justifier sont payés à 100 % et doivent être couverts par les pièces justificatives au retour.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">4. Paiement à effectuer</div>
+      <div class="section-body pay-grid">
+        <div class="pay-card">
+          <h3>À payer avant mission</h3>
+          <div class="amount">${escapeHtml(formatCurrencyDisplay(snapshot.aPayer))} USD</div>
+          <small>80 % per diem + 100 % frais à justifier</small>
+        </div>
+        <div class="pay-card">
+          <h3>5. Solde au retour</h3>
+          <div class="amount">${escapeHtml(formatCurrencyDisplay(snapshot.soldeRetour))} USD</div>
+          <small>20 % du per diem après dépôt du rapport et des pièces</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="sign-grid">
+      <div class="signature-box">
+        <h4>6. Engagement du missionnaire</h4>
+        <div class="note">Je m'engage à soumettre le rapport de mission et les pièces justificatives endéans 7 jours après le retour.</div>
+        <div class="signature-line">Nom et signature du missionnaire</div>
+      </div>
+      <div class="signature-box">
+        <h4>7. Approbation</h4>
+        <div class="note">Visa et approbation du comptable / autorité habilitée.</div>
+        <div class="signature-line">Nom, qualité et signature</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    window.onload = function () { window.print(); };
+  <\/script>
+</body>
+</html>`;
+}
+
+function openLiquidationPrintWindow(snapshot) {
+  const printWindow = window.open('', '_blank', 'width=900,height=1200');
+  if (!printWindow) {
+    showToast('Autorisez les fenêtres pop-up pour imprimer le bordereau.');
+    return;
+  }
+  printWindow.document.open();
+  printWindow.document.write(buildLiquidationPrintHtml(snapshot));
+  printWindow.document.close();
+}
+
+function printCurrentLiquidationBordereau() {
+  if (!CURRENT_COMPLETION_REPORT_ID) { showToast('Ouvrez d\'abord une mission à compléter.'); return; }
+  const report = PENDING_REPORTS_CACHE.find((entry) => entry.id === CURRENT_COMPLETION_REPORT_ID);
+  if (!report) { showToast('Rapport introuvable.'); return; }
+  const updatedMissions = collectCompletionMissions(report);
+  openLiquidationPrintWindow(buildLiquidationSnapshot(report, updatedMissions));
+}
+
+function printLiquidationBordereau(reportId) {
+  const report = ACTIVE_REPORTS_CACHE.find((entry) => entry.id === reportId)
+    || PENDING_REPORTS_CACHE.find((entry) => entry.id === reportId)
+    || USER_MISSIONS_CACHE.find((entry) => entry.id === reportId);
+  if (!report) { showToast('Bordereau introuvable pour ce rapport.'); return; }
+  openLiquidationPrintWindow(buildLiquidationSnapshot(report));
+}
+
 function renderSelectedMissionsTable() {
   const data = buildData();
   const body = document.getElementById('selected-missions-body');
@@ -1756,7 +2051,10 @@ async function loadActiveMissions(province) {
         <td>${escapeHtml(`${report.trimestre||report.meta?.trimestre||''} ${report.annee||report.meta?.annee||''}`.trim())}</td>
         <td><span class="badge bg-secondary">${escapeHtml(String(report.missions?.length || 0))}</span></td>
         <td><span class="badge ${litige > 0 ? 'bg-warning text-dark' : 'bg-success'}">${escapeHtml(formatCurrencyDisplay(litige))}</span></td>
-        <td><button class="btn btn-outline-secondary btn-sm" onclick="signalerMissionRealisee('${rid}')"><i class="bi bi-check2-circle me-1"></i>Mission effectuée</button></td>
+        <td class="text-nowrap">
+          <button class="btn btn-outline-primary btn-sm me-1" onclick="printLiquidationBordereau('${rid}')"><i class="bi bi-printer me-1"></i>Bordereau</button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="signalerMissionRealisee('${rid}')"><i class="bi bi-check2-circle me-1"></i>Mission effectuée</button>
+        </td>
       </tr>`;
     }).join('');
     renderWorkflowAlerts();
@@ -1938,24 +2236,7 @@ async function saveFinancialCompletion() {
   const report = PENDING_REPORTS_CACHE.find((r) => r.id === CURRENT_COMPLETION_REPORT_ID);
   if (!report) { showToast('Rapport introuvable.'); return; }
 
-  // Collect financial data from the form
-  const cards = document.querySelectorAll('#completion-missions-list .completion-mission-card');
-  const updatedMissions = (report.missions || []).map((m, i) => {
-    const card = cards[i];
-    if (!card) return m;
-    const taux       = parseFloat(card.querySelector('.cf-taux')?.value) || 0;
-    const montant    = parseFloat(card.querySelector('.cf-montant')?.value) || 0;
-    const autres     = parseFloat(card.querySelector('.cf-autres-frais')?.value) || 0;
-    const total      = +(montant + autres).toFixed(2);
-    const avance     = parseFloat(card.querySelector('.cf-avance')?.value) || 0;
-    const solde      = +(total - avance).toFixed(2);
-    const section    = card.querySelector('.cf-section')?.value || '';
-    const horsProjet = parseInt(card.querySelector('.cf-hors-projet')?.value) || 0;
-    const projet     = parseInt(card.querySelector('.cf-projet')?.value) || 0;
-    return { ...m, taux_per_diem: taux, montant_usd: montant, autres_frais_usd: autres,
-             total_usd: total, avance_usd: avance, solde_usd: solde,
-             section, hors_projet: horsProjet, projet };
-  });
+  const updatedMissions = collectCompletionMissions(report);
 
   const session = getSession();
   const totalMontant = updatedMissions.reduce((s, m) => s + Number(m.montant_usd || 0), 0);
