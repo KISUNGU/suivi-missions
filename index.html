@@ -2518,18 +2518,20 @@ async function returnMissionToMissionnaire() {
 async function saveFinancialCompletion() {
   if (!CURRENT_COMPLETION_REPORT_ID) { showToast('Aucun rapport sélectionné.'); return; }
   if (IS_SAVING_COMPLETION) { showToast('Activation déjà en cours.'); return; }
-  const report = PENDING_REPORTS_CACHE.find((r) => r.id === CURRENT_COMPLETION_REPORT_ID);
+  const reportId = CURRENT_COMPLETION_REPORT_ID;
+  const report = PENDING_REPORTS_CACHE.find((r) => r.id === reportId);
   if (!report) { showToast('Rapport introuvable.'); return; }
   IS_SAVING_COMPLETION = true;
   setCompletionActionsDisabled(true);
 
   const updatedMissions = collectCompletionMissions(report);
-
   const session = getSession();
+  
   const totalMontant = updatedMissions.reduce((s, m) => s + Number(m.montant_usd || 0), 0);
   const totalGeneral = updatedMissions.reduce((s, m) => s + Number(m.total_usd || 0), 0);
   const totalSolde   = updatedMissions.reduce((s, m) => s + Number(m.solde_usd || 0), 0);
-  const updatedMeta  = {
+  
+  const updatedMeta = {
     ...(report.meta || {}),
     total_montant_usd: totalMontant.toFixed(2),
     total_general_usd: totalGeneral.toFixed(2),
@@ -2541,55 +2543,42 @@ async function saveFinancialCompletion() {
   };
 
   try {
-    const { data: currentRow, error: currentError } = await db.from('reports')
-      .select('id, statut')
-      .eq('id', CURRENT_COMPLETION_REPORT_ID)
-      .maybeSingle();
-    if (currentError) throw currentError;
-    if (!currentRow) throw new Error('missing-report');
-    const currentStatus = normalizeReportStatus(currentRow.statut || report.statut, WORKFLOW_STATUS.EN_ATTENTE);
-    if (currentStatus !== WORKFLOW_STATUS.EN_ATTENTE) {
-      throw new Error('already-processed');
-    }
-
+    // 1. Mise à jour du rapport
     const { error } = await db.from('reports').update({
-      missions: updatedMissions, meta: updatedMeta,
+      missions: updatedMissions,
+      meta: updatedMeta,
       statut: WORKFLOW_STATUS.ACTIVEE,
       returned_by: null,
       returned_at: null,
       activated_by: session?.user || null,
       activated_at: new Date().toISOString()
-    }).eq('id', CURRENT_COMPLETION_REPORT_ID);
+    }).eq('id', reportId);
+    
     if (error) throw error;
 
-    const { data: verifiedRow, error: verifyError } = await db.from('reports')
-      .select('id, statut')
-      .eq('id', CURRENT_COMPLETION_REPORT_ID)
-      .maybeSingle();
-    if (verifyError) throw verifyError;
-    if (!verifiedRow || normalizeReportStatus(verifiedRow.statut, '') !== WORKFLOW_STATUS.ACTIVEE) {
-      throw new Error('activation-failed');
-    }
-    PENDING_REPORTS_CACHE = PENDING_REPORTS_CACHE.filter((entry) => entry.id !== CURRENT_COMPLETION_REPORT_ID);
-    updatePendingSectionVisibility();
-    showToast('✓ Mission activée ! Le budget a été validé.');
-    notifyReportDataChanged();
+    // 2. Fermer la section de complétion immédiatement
     closeFinancialCompletion();
-    await loadPendingMissions(session?.province);
-    await loadActiveMissions(session?.province);
-    await loadUserArchive(session?.user, session?.province);
+    showToast('✓ Mission activée ! Le budget a été validé.');
+    
+    // 3. Notification de changement
+    notifyReportDataChanged();
+    
+    // 4. Rechargement des listes en arrière-plan (ne pas attendre pour l'UI)
+    loadPendingMissions(session?.province);
+    loadActiveMissions(session?.province);
+    loadUserArchive(session?.user, session?.province);
+    
+    // 5. Mise à jour locale immédiate pour éviter l'incohérence d'affichage
+    PENDING_REPORTS_CACHE = PENDING_REPORTS_CACHE.filter((entry) => entry.id !== reportId);
+    updatePendingSectionVisibility();
+    
   } catch (e) {
     console.error(e);
-    showToast(e?.message === 'already-processed'
-      ? 'Cette mission a déjà été activée.'
-      : e?.message === 'missing-report'
-        ? 'Rapport introuvable dans la base.'
-      : 'Erreur lors de l\'activation.');
+    showToast('Erreur lors de l\'activation : ' + (e.message || 'Erreur inconnue'));
     IS_SAVING_COMPLETION = false;
     setCompletionActionsDisabled(false);
   }
 }
-
 // ─── AUTO-SAVE ────────────────────────────────────────────────────────────────
 let _autoSaveTimer = null;
 function scheduleAutoSave() {
