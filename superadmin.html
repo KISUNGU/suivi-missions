@@ -224,9 +224,31 @@
     <h1>PNDA-SE · RNSE</h1>
     <p>Plateforme nationale de gestion des missions</p>
   </div>
-  <div class="ms-auto text-end">
-    <span class="session-user" id="session-user">—</span>
-    <span class="session-date" id="session-date">—</span>
+  <div class="ms-auto d-flex align-items-center gap-3">
+    <!-- Badges de statut workflow -->
+    <div class="d-flex gap-2" id="workflow-badges">
+      <button class="btn btn-sm position-relative p-1 workflow-badge-btn" onclick="filterReportsByStatus('en_attente')" title="Missions en attente de validation">
+        <i class="bi bi-hourglass-split text-warning fs-5"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark notif-badge d-none" id="badge-en-attente">0</span>
+      </button>
+      <button class="btn btn-sm position-relative p-1 workflow-badge-btn" onclick="filterReportsByStatus('activee')" title="Missions activées en cours">
+        <i class="bi bi-lightning-charge-fill text-info fs-5"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info text-dark notif-badge d-none" id="badge-activee">0</span>
+      </button>
+      <button class="btn btn-sm position-relative p-1 workflow-badge-btn" onclick="filterReportsByStatus('realisee')" title="Missions réalisées">
+        <i class="bi bi-check2-circle text-success fs-5"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success notif-badge d-none" id="badge-realisee">0</span>
+      </button>
+      <button class="btn btn-sm position-relative p-1 workflow-badge-btn" onclick="filterReportsByStatus('retournee')" title="Missions retournées pour correction">
+        <i class="bi bi-arrow-return-left text-danger fs-5"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notif-badge d-none" id="badge-retournee">0</span>
+      </button>
+    </div>
+    
+    <div class="text-end">
+      <span class="session-user" id="session-user">—</span>
+      <span class="session-date" id="session-date">—</span>
+    </div>
   </div>
 </div>
 
@@ -328,7 +350,47 @@
         <span>Pour créer un utilisateur, attribuer un rôle ou modifier ses accès, cliquez sur <strong>Utilisateurs et rôles</strong> dans le menu de gauche.</span>
       </div>
 
-      <!-- Stats -->
+      <!-- Workflow Tracker -->
+      <div class="card mb-4">
+        <div class="card-header py-3">
+          <h5><i class="bi bi-diagram-3 me-2"></i>Workflow des missions — Vue d'ensemble</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-center flex-wrap gap-2 py-3">
+            <div class="workflow-step en-attente">
+              <div class="step-icon"><i class="bi bi-hourglass-split"></i></div>
+              <div class="fw-bold fs-5" id="wf-en-attente">0</div>
+              <small class="text-muted">En attente</small>
+              <small class="text-muted">(validation comptable)</small>
+            </div>
+            <div class="workflow-arrow"><i class="bi bi-arrow-right"></i></div>
+            <div class="workflow-step activee">
+              <div class="step-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+              <div class="fw-bold fs-5" id="wf-activee">0</div>
+              <small class="text-muted">Activées</small>
+              <small class="text-muted">(en cours d'exécution)</small>
+            </div>
+            <div class="workflow-arrow"><i class="bi bi-arrow-right"></i></div>
+            <div class="workflow-step realisee">
+              <div class="step-icon"><i class="bi bi-check2-circle"></i></div>
+              <div class="fw-bold fs-5" id="wf-realisee">0</div>
+              <small class="text-muted">Réalisées</small>
+              <small class="text-muted">(clôturées)</small>
+            </div>
+          </div>
+          <div class="text-center mt-3">
+            <div class="workflow-step retournee d-inline-flex mx-auto" style="flex-direction: row; gap: 10px; padding: 10px 20px; background: #f8f9fa; border-radius: 40px;">
+              <div class="step-icon" style="width: 35px; height: 35px; font-size: 1.2rem;"><i class="bi bi-arrow-return-left"></i></div>
+              <div>
+                <span class="fw-bold fs-5" id="wf-retournee">0</span>
+                <small class="text-muted ms-2">mission(s) retournée(s) pour correction</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistiques générales -->
       <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
           <div class="card h-100">
@@ -367,10 +429,10 @@
           <div class="card h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
               <div>
-                <div class="text-muted small fw-semibold text-uppercase stat-label">Missions enreg.</div>
-                <span class="stat-value" id="stat-missions">—</span>
+                <div class="text-muted small fw-semibold text-uppercase stat-label">Litige total USD</div>
+                <span class="stat-value text-danger" id="stat-litige">—</span>
               </div>
-              <i class="bi bi-check2-circle stat-icon stat-icon-success"></i>
+              <i class="bi bi-exclamation-triangle stat-icon" style="color: #dc3545;"></i>
             </div>
           </div>
         </div>
@@ -385,10 +447,10 @@
           <div class="table-responsive">
             <table class="table table-hover table-sm mb-0">
               <thead>
-                <tr><th>N°</th><th>Date</th><th>Province</th><th>Rapporteur</th><th>Missions</th><th>Montant USD</th></tr>
+                <tr><th>N°</th><th>Date</th><th>Province</th><th>Rapporteur</th><th>Missions</th><th>Montant USD</th><th>Statut</th></tr>
               </thead>
               <tbody id="tbl-recent-reports">
-                <tr><td colspan="6" class="text-center text-muted py-4">Chargement…</td></tr>
+                <tr><td colspan="7" class="text-center text-muted py-4">Chargement…</td></tr>
               </tbody>
             </table>
           </div>
@@ -741,7 +803,7 @@
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
           <h2 class="page-title">Tous les rapports</h2>
-          <p class="text-muted mb-0 small">Consultation et suppression des rapports soumis.</p>
+          <p class="text-muted mb-0 small">Consultation, filtrage et gestion des rapports soumis.</p>
         </div>
         <button class="btn btn-pnda btn-sm" onclick="loadAllReports()">
           <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
@@ -755,6 +817,13 @@
             <select class="form-select form-select-sm filter-auto-width" id="rp-filter-province" onchange="loadAllReports()">
               <option value="">Toutes provinces</option>
             </select>
+            <select class="form-select form-select-sm filter-auto-width" id="rp-filter-statut" onchange="loadAllReports()">
+              <option value="">Tous statuts</option>
+              <option value="en_attente">⏳ En attente</option>
+              <option value="activee">⚡ Activées</option>
+              <option value="realisee">✓ Réalisées</option>
+              <option value="retournee">↩ Retournées</option>
+            </select>
             <input class="form-control form-control-sm rapporteur-filter-width" id="rp-filter-rapporteur" type="text" placeholder="Rapporteur…" oninput="loadAllReports()">
           </div>
         </div>
@@ -762,10 +831,13 @@
           <div class="table-responsive">
             <table class="table table-hover table-sm mb-0">
               <thead>
-                <tr><th>N°</th><th>Date</th><th>Province</th><th>Rapporteur</th><th>Trimestre</th><th>Missions</th><th>Montant USD</th><th>Actions</th></tr>
+                <tr>
+                  <th>N°</th><th>Date</th><th>Province</th><th>Rapporteur</th><th>Trimestre</th>
+                  <th>Missions</th><th>Montant USD</th><th>Litige USD</th><th>Statut</th><th>Actions</th>
+                </tr>
               </thead>
               <tbody id="tbl-all-reports">
-                <tr><td colspan="8" class="text-center text-muted py-4">Chargement…</td></tr>
+                <tr><td colspan="10" class="text-center text-muted py-4">Chargement…</td></tr>
               </tbody>
             </table>
           </div>

@@ -285,6 +285,30 @@
     #layout-wrapper { padding-top: 0; }
     #content { padding: 0; }
   }
+
+  .workflow-badge-btn {
+  transition: transform 0.15s ease;
+}
+.workflow-badge-btn:hover {
+  transform: scale(1.08);
+}
+.status-filter-active {
+  opacity: 0.7;
+}
+.statut-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.statut-badge.en-attente { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+.statut-badge.activee { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+.statut-badge.realisee { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.statut-badge.retournee { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 </style>
 </head>
 <body>
@@ -301,10 +325,27 @@
   </div>
   <div class="ms-auto d-flex align-items-center gap-3">
     <span class="badge bg-warning text-dark fw-semibold d-none" id="admin-super-badge">Session RNSE</span>
-    <button class="btn btn-sm position-relative p-1" id="btn-admin-notif" onclick="refreshDashboard()" title="Nouveaux rapports">
-      <i class="bi bi-bell-fill text-white fs-5"></i>
-      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notif-badge d-none" id="admin-notif-badge">0</span>
-    </button>
+    
+    <!-- Badges de statut workflow -->
+    <div class="d-flex gap-2" id="workflow-badges">
+      <button class="btn btn-sm position-relative p-1 workflow-badge-btn" onclick="filterByStatus('en_attente')" title="Missions en attente de validation">
+        <i class="bi bi-hourglass-split text-warning fs-5"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark notif-badge d-none" id="badge-en-attente">0</span>
+      </button>
+      <button class="btn btn-sm position-relative p-1 workflow-badge-btn" onclick="filterByStatus('activee')" title="Missions activées en cours">
+        <i class="bi bi-lightning-charge-fill text-info fs-5"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info text-dark notif-badge d-none" id="badge-activee">0</span>
+      </button>
+      <button class="btn btn-sm position-relative p-1 workflow-badge-btn" onclick="filterByStatus('realisee')" title="Missions réalisées">
+        <i class="bi bi-check2-circle text-success fs-5"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success notif-badge d-none" id="badge-realisee">0</span>
+      </button>
+      <button class="btn btn-sm position-relative p-1 workflow-badge-btn" onclick="filterByStatus('retournee')" title="Missions retournées pour correction">
+        <i class="bi bi-arrow-return-left text-danger fs-5"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notif-badge d-none" id="badge-retournee">0</span>
+      </button>
+    </div>
+    
     <div class="text-end">
       <span class="session-user" id="session-user">—</span>
       <span class="session-date" id="session-date">—</span>
@@ -395,6 +436,47 @@
         </div>
       </div>
 
+      <!-- Workflow Tracker -->
+      <div class="card mb-4">
+        <div class="card-header py-3">
+          <h6><i class="bi bi-diagram-3 me-2"></i>Workflow des missions</h6>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-around flex-wrap gap-3">
+            <div class="text-center">
+              <div class="display-6 text-warning"><i class="bi bi-hourglass-split"></i></div>
+              <div class="fw-bold fs-4" id="workflow-en-attente">0</div>
+              <small class="text-muted">En attente</small>
+              <small class="text-muted d-block">(validation comptable)</small>
+            </div>
+            <div class="text-center">
+              <i class="bi bi-arrow-right text-muted fs-3"></i>
+            </div>
+            <div class="text-center">
+              <div class="display-6 text-info"><i class="bi bi-lightning-charge-fill"></i></div>
+              <div class="fw-bold fs-4" id="workflow-activee">0</div>
+              <small class="text-muted">Activées</small>
+              <small class="text-muted d-block">(en cours)</small>
+            </div>
+            <div class="text-center">
+              <i class="bi bi-arrow-right text-muted fs-3"></i>
+            </div>
+            <div class="text-center">
+              <div class="display-6 text-success"><i class="bi bi-check2-circle"></i></div>
+              <div class="fw-bold fs-4" id="workflow-realisee">0</div>
+              <small class="text-muted">Réalisées</small>
+              <small class="text-muted d-block">(clôturées)</small>
+            </div>
+          </div>
+          <div class="text-center mt-3">
+            <span class="badge bg-danger p-3">
+              <i class="bi bi-arrow-return-left me-1"></i>
+              <span class="fw-bold fs-6" id="workflow-retournee">0</span> mission(s) retournée(s) pour correction
+            </span>
+          </div>
+        </div>
+      </div>
+
       <!-- Stats -->
       <div class="row g-3 mb-4" id="summary-grid">
         <div class="col-6 col-md-2">
@@ -424,9 +506,9 @@
             <div class="card-body d-flex justify-content-between align-items-center">
               <div>
                 <div class="text-muted small fw-semibold text-uppercase stat-label-admin">Activées</div>
-                <span class="stat-value text-success" id="stat-activee">—</span>
+                <span class="stat-value text-info" id="stat-activee">—</span>
               </div>
-              <i class="bi bi-lightning-charge stat-icon icon-success"></i>
+              <i class="bi bi-lightning-charge stat-icon" style="color: #17a2b8;"></i>
             </div>
           </div>
         </div>
@@ -435,9 +517,20 @@
             <div class="card-body d-flex justify-content-between align-items-center">
               <div>
                 <div class="text-muted small fw-semibold text-uppercase stat-label-admin">Réalisées</div>
-                <span class="stat-value text-secondary" id="stat-realisee">—</span>
+                <span class="stat-value text-success" id="stat-realisee">—</span>
               </div>
-              <i class="bi bi-check2-all stat-icon icon-secondary"></i>
+              <i class="bi bi-check2-all stat-icon icon-success"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-2">
+          <div class="card h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+              <div>
+                <div class="text-muted small fw-semibold text-uppercase stat-label-admin">Retournées</div>
+                <span class="stat-value text-danger" id="stat-retournee">—</span>
+              </div>
+              <i class="bi bi-arrow-return-left stat-icon" style="color: #dc3545;"></i>
             </div>
           </div>
         </div>
@@ -449,17 +542,6 @@
                 <span class="stat-value" id="stat-total">—</span>
               </div>
               <i class="bi bi-cash-coin stat-icon icon-green-light"></i>
-            </div>
-          </div>
-        </div>
-        <div class="col-6 col-md-2">
-          <div class="card h-100">
-            <div class="card-body d-flex justify-content-between align-items-center">
-              <div>
-                <div class="text-muted small fw-semibold text-uppercase stat-label-admin">Missions</div>
-                <span class="stat-value" id="stat-missions">—</span>
-              </div>
-              <i class="bi bi-list-check stat-icon icon-blue"></i>
             </div>
           </div>
         </div>
@@ -602,7 +684,7 @@
 <script src="supabase_config.js"></script>
 
 <script>
-// ─── CLIENT SUPABASE ──────────────────────────────────────────────────────────
+  // ─── CLIENT SUPABASE ──────────────────────────────────────────────────────────
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -642,6 +724,14 @@ const REPORT_SYNC_KEY = 'PNDA_REPORTS_SYNC';
 let REPORTS_CACHE = [];
 let importedReports = [];
 let activeTab = 'general';
+let currentStatusFilter = '';
+
+const WORKFLOW_STATUS = {
+  EN_ATTENTE: 'en_attente',
+  RETOURNEE: 'retournee',
+  ACTIVEE: 'activee',
+  REALISEE: 'realisee'
+};
 
 initialize();
 
@@ -700,7 +790,7 @@ function showAdminView(name) {
     if (el) el.classList.toggle('active', v === name);
   });
   document.querySelectorAll('#sidebar .nav-link').forEach((btn) => btn.classList.remove('active'));
-  const map = { dashboard:'tableau', imports:'import', export:'export', signatory:'signa', filters:'filtr' };
+  const map = { dashboard:'tableau', import:'import', export:'export', signatory:'signa', filters:'filtr' };
   document.querySelectorAll('#sidebar .nav-link').forEach((btn) => {
     if (btn.textContent.toLowerCase().includes(map[name] || name)) btn.classList.add('active');
   });
@@ -770,8 +860,6 @@ function logoutAdmin() {
   window.location.href = 'index.html?manual-login=1';
 }
 
-function returnToFormLogin() { window.location.href = 'index.html?manual-login=1'; }
-
 function getAdminProvinces(session) {
   if (session?.role === 'super_admin') return REFERENCE.provinces;
   if (session?.province) return REFERENCE.provinces.filter((p) => p.name === session.province);
@@ -816,45 +904,133 @@ function getProvinceNameByLabel(label) {
   return REFERENCE.provinces.find((province) => province.label === label)?.name || 'general';
 }
 
+// ─── WORKFLOW & FILTRAGE ─────────────────────────────────────────────────────
+function filterByStatus(status) {
+  if (currentStatusFilter === status) {
+    currentStatusFilter = '';
+    document.querySelectorAll('.workflow-badge-btn').forEach(btn => btn.classList.remove('status-filter-active'));
+  } else {
+    currentStatusFilter = status;
+    document.querySelectorAll('.workflow-badge-btn').forEach(btn => btn.classList.remove('status-filter-active'));
+    if (event?.currentTarget) event.currentTarget.classList.add('status-filter-active');
+  }
+  
+  const filterSelect = document.getElementById('filter-statut');
+  if (filterSelect) filterSelect.value = currentStatusFilter;
+  
+  refreshDashboard();
+  showToast(currentStatusFilter ? `Filtre actif : ${getStatusLabel(currentStatusFilter)}` : 'Filtre désactivé');
+}
+
+function getStatusLabel(status) {
+  const labels = {
+    'en_attente': '⏳ En attente',
+    'activee': '⚡ Activées',
+    'realisee': '✓ Réalisées',
+    'retournee': '↩ À corriger'
+  };
+  return labels[status] || status;
+}
+
+function getStatusBadge(status) {
+  const config = {
+    'en_attente': { icon: 'hourglass-split', label: 'En attente', class: 'en-attente' },
+    'activee': { icon: 'lightning-charge-fill', label: 'Activée', class: 'activee' },
+    'realisee': { icon: 'check2-all', label: 'Réalisée', class: 'realisee' },
+    'retournee': { icon: 'arrow-return-left', label: 'À corriger', class: 'retournee' }
+  };
+  const cfg = config[status] || config['activee'];
+  return `<span class="statut-badge ${cfg.class}"><i class="bi bi-${cfg.icon} me-1"></i>${cfg.label}</span>`;
+}
+
+function calculateReportLitige(report) {
+  return (report.missions || []).reduce((sum, mission) => sum + Number(mission.solde_usd || 0), 0);
+}
+
 async function refreshDashboard() {
   await refreshReportsCache();
   populateFilterProvinceOptions();
   renderSummaryCards();
   renderPanels();
   updateActiveTab();
-  updateAdminNotifBadge();
+  updateWorkflowBadges();
+  updateWorkflowPanel();
 }
 
-function updateAdminNotifBadge() {
-  const unreadCount = REPORTS_CACHE.filter(r => !r.is_read).length;
-  const badge = document.getElementById('admin-notif-badge');
-  if (!badge) return;
-  if (unreadCount > 0) {
-    badge.classList.remove('d-none');
-    badge.textContent = unreadCount;
-  } else {
-    badge.classList.add('d-none');
-  }
+function updateWorkflowBadges() {
+  const stats = {
+    en_attente: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'en_attente').length,
+    activee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'activee').length,
+    realisee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'realisee').length,
+    retournee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'retournee').length
+  };
+  
+  Object.entries(stats).forEach(([status, count]) => {
+    const badge = document.getElementById(`badge-${status}`);
+    if (!badge) return;
+    if (count > 0) {
+      badge.classList.remove('d-none');
+      badge.textContent = count;
+    } else {
+      badge.classList.add('d-none');
+    }
+  });
 }
 
-// Auto-poll every 30s for new reports
+function updateWorkflowPanel() {
+  const stats = {
+    en_attente: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'en_attente').length,
+    activee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'activee').length,
+    realisee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'realisee').length,
+    retournee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'retournee').length
+  };
+  
+  const wfEnAttente = document.getElementById('workflow-en-attente');
+  const wfActivee = document.getElementById('workflow-activee');
+  const wfRealisee = document.getElementById('workflow-realisee');
+  const wfRetournee = document.getElementById('workflow-retournee');
+  
+  if (wfEnAttente) wfEnAttente.textContent = stats.en_attente;
+  if (wfActivee) wfActivee.textContent = stats.activee;
+  if (wfRealisee) wfRealisee.textContent = stats.realisee;
+  if (wfRetournee) wfRetournee.textContent = stats.retournee;
+}
+
+// ─── AUTO-POLL ────────────────────────────────────────────────────────────────
 let _pollInterval = null;
 function startPolling() {
   if (_pollInterval) clearInterval(_pollInterval);
   _pollInterval = setInterval(async () => {
-    const prevUnread = REPORTS_CACHE.filter(r => !r.is_read).length;
-    const prevTotal = REPORTS_CACHE.length;
+    const prevStats = {
+      en_attente: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'en_attente').length,
+      activee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'activee').length,
+      retournee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'retournee').length
+    };
     await refreshReportsCache();
-    const curUnread = REPORTS_CACHE.filter(r => !r.is_read).length;
-    if (REPORTS_CACHE.length !== prevTotal || curUnread !== prevUnread) {
-      renderSummaryCards(); renderPanels(); updateActiveTab(); updateAdminNotifBadge();
-      if (curUnread > prevUnread) {
-        showToast(`${curUnread - prevUnread} nouveau(x) rapport(s) non lu(s) !`);
+    const curStats = {
+      en_attente: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'en_attente').length,
+      activee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'activee').length,
+      retournee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'retournee').length
+    };
+    
+    if (curStats.en_attente !== prevStats.en_attente || 
+        curStats.activee !== prevStats.activee || 
+        curStats.retournee !== prevStats.retournee) {
+      renderSummaryCards(); 
+      renderPanels(); 
+      updateActiveTab(); 
+      updateWorkflowBadges();
+      updateWorkflowPanel();
+      
+      if (curStats.en_attente > prevStats.en_attente) {
+        showToast(`${curStats.en_attente - prevStats.en_attente} nouvelle(s) mission(s) en attente !`);
+      }
+      if (curStats.retournee > prevStats.retournee) {
+        showToast(`${curStats.retournee - prevStats.retournee} mission(s) retournée(s) pour correction !`);
       }
     }
   }, 30000);
 }
-function stopPolling() { if (_pollInterval) { clearInterval(_pollInterval); _pollInterval = null; } }
 
 function handleStorageSync(event) {
   if ([IMPORT_STORAGE_KEY, REPORT_SYNC_KEY, 'PNDA_SESSION'].includes(event.key)) {
@@ -864,13 +1040,10 @@ function handleStorageSync(event) {
   }
 }
 
-function stableStringify(value) {
-  if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item)).join(',')}]`;
-  if (value && typeof value === 'object') return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
-  return JSON.stringify(value);
+// ─── REPORTS ──────────────────────────────────────────────────────────────────
+async function refreshReportsCache() { 
+  REPORTS_CACHE = await getAllReports(); 
 }
-
-async function refreshReportsCache() { REPORTS_CACHE = await getAllReports(); }
 
 function getReportProvinceName(report) {
   if (report?.meta?.province) return report.meta.province;
@@ -883,7 +1056,9 @@ function getReportProvinceLabel(report) {
   return REFERENCE.provinces.find((province) => province.name === provinceName)?.label || report?.meta?.province_label || provinceName || '—';
 }
 
-function getReportDateValue(report) { return report?.savedAt || report?.meta?.date_generation || ''; }
+function getReportDateValue(report) { 
+  return report?.savedAt || report?.meta?.date_generation || ''; 
+}
 
 function getReportFingerprint(report) {
   return JSON.stringify({ meta: report.meta, missions: report.missions });
@@ -894,16 +1069,19 @@ function getFilteredReports() {
   const rapporteurFilter = document.getElementById('filter-rapporteur').value.trim().toLowerCase();
   const startDate = document.getElementById('filter-start-date').value;
   const endDate = document.getElementById('filter-end-date').value;
-  const statutFilter = document.getElementById('filter-statut')?.value || '';
+  const statutFilter = currentStatusFilter || document.getElementById('filter-statut')?.value || '';
+  
   return REPORTS_CACHE.filter((report) => {
     const provinceName = getReportProvinceName(report);
     const reporteur = String(report?.meta?.rapporteur || '').toLowerCase();
     const reportDate = getReportDateValue(report);
+    const reportStatut = report.statut || 'activee';
+    
     if (selectedProvince && provinceName !== selectedProvince) return false;
     if (rapporteurFilter && !reporteur.includes(rapporteurFilter)) return false;
     if (startDate && reportDate && reportDate < startDate) return false;
     if (endDate && reportDate && reportDate > endDate) return false;
-    if (statutFilter && (report.statut || 'activee') !== statutFilter) return false;
+    if (statutFilter && reportStatut !== statutFilter) return false;
     return true;
   });
 }
@@ -951,8 +1129,13 @@ function hydrateSignatory() {
   }
 }
 
-function persistSignatory() { localStorage.setItem(SIGNATORY_STORAGE_KEY, JSON.stringify(getSignatory())); }
-function persistImportedReports() { localStorage.setItem(IMPORT_STORAGE_KEY, JSON.stringify(importedReports)); }
+function persistSignatory() { 
+  localStorage.setItem(SIGNATORY_STORAGE_KEY, JSON.stringify(getSignatory())); 
+}
+
+function persistImportedReports() { 
+  localStorage.setItem(IMPORT_STORAGE_KEY, JSON.stringify(importedReports)); 
+}
 
 function normalizeImportedReport(entry) {
   const normalized = normalizeReport(entry, entry.importLabel || entry.source || 'import manuel');
@@ -965,11 +1148,21 @@ function normalizeImportedReport(entry) {
   };
 }
 
+function normalizeReport(candidate, source) {
+  if (candidate?.payload?.meta && Array.isArray(candidate.payload.missions)) {
+    return { ...candidate.payload, savedAt: candidate.savedAt || candidate.payload.meta?.date_generation || new Date().toISOString(), source: candidate.source || source };
+  }
+  if (candidate?.meta && Array.isArray(candidate.missions)) {
+    return { ...candidate, savedAt: candidate.meta?.date_generation || new Date().toISOString(), source };
+  }
+  return null;
+}
+
 async function getStoredReports() {
   try {
     const session = getSession();
     let query = db.from('reports').select('*').order('saved_at', { ascending: false }).limit(500);
-    // Province isolation: non-super_admin only sees allowed provinces
+    
     if (session?.role !== 'super_admin') {
       if (session?.province) {
         query = query.eq('province', session.province);
@@ -982,19 +1175,28 @@ async function getStoredReports() {
     }
     const { data, error } = await query;
     if (error) throw error;
+    
     return (data || []).map((row) => ({
       id: row.id,
       meta: { ...(row.meta || {}), province: row.province, province_label: row.province_label,
               province_code: row.province_code, trimestre: row.trimestre, annee: row.annee,
               rapporteur: row.rapporteur, role: row.rapporteur_role },
-      missions: row.missions || [], savedAt: row.saved_at, source: row.source || 'supabase',
-      is_read: !!row.is_read, read_at: row.read_at || null, read_by: row.read_by || null,
+      missions: row.missions || [], 
+      savedAt: row.saved_at, 
+      source: row.source || 'supabase',
+      is_read: !!row.is_read, 
+      read_at: row.read_at || null, 
+      read_by: row.read_by || null,
       statut: row.statut || 'activee',
       returned_by: row.returned_by || null,
       returned_at: row.returned_at || null,
-      activated_by: row.activated_by || null, activated_at: row.activated_at || null
+      activated_by: row.activated_by || null, 
+      activated_at: row.activated_at || null
     }));
-  } catch (error) { console.error('Erreur lecture rapports Supabase:', error); return []; }
+  } catch (error) { 
+    console.error('Erreur lecture rapports Supabase:', error); 
+    return []; 
+  }
 }
 
 async function getAllReports() {
@@ -1009,7 +1211,8 @@ function deduplicateReports(reports) {
   return reports.filter((report) => {
     const fingerprint = getReportFingerprint(report);
     if (seen.has(fingerprint)) return false;
-    seen.add(fingerprint); return true;
+    seen.add(fingerprint); 
+    return true;
   });
 }
 
@@ -1034,121 +1237,31 @@ function removeReportFromLocalState(reportId, importId = '') {
   if (nextImportedReports.length !== importedReports.length) {
     importedReports = nextImportedReports;
     persistImportedReports();
-    renderImportedReportsList();
   }
 }
 
-function normalizeReport(candidate, source) {
-  if (candidate?.payload?.meta && Array.isArray(candidate.payload.missions)) {
-    return { ...candidate.payload, savedAt: candidate.savedAt || candidate.payload.meta?.date_generation || new Date().toISOString(), source: candidate.source || source };
-  }
-  if (candidate?.meta && Array.isArray(candidate.missions)) {
-    return { ...candidate, savedAt: candidate.meta?.date_generation || new Date().toISOString(), source };
-  }
-  return null;
-}
-
-async function handleFileImport(event) {
-  const files = Array.from(event.target.files || []);
-  const loaded = [];
-  const existingFingerprints = new Set(importedReports.map((report) => getReportFingerprint(report)));
-  for (const file of files) {
-    try {
-      const text = await file.text();
-      const parsed = JSON.parse(text);
-      const normalized = normalizeReport(parsed, file.name);
-      if (!normalized) continue;
-      const candidate = {
-        ...normalized,
-        importId: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-        importLabel: file.name, importedAt: new Date().toISOString()
-      };
-      const fingerprint = getReportFingerprint(candidate);
-      if (existingFingerprints.has(fingerprint)) continue;
-      existingFingerprints.add(fingerprint);
-      loaded.push(candidate);
-    } catch (error) { console.error(error); showToast(`Erreur fichier: ${file.name}`); }
-  }
-  importedReports = [...importedReports, ...loaded];
-  persistImportedReports();
-  document.getElementById('json-files').value = '';
-  await refreshDashboard();
-  showToast(`${loaded.length} fichier(s) ajouté(s). Total imports: ${importedReports.length}.`);
-}
-
-async function clearImportedReports() {
-  importedReports = [];
-  persistImportedReports();
-  document.getElementById('json-files').value = '';
-  await refreshDashboard();
-  showToast('Imports JSON supprimés du tableau de bord.');
-}
-
-async function clearDashboardData() {
-  importedReports = [];
-  persistImportedReports();
-  document.getElementById('json-files').value = '';
-  await refreshDashboard();
-  showToast('Les imports JSON locaux ont été supprimés. Les rapports Supabase sont conservés.');
-}
-
-async function removeImportedReport(importId) {
-  const nextReports = importedReports.filter((report) => report.importId !== importId);
-  if (nextReports.length === importedReports.length) return;
-  importedReports = nextReports;
-  persistImportedReports();
-  await refreshDashboard();
-  showToast('Import supprimé du tableau de bord.');
-}
-
-function renderImportedReportsList() {
-  const list = document.getElementById('import-list');
-  const summary = document.getElementById('import-summary');
-  const badges = document.getElementById('import-badges');
-  if (!list || !summary || !badges) return;
-
-  if (!importedReports.length) {
-    summary.textContent = 'Aucun import supplémentaire chargé.';
-    badges.innerHTML = '';
-    list.innerHTML = '<p class="text-muted text-center py-3 mb-0">Importez un ou plusieurs fichiers JSON pour compléter les rapports.</p>';
-    return;
-  }
-
-  const provinceCounts = importedReports.reduce((acc, report) => {
-    const province = getReportProvinceLabel(report) || 'Non renseignée';
-    acc[province] = (acc[province] || 0) + 1; return acc;
-  }, {});
-
-  summary.textContent = `${importedReports.length} fichier(s) JSON importé(s) et conservé(s) dans le tableau de bord.`;
-  badges.innerHTML = Object.entries(provinceCounts).sort((a, b) => a[0].localeCompare(b[0], 'fr'))
-    .map(([province, count]) => `<div class="import-badge"><span>${escapeHtml(province)}</span><strong>${count}</strong></div>`).join('');
-
-  list.innerHTML = importedReports.map((report) => `
-    <div class="import-item mb-2">
-      <div>
-        <strong>${escapeHtml(report.importLabel || report.source || 'import-manuel.json')}</strong>
-        <div class="import-meta">
-          Province: ${escapeHtml(getReportProvinceLabel(report) || '—')} · Rapporteur: ${escapeHtml(report.meta?.rapporteur || '—')} · Missions: ${escapeHtml(String(report.meta?.total_missions || report.missions?.length || 0))} · Ajouté le ${escapeHtml(formatDate(report.importedAt || report.savedAt))}
-        </div>
-      </div>
-      <button class="btn btn-outline-danger btn-sm" data-import-id="${escapeHtml(report.importId)}" onclick="removeImportedReport(this.dataset.importId)">
-        <i class="bi bi-trash3"></i>
-      </button>
-    </div>
-  `).join('');
-}
-
+// ─── RENDER FUNCTIONS ─────────────────────────────────────────────────────────
 function renderSummaryCards() {
   const reports = getFilteredReports();
   const allReports = REPORTS_CACHE;
   const missions = reports.flatMap((report) => report.missions || []);
   const totalGeneral = missions.reduce((sum, m) => sum + Number(m.total_usd || 0), 0);
+  
   document.getElementById('stat-reports').textContent = reports.length;
   document.getElementById('stat-missions').textContent = missions.length;
   document.getElementById('stat-total').textContent = formatCurrency(totalGeneral);
-  document.getElementById('stat-en-attente').textContent = allReports.filter((r) => (r.statut||'activee') === 'en_attente').length;
-  document.getElementById('stat-activee').textContent   = allReports.filter((r) => (r.statut||'activee') === 'activee').length;
-  document.getElementById('stat-realisee').textContent  = allReports.filter((r) => (r.statut||'activee') === 'realisee').length;
+  
+  const enAttente = allReports.filter((r) => (r.statut || 'activee') === 'en_attente').length;
+  const activee = allReports.filter((r) => (r.statut || 'activee') === 'activee').length;
+  const realisee = allReports.filter((r) => (r.statut || 'activee') === 'realisee').length;
+  const retournee = allReports.filter((r) => (r.statut || 'activee') === 'retournee').length;
+  
+  document.getElementById('stat-en-attente').textContent = enAttente;
+  document.getElementById('stat-activee').textContent = activee;
+  document.getElementById('stat-realisee').textContent = realisee;
+  
+  const statRetournee = document.getElementById('stat-retournee');
+  if (statRetournee) statRetournee.textContent = retournee;
 }
 
 function renderPanels() {
@@ -1193,25 +1306,20 @@ function buildGeneralPanel(reports = getFilteredReports()) {
         <div class="card-body p-0">
           <div class="table-responsive">
             <table class="table table-hover table-sm mb-0">
-              <thead><tr><th>Date</th><th>Province</th><th>Rapporteur</th><th>Missions</th><th>Total USD</th><th>Statut</th></tr></thead>
+              <thead><tr><th>Date</th><th>Province</th><th>Rapporteur</th><th>Missions</th><th>Total USD</th><th>Litige USD</th><th>Statut</th></tr></thead>
               <tbody>${reports.length ? reports.slice(0, 10).map((report) => {
                 const rm = report.missions || [];
                 const rTotal = rm.reduce((s,m) => s + Number(m.total_usd||0), 0);
+                const litige = calculateReportLitige(report);
                 const st = report.statut || 'activee';
-                const sb = st === 'en_attente'
-                  ? '<span class="badge bg-warning text-dark status-badge-small">En attente</span>'
-                  : st === 'retournee'
-                    ? '<span class="badge bg-danger-subtle text-danger border border-danger-subtle status-badge-small">À corriger</span>'
-                  : st === 'realisee'
-                    ? '<span class="badge bg-secondary status-badge-small">Réalisée</span>'
-                    : '<span class="badge bg-success status-badge-small">Activée</span>';
                 return `
                 <tr><td>${formatDate(report.savedAt)}</td><td>${escapeHtml(getReportProvinceLabel(report) || '—')}</td>
                 <td>${escapeHtml(report.meta?.rapporteur || '—')}</td>
                 <td><span class="badge bg-secondary">${rm.length}</span></td>
                 <td class="text-end fw-bold">${formatCurrency(rTotal)}</td>
-                <td class="text-center">${sb}</td></tr>`;
-              }).join('') : '<tr><td colspan="6" class="text-center text-muted py-4">Aucun rapport.</td></tr>'}</tbody>
+                <td class="text-end ${litige > 0 ? 'text-warning fw-bold' : 'text-success'}">${formatCurrency(litige)}</td>
+                <td>${getStatusBadge(st)}</td></tr>`;
+              }).join('') : '<tr><td colspan="7" class="text-center text-muted py-4">Aucun rapport.</td></tr>'}</tbody>
             </table>
           </div>
         </div>
@@ -1247,22 +1355,16 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-hover table-sm mb-0">
-            <thead><tr><th>Date</th><th>Rapporteur</th><th>Trimestre</th><th>Missions</th><th>Total USD</th><th>Statut</th><th>Lu</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Date</th><th>Rapporteur</th><th>Trimestre</th><th>Missions</th><th>Total USD</th><th>Litige USD</th><th>Statut</th><th>Lu</th><th>Actions</th></tr></thead>
             <tbody>${reports.length ? reports.map((report, idx) => {
               const rm = report.missions || [];
               const rTotal   = rm.reduce((s,m) => s + Number(m.total_usd||0), 0);
+              const litige   = calculateReportLitige(report);
               const isUnread = !report.is_read;
               const st = report.statut || 'activee';
-              const statutBadge = st === 'en_attente'
-                ? '<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>En attente</span>'
-                : st === 'retournee'
-                  ? '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-arrow-return-left me-1"></i>À corriger</span>'
-                : st === 'realisee'
-                  ? '<span class="badge bg-secondary"><i class="bi bi-check2-all me-1"></i>Réalisée</span>'
-                  : '<span class="badge bg-success"><i class="bi bi-lightning-charge-fill me-1"></i>Activée</span>';
               const rid = escapeHtml(report.id || '');
               const importId = escapeHtml(report.importId || '');
-              const isLocalOnly = !report.id && !!report.importId;
+              
               return `
                 <tr class="report-row report-row-clickable${isUnread ? ' unread' : ''}" data-report-idx="${idx}" data-report-id="${rid}" data-province="${escapeHtml(province.name)}">
                   <td>${formatDate(report.savedAt)}</td>
@@ -1270,18 +1372,19 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
                   <td>${escapeHtml(((report.meta?.trimestre||'')+' '+(report.meta?.annee||'')).trim()||'—')}</td>
                   <td><span class="badge bg-secondary">${rm.length}</span></td>
                   <td class="text-end fw-bold">${formatCurrency(rTotal)}</td>
-                  <td>${statutBadge}</td>
+                  <td class="text-end ${litige > 0 ? 'text-warning fw-bold' : 'text-success'}">${formatCurrency(litige)}</td>
+                  <td>${getStatusBadge(st)}</td>
                   <td class="text-center">${isUnread ? '<span class="badge bg-danger badge-nouveau">Nouveau</span>' : '<span class="badge bg-light text-muted border status-badge-small">Lu</span>'}</td>
                   <td class="text-nowrap report-actions-cell">
                     ${isUnread && isSuperAdmin ? `<button class="btn btn-outline-success btn-sm me-1" onclick="event.stopPropagation();markAsRead('${rid}')" title="Marquer comme lu"><i class="bi bi-check2-circle"></i></button>` : ''}
                     ${st === 'activee' ? `<button class="btn btn-sm btn-outline-secondary me-1" onclick="event.stopPropagation();updateReportStatut('${rid}','realisee')" title="Marquer réalisée"><i class="bi bi-flag-fill"></i></button>` : ''}
                     ${st === 'realisee' ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="event.stopPropagation();updateReportStatut('${rid}','activee')" title="Remettre en Activée"><i class="bi bi-arrow-counterclockwise"></i></button>` : ''}
-                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteReport('${rid}','${importId}')" title="${isLocalOnly ? 'Retirer du tableau de bord' : 'Supprimer'}"><i class="bi bi-trash3-fill"></i></button>
+                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteReport('${rid}','${importId}')" title="Supprimer"><i class="bi bi-trash3-fill"></i></button>
                     <i class="bi bi-chevron-down text-muted small ms-1 chevron-icon"></i>
                   </td>
                 </tr>
                 <tr class="report-detail is-hidden" id="detail-${escapeHtml(province.name)}-${idx}">
-                  <td colspan="8" class="p-0">
+                  <td colspan="9" class="p-0">
                     <div class="bg-light p-3">
                       <h6 class="small fw-bold text-uppercase text-muted mb-2"><i class="bi bi-list-check me-1"></i>Missions du rapport</h6>
                       <div class="table-responsive">
@@ -1312,7 +1415,7 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
                     </div>
                   </td>
                 </tr>`;
-            }).join('') : '<tr><td colspan="8" class="text-center text-muted py-4">Aucun rapport pour cette province.</td></tr>'}</tbody>
+            }).join('') : '<tr><td colspan="9" class="text-center text-muted py-4">Aucun rapport pour cette province.</td></tr>'}</tbody>
           </table>
         </div>
       </div>
@@ -1327,14 +1430,14 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
               <tr><td class="fw-semibold">Montant missions</td><td class="text-end">${formatCurrency(totalMontant)} USD</td></tr>
               <tr><td class="fw-semibold">Autres frais</td><td class="text-end">${formatCurrency(totalAutres)} USD</td></tr>
               <tr class="table-warning"><td class="fw-bold">Total général</td><td class="text-end fw-bold">${formatCurrency(totalGeneral)} USD</td></tr>
-              <tr><td class="fw-semibold">Solde</td><td class="text-end">${formatCurrency(totalSolde)} USD</td></tr>
+              <tr><td class="fw-semibold">Solde (litige)</td><td class="text-end">${formatCurrency(totalSolde)} USD</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
   `;
-  // Bind click to expand/collapse report details (action buttons use inline onclick)
+  
   panel.querySelectorAll('.report-row').forEach((row) => {
     row.addEventListener('click', (e) => {
       if (e.target.closest('button')) return;
@@ -1352,6 +1455,21 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
   return panel;
 }
 
+function summarizeProvince(provinceName, reportsSource = getFilteredReports()) {
+  const reports = reportsSource.filter((report) => getReportProvinceName(report) === provinceName);
+  const missions = reports.flatMap((report) => report.missions || []);
+  return {
+    label: REFERENCE.provinces.find((p) => p.name === provinceName)?.label || provinceName,
+    reports: reports.length, 
+    missions: missions.length,
+    montant: missions.reduce((s, m) => s + Number(m.montant_usd || 0), 0),
+    autresFrais: missions.reduce((s, m) => s + Number(m.autres_frais_usd || 0), 0),
+    total: missions.reduce((s, m) => s + Number(m.total_usd || 0), 0),
+    solde: missions.reduce((s, m) => s + Number(m.solde_usd || 0), 0)
+  };
+}
+
+// ─── REPORT ACTIONS ───────────────────────────────────────────────────────────
 async function markAsRead(reportId) {
   try {
     const session = getSession();
@@ -1399,27 +1517,23 @@ async function deleteReport(reportId, importId = '') {
           renderSummaryCards();
           renderPanels();
           updateActiveTab();
-          updateAdminNotifBadge();
+          updateWorkflowBadges();
+          updateWorkflowPanel();
           showToast('✓ Rapport importé retiré du tableau de bord.');
           return;
         }
-        console.log('[deleteReport] Tentative suppression id=', reportId);
         const { error } = await db.from('reports').delete().eq('id', reportId);
-        if (error) {
-          console.error('[deleteReport] Erreur Supabase:', error);
-          showToast('Erreur suppression : ' + (error.message || error.code || JSON.stringify(error)));
-          return;
-        }
-        console.log('[deleteReport] Suppression OK');
+        if (error) throw error;
         removeReportFromLocalState(reportId, importId);
         renderSummaryCards();
         renderPanels();
         updateActiveTab();
-        updateAdminNotifBadge();
+        updateWorkflowBadges();
+        updateWorkflowPanel();
         showToast('✓ Rapport supprimé.');
         await refreshDashboard();
       } catch (e) {
-        console.error('[deleteReport] Exception:', e);
+        console.error(e);
         showToast('Erreur lors de la suppression : ' + (e?.message || String(e)));
       }
     },
@@ -1427,37 +1541,12 @@ async function deleteReport(reportId, importId = '') {
   );
 }
 
-function summarizeProvince(provinceName, reportsSource = getFilteredReports()) {
-  const reports = reportsSource.filter((report) => getReportProvinceName(report) === provinceName);
-  const missions = reports.flatMap((report) => report.missions || []);
-  return {
-    label: REFERENCE.provinces.find((p) => p.name === provinceName)?.label || provinceName,
-    reports: reports.length, missions: missions.length,
-    montant: missions.reduce((s, m) => s + Number(m.montant_usd || 0), 0),
-    autresFrais: missions.reduce((s, m) => s + Number(m.autres_frais_usd || 0), 0),
-    total: missions.reduce((s, m) => s + Number(m.total_usd || 0), 0),
-    solde: missions.reduce((s, m) => s + Number(m.solde_usd || 0), 0)
-  };
-}
-
-async function saveFileDesktop(options) {
-  if (!window.PNDA_DESKTOP?.saveFile) return { canceled: true, unsupported: true };
-  return window.PNDA_DESKTOP.saveFile(options);
-}
-
+// ─── EXCEL EXPORT ─────────────────────────────────────────────────────────────
 async function exportExcelWorkbook() {
   const date = new Date().toISOString().slice(0, 10);
   const signatory = getSignatory();
   const reports = getFilteredReports();
-  if (window.PNDA_DESKTOP?.exportExcelWorkbook) {
-    const result = await window.PNDA_DESKTOP.exportExcelWorkbook({
-      defaultFileName: `PNDA_dashboard_${date}.xlsx`, exportedAt: new Date().toISOString(),
-      exportedBy: document.getElementById('session-user').textContent || '—',
-      signatory, provinces: REFERENCE.provinces, reports
-    });
-    if (!result.canceled) showToast('Export Excel enregistré.');
-    return;
-  }
+  
   const workbookXml = buildExcelWorkbookXml(signatory, reports);
   const fileName = `PNDA_dashboard_${date}.xls`;
   const blob = new Blob([workbookXml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
@@ -1469,10 +1558,11 @@ async function exportExcelWorkbook() {
 
 function buildExcelWorkbookXml(signatory = {}, reports = getFilteredReports()) {
   const worksheets = [
-    buildWorksheetXml('General', buildGeneralSheetRows(signatory, reports), [220, 140, 120, 120, 120]),
-    ...REFERENCE.provinces.map((province) => buildWorksheetXml(sheetNameForProvince(province.label), buildProvinceSheetRows(province, signatory, reports), [110, 110, 90, 110, 260, 130, 130, 70, 80, 130, 130, 110, 110, 110, 110, 200])),
-    buildWorksheetXml('Toutes_Missions', buildAllMissionsSheetRows(signatory, reports), [110, 180, 90, 80, 80, 130, 260, 260, 130, 130, 130, 130, 70, 80, 110, 110, 110, 110, 110, 200])
+    buildWorksheetXml('General', buildGeneralSheetRows(signatory, reports), [220, 140, 120, 120, 120, 120, 120]),
+    ...REFERENCE.provinces.map((province) => buildWorksheetXml(sheetNameForProvince(province.label), buildProvinceSheetRows(province, signatory, reports), [110, 110, 90, 110, 260, 130, 130, 70, 80, 130, 130, 110, 110, 110, 110, 110, 200])),
+    buildWorksheetXml('Toutes_Missions', buildAllMissionsSheetRows(signatory, reports), [110, 180, 90, 80, 80, 130, 260, 260, 130, 130, 130, 130, 70, 80, 110, 110, 110, 110, 110, 110, 200])
   ].join('');
+  
   return [
     '<?xml version="1.0" encoding="UTF-8"?>','<?mso-application progid="Excel.Sheet"?>',
     '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"',
@@ -1502,35 +1592,40 @@ function buildGeneralSheetRows(signatory = {}, reports = getFilteredReports()) {
   const missions = reports.flatMap((r) => r.missions || []);
   const provinceRows = REFERENCE.provinces.map((p) => summarizeProvince(p.name, reports));
   return [
-    ...buildWorkbookHeaderRows('Tableau de bord général', 5),
-    [{ value: 'PNDA-SE - Tableau de bord général', style: 'title', mergeAcross: 4 }],
+    ...buildWorkbookHeaderRows('Tableau de bord général', 7),
+    [{ value: 'PNDA-SE - Tableau de bord général', style: 'title', mergeAcross: 6 }],
     [{ value: 'Date export', style: 'subtitle' }, { value: new Date().toLocaleDateString('fr-FR'), style: 'date' }],
     [{ value: 'Utilisateur', style: 'subtitle' }, { value: document.getElementById('session-user').textContent || '—', style: 'text' }],
     [],
     [{ value: 'Indicateur', style: 'header' }, { value: 'Valeur', style: 'header' }],
     [{ value: 'Rapports consolidés', style: 'text' }, { value: reports.length, type: 'Number', style: 'integer' }],
     [{ value: 'Missions consolidées', style: 'text' }, { value: missions.length, type: 'Number', style: 'integer' }],
-    [{ value: 'Montant total USD', style: 'text' }, { value: missions.reduce((s, m) => s + Number(m.montant_usd || 0), 0), type: 'Number', style: 'currency' }],
-    [{ value: 'Avance totale USD', style: 'text' }, { value: missions.reduce((s, m) => s + Number(m.avance_usd || 0), 0), type: 'Number', style: 'currency' }],
-    [{ value: 'Solde total USD', style: 'text' }, { value: missions.reduce((s, m) => s + Number(m.solde_usd || 0), 0), type: 'Number', style: 'currency' }],
+    [{ value: 'En attente', style: 'text' }, { value: reports.filter(r => (r.statut||'activee') === 'en_attente').length, type: 'Number', style: 'integer' }],
+    [{ value: 'Activées', style: 'text' }, { value: reports.filter(r => (r.statut||'activee') === 'activee').length, type: 'Number', style: 'integer' }],
+    [{ value: 'Réalisées', style: 'text' }, { value: reports.filter(r => (r.statut||'activee') === 'realisee').length, type: 'Number', style: 'integer' }],
+    [{ value: 'Litige total USD', style: 'text' }, { value: missions.reduce((s, m) => s + Number(m.solde_usd || 0), 0), type: 'Number', style: 'currency' }],
     [],
-    [{ value: 'Consolidation par province', style: 'title', mergeAcross: 4 }],
-    [{ value: 'Province', style: 'header' }, { value: 'Rapports', style: 'header' }, { value: 'Missions', style: 'header' }, { value: 'Montant USD', style: 'header' }, { value: 'Solde USD', style: 'header' }],
+    [{ value: 'Consolidation par province', style: 'title', mergeAcross: 6 }],
+    [{ value: 'Province', style: 'header' }, { value: 'Rapports', style: 'header' }, { value: 'Missions', style: 'header' }, { value: 'Montant USD', style: 'header' }, { value: 'Autres frais', style: 'header' }, { value: 'Total USD', style: 'header' }, { value: 'Solde USD', style: 'header' }],
     ...provinceRows.map((row) => [
       { value: row.label, style: 'text' }, { value: row.reports, type: 'Number', style: 'integer' },
       { value: row.missions, type: 'Number', style: 'integer' }, { value: row.montant, type: 'Number', style: 'currency' },
+      { value: row.autresFrais, type: 'Number', style: 'currency' }, { value: row.total, type: 'Number', style: 'currency' },
       { value: row.solde, type: 'Number', style: 'currency' }
     ]),
     [],
-    [{ value: 'Derniers rapports', style: 'title', mergeAcross: 4 }],
-    [{ value: 'Date', style: 'header' }, { value: 'Province', style: 'header' }, { value: 'Rapporteur', style: 'header' }, { value: 'Missions', style: 'header' }, { value: 'Source', style: 'header' }],
+    [{ value: 'Derniers rapports', style: 'title', mergeAcross: 6 }],
+    [{ value: 'Date', style: 'header' }, { value: 'Province', style: 'header' }, { value: 'Rapporteur', style: 'header' }, { value: 'Missions', style: 'header' }, { value: 'Total USD', style: 'header' }, { value: 'Litige USD', style: 'header' }, { value: 'Statut', style: 'header' }],
     ...reports.slice(0, 20).map((r) => [
-      { value: formatDate(r.savedAt), style: 'date' }, { value: getReportProvinceLabel(r) || '—', style: 'text' },
+      { value: formatDate(r.savedAt), style: 'date' }, 
+      { value: getReportProvinceLabel(r) || '—', style: 'text' },
       { value: r.meta?.rapporteur || '—', style: 'text' },
-      { value: r.meta?.total_missions || r.missions.length || 0, type: 'Number', style: 'integer' },
-      { value: r.source || 'stockage local', style: 'text' }
+      { value: r.missions?.length || 0, type: 'Number', style: 'integer' },
+      { value: (r.missions || []).reduce((s, m) => s + Number(m.total_usd || 0), 0), type: 'Number', style: 'currency' },
+      { value: calculateReportLitige(r), type: 'Number', style: 'currency' },
+      { value: getStatusLabel(r.statut || 'activee').replace(/[⏳⚡✓↩]/g, '').trim(), style: 'text' }
     ]),
-    [], ...buildSignatureRows(signatory, 5)
+    [], ...buildSignatureRows(signatory, 7)
   ];
 }
 
@@ -1543,13 +1638,14 @@ function buildProvinceSheetRows(province, signatory = {}, reportsSource = getFil
     [{ value: 'Rapports', style: 'subtitle' }, { value: reports.length, type: 'Number', style: 'integer' }],
     [{ value: 'Missions', style: 'subtitle' }, { value: missions.length, type: 'Number', style: 'integer' }],
     [],
-    [{ value: 'Rapports', style: 'title', mergeAcross: 5 }],
-    [{ value: 'Date', style: 'header' }, { value: 'Rapporteur', style: 'header' }, { value: 'Trimestre', style: 'header' }, { value: 'Année', style: 'header' }, { value: 'Montant USD', style: 'header' }, { value: 'Solde USD', style: 'header' }],
+    [{ value: 'Rapports', style: 'title', mergeAcross: 6 }],
+    [{ value: 'Date', style: 'header' }, { value: 'Rapporteur', style: 'header' }, { value: 'Trimestre', style: 'header' }, { value: 'Année', style: 'header' }, { value: 'Total USD', style: 'header' }, { value: 'Litige USD', style: 'header' }, { value: 'Statut', style: 'header' }],
     ...reports.map((r) => [
       { value: formatDate(r.savedAt), style: 'date' }, { value: r.meta?.rapporteur || '—', style: 'text' },
       { value: r.meta?.trimestre || '—', style: 'text' }, { value: r.meta?.annee || '—', style: 'integer' },
-      { value: Number(r.meta?.total_montant_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(r.meta?.total_solde_usd || 0), type: 'Number', style: 'currency' }
+      { value: (r.missions || []).reduce((s, m) => s + Number(m.total_usd || 0), 0), type: 'Number', style: 'currency' },
+      { value: calculateReportLitige(r), type: 'Number', style: 'currency' },
+      { value: getStatusLabel(r.statut || 'activee').replace(/[⏳⚡✓↩]/g, '').trim(), style: 'text' }
     ]),
     [],
     [{ value: 'Détail des missions', style: 'title', mergeAcross: 17 }],
@@ -1559,7 +1655,7 @@ function buildProvinceSheetRows(province, signatory = {}, reportsSource = getFil
      { value:'Montant USD',style:'header' },{ value:'Autres frais',style:'header' },{ value:'Total USD',style:'header' },
      { value:'Avance USD',style:'header' },{ value:'Solde USD',style:'header' },{ value:'Observation',style:'header' }],
     ...missions.map((m) => [
-      { value: m.date_debut || m.date || formatDate(m.__report.savedAt), style: 'date' },
+      { value: m.date_debut || formatDate(m.__report.savedAt), style: 'date' },
       { value: m.date_fin || '—', style: 'date' },
       { value: m.numero || '—', style: 'text' }, { value: m.nature || '—', style: 'text' },
       { value: m.objectif || '—', style: 'text' },
@@ -1570,7 +1666,7 @@ function buildProvinceSheetRows(province, signatory = {}, reportsSource = getFil
       { value: Number(m.taux_per_diem || 0), type: 'Number', style: 'currency' },
       { value: Number(m.montant_usd || 0), type: 'Number', style: 'currency' },
       { value: Number(m.autres_frais_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.total_usd || m.montant_usd || 0), type: 'Number', style: 'currency' },
+      { value: Number(m.total_usd || 0), type: 'Number', style: 'currency' },
       { value: Number(m.avance_usd || 0), type: 'Number', style: 'currency' },
       { value: Number(m.solde_usd || 0), type: 'Number', style: 'currency' },
       { value: m.observation || '', style: 'text' }
@@ -1582,31 +1678,32 @@ function buildProvinceSheetRows(province, signatory = {}, reportsSource = getFil
 function buildAllMissionsSheetRows(signatory = {}, reports = getFilteredReports()) {
   const missions = reports.flatMap((r) => (r.missions || []).map((m) => ({ ...m, __report: r })));
   return [
-    ...buildWorkbookHeaderRows('Toutes les missions', 22),
-    [{ value: 'Toutes les missions', style: 'title', mergeAcross: 21 }],
-    [{ value:'Province',style:'header' },{ value:'Rapporteur',style:'header' },{ value:'Trimestre',style:'header' },{ value:'Année',style:'header' },{ value:'Numero',style:'header' },{ value:'Mission ref',style:'header' },{ value:'Nature',style:'header' },{ value:'Objectif',style:'header' },
+    ...buildWorkbookHeaderRows('Toutes les missions', 21),
+    [{ value: 'Toutes les missions', style: 'title', mergeAcross: 20 }],
+    [{ value:'Province',style:'header' },{ value:'Rapporteur',style:'header' },{ value:'Trimestre',style:'header' },{ value:'Année',style:'header' },{ value:'Numero',style:'header' },{ value:'Nature',style:'header' },{ value:'Objectif',style:'header' },
      { value:'Prov. dest.',style:'header' },{ value:'Territoire',style:'header' },{ value:'Secteur',style:'header' },
      { value:'Début',style:'header' },{ value:'Fin prévue',style:'header' },{ value:'Participants',style:'header' },
      { value:'Nuitées',style:'header' },{ value:'Taux/nuit',style:'header' },
      { value:'Montant USD',style:'header' },{ value:'Autres frais',style:'header' },{ value:'Total USD',style:'header' },
-     { value:'Avance USD',style:'header' },{ value:'Solde USD',style:'header' },{ value:'Observation',style:'header' }],
+     { value:'Avance USD',style:'header' },{ value:'Solde USD',style:'header' },{ value:'Statut',style:'header' },{ value:'Observation',style:'header' }],
     ...missions.map((m) => [
       { value: getReportProvinceLabel(m.__report) || '—', style: 'text' },
       { value: m.__report.meta?.rapporteur || '—', style: 'text' },
       { value: m.__report.meta?.trimestre || '—', style: 'text' },
       { value: m.__report.meta?.annee || '—', style: 'integer' },
-      { value: m.numero || '—', style: 'text' }, { value: m.mission_reference_id || '—', style: 'text' },
+      { value: m.numero || '—', style: 'text' },
       { value: m.nature || '—', style: 'text' }, { value: m.objectif || '—', style: 'text' },
       { value: m.destination_province_label || '—', style: 'text' }, { value: m.territoire_label || '—', style: 'text' }, { value: m.secteur_label || '—', style: 'text' },
-      { value: m.date_debut || m.date || '—', style: 'text' }, { value: m.date_fin || '—', style: 'text' },
+      { value: m.date_debut || '—', style: 'text' }, { value: m.date_fin || '—', style: 'text' },
       { value: Number(m.participants || 0), type: 'Number', style: 'integer' },
       { value: Number(m.nuitees || 0), type: 'Number', style: 'integer' },
       { value: Number(m.taux_per_diem || 0), type: 'Number', style: 'currency' },
       { value: Number(m.montant_usd || 0), type: 'Number', style: 'currency' },
       { value: Number(m.autres_frais_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.total_usd || m.montant_usd || 0), type: 'Number', style: 'currency' },
+      { value: Number(m.total_usd || 0), type: 'Number', style: 'currency' },
       { value: Number(m.avance_usd || 0), type: 'Number', style: 'currency' },
       { value: Number(m.solde_usd || 0), type: 'Number', style: 'currency' },
+      { value: getStatusLabel(m.__report.statut || 'activee').replace(/[⏳⚡✓↩]/g, '').trim(), style: 'text' },
       { value: m.observation || '', style: 'text' }
     ]),
     [], ...buildSignatureRows(signatory, 22)
@@ -1676,6 +1773,7 @@ function xmlEscape(value) {
   return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
 }
 
+// ─── UTILITIES ────────────────────────────────────────────────────────────────
 function formatCurrency(value) {
   return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
 }
