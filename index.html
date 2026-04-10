@@ -416,7 +416,7 @@
               <thead>
                 <tr>
                   <th>N°</th><th>Province</th><th>Mission</th><th>Objectif</th>
-                  <th>Prov. dest.</th><th>Territoire</th><th>Secteur</th><th>Début</th><th>Fin prévue</th><th>Nuitées</th>
+                  <th>Prov. dest.</th><th>Territoire</th><th>Secteur</th><th>Début</th><th>Fin prévue</th><th>Participants</th><th>Nuitées</th>
                   <th>Taux/nuit</th><th>Section</th><th>Hors projet</th><th>Projet</th>
                   <th>Montant USD</th><th>Autres frais</th><th>Total USD</th><th>Avance USD</th><th>Solde USD</th><th>Observation</th>
                 </tr>
@@ -910,7 +910,7 @@ function openProvinceSession(user, province) {
   document.getElementById('display-user').textContent     = user.toUpperCase();
   document.getElementById('display-province').textContent  = (getProvinceData(province)?.label || province).toUpperCase();
   document.getElementById('header-province-label').textContent = getProvinceData(province)?.label || province;
-  document.getElementById('admin-shortcut').hidden = !['admin','super_admin'].includes(account?.role);
+  document.getElementById('admin-shortcut').hidden = !['admin','super_admin','comptable'].includes(account?.role);
 
   if (CURRENT_USER_ROLE === 'comptable') {
     // ── Mode comptable ──
@@ -1082,6 +1082,10 @@ function addMission() {
         <input type="date" class="form-control form-control-sm inp-date-fin">
       </div>
       <div class="col-md-4">
+        <label class="form-label form-label-sm">Nombre de participants <span class="req">*</span></label>
+        <input type="number" class="form-control form-control-sm inp-participants" value="1" min="1" step="1">
+      </div>
+      <div class="col-md-4">
         <label class="form-label form-label-sm">Nuitées</label>
         <input type="number" class="form-control form-control-sm inp-nuitees" value="0" min="0" readonly style="background:#f0ede0;font-weight:600">
       </div>
@@ -1211,6 +1215,7 @@ function buildData() {
     const selId    = isAutre ? '' : (row.querySelector('.sel-mission')?.value || '');
     const nature   = isAutre ? (row.querySelector('.inp-nature-autre')?.value.trim() || 'Autre') : (CAT_LABELS[category] || '');
     const objectif = row.querySelector('.inp-objectif-txt')?.value.trim() || (!isAutre && getMissionById(province, selId)?.objectif) || '';
+    const participants = Math.max(1, parseInt(row.querySelector('.inp-participants')?.value, 10) || 1);
     const montant  = parseFloat(row.querySelector('.inp-montant').value) || 0;
     const avance   = parseFloat(row.querySelector('.inp-avance').value)  || 0;
     const nuitees  = parseInt(row.querySelector('.inp-nuitees').value) || 0;
@@ -1230,6 +1235,7 @@ function buildData() {
       nature, objectif,
       date_debut: row.querySelector('.inp-date-debut').value || '',
       date_fin:   row.querySelector('.inp-date-fin').value   || '',
+      participants,
       destination_province: destProv, destination_province_label: destProvData?.label || destProv,
       territoire_id: terrId, territoire_label: terrObj?.label || '',
       secteur_id: sectId, secteur_label: sectObj?.label || '',
@@ -1252,6 +1258,7 @@ function buildData() {
       role: document.getElementById('f-role').value.trim(),
       date_generation: document.getElementById('f-date').value,
       total_missions: missions.length,
+      total_participants: missions.reduce((s, m) => s + Number(m.participants || 0), 0),
       total_montant_usd: missions.reduce((s, m) => s + m.montant_usd, 0).toFixed(2),
       total_autres_frais_usd: missions.reduce((s, m) => s + m.autres_frais_usd, 0).toFixed(2),
       total_general_usd: missions.reduce((s, m) => s + m.total_usd, 0).toFixed(2),
@@ -1280,10 +1287,11 @@ function renderSelectedMissionsTable() {
   metrics.innerHTML = [
     { label: 'Province', value: pLabel, icon: 'bi-geo-alt' },
     { label: 'Missions', value: String(data.missions.length), icon: 'bi-list-check' },
+    { label: 'Participants', value: String(data.meta.total_participants || 0), icon: 'bi-people' },
     { label: 'Total général USD', value: formatCurrencyDisplay(totT), icon: 'bi-cash-stack' },
     { label: 'Solde total USD', value: formatCurrencyDisplay(totS), icon: 'bi-wallet2' }
   ].map((item) => `
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body py-2 px-3">
           <div class="text-muted small fw-semibold text-uppercase" style="font-size:.68rem;letter-spacing:.8px">${escapeHtml(item.label)}</div>
@@ -1294,7 +1302,7 @@ function renderSelectedMissionsTable() {
   `).join('');
 
   if (!data.missions.length) {
-    body.innerHTML = '<tr><td colspan="20" class="text-center text-muted py-4">Aucune mission sélectionnée.</td></tr>';
+    body.innerHTML = '<tr><td colspan="21" class="text-center text-muted py-4">Aucune mission sélectionnée.</td></tr>';
     return;
   }
   body.innerHTML = data.missions.map((m) => `
@@ -1303,6 +1311,7 @@ function renderSelectedMissionsTable() {
       <td>${escapeHtml(m.nature||'—')}</td><td>${escapeHtml(m.objectif||'—')}</td>
       <td>${escapeHtml(m.destination_province_label||'—')}</td><td>${escapeHtml(m.territoire_label||'—')}</td><td>${escapeHtml(m.secteur_label||'—')}</td>
       <td>${escapeHtml(m.date_debut||'—')}</td><td>${escapeHtml(m.date_fin||'—')}</td>
+      <td class="text-end">${Number(m.participants||0)}</td>
       <td class="text-end">${m.nuitees||0}</td>
       <td class="text-end">${escapeHtml(formatCurrencyDisplay(m.taux_per_diem))}</td>
       <td>${escapeHtml(m.section||'—')}</td>
@@ -1329,7 +1338,7 @@ function buildWorkbookCellXml(cell) {
 function buildSelectedMissionsWorkbookXml(data) {
   const pLabel = getProvinceData(data.meta.province)?.label || data.meta.province || '—';
   const rows = [
-    [{ value: 'PNDA-SE - Budget des missions', style: 'title', mergeAcross: 19 }],
+    [{ value: 'PNDA-SE - Budget des missions', style: 'title', mergeAcross: 20 }],
     [{ value: 'Province', style: 'header' }, { value: pLabel, style: 'text' }],
     [{ value: 'Trimestre', style: 'header' }, { value: `${data.meta.trimestre||''} ${data.meta.annee||''}`.trim(), style: 'text' }],
     [{ value: 'Rapporteur', style: 'header' }, { value: data.meta.rapporteur||'—', style: 'text' }],
@@ -1337,7 +1346,7 @@ function buildSelectedMissionsWorkbookXml(data) {
     [],
     [{ value:'N°',style:'header' },{ value:'Province',style:'header' },{ value:'Mission',style:'header' },{ value:'Objectif',style:'header' },
      { value:'Prov. dest.',style:'header' },{ value:'Territoire',style:'header' },{ value:'Secteur',style:'header' },
-     { value:'Début',style:'header' },{ value:'Fin prévue',style:'header' },{ value:'Nuitées',style:'header' },
+     { value:'Début',style:'header' },{ value:'Fin prévue',style:'header' },{ value:'Participants',style:'header' },{ value:'Nuitées',style:'header' },
      { value:'Taux/nuit',style:'header' },
      { value:'Section',style:'header' },{ value:'Hors projet',style:'header' },{ value:'Projet',style:'header' },
      { value:'Montant USD',style:'header' },{ value:'Autres frais',style:'header' },{ value:'Total USD',style:'header' },
@@ -1348,6 +1357,7 @@ function buildSelectedMissionsWorkbookXml(data) {
       { value:m.objectif||'—',style:'text' },
       { value:m.destination_province_label||'—',style:'text' },{ value:m.territoire_label||'—',style:'text' },{ value:m.secteur_label||'—',style:'text' },
       { value:m.date_debut||'—',style:'text' },{ value:m.date_fin||'—',style:'text' },
+      { value:Number(m.participants||0),type:'Number',style:'integer' },
       { value:Number(m.nuitees||0),type:'Number',style:'integer' },
       { value:Number(m.taux_per_diem||0),type:'Number',style:'currency' },
       { value:m.section||'—',style:'text' },
@@ -1614,6 +1624,7 @@ async function restoreReport(reportId) {
     set('.inp-objectif-txt', m.objectif); set('.sel-section', m.section);
     set('.inp-date-debut', m.date_debut || m.date || '');
     set('.inp-date-fin',   m.date_fin || '');
+    set('.inp-participants', m.participants ?? 1);
     set('.inp-hors-projet', m.hors_projet ?? 0); set('.inp-projet', m.projet ?? 1);
     set('.inp-montant', m.montant_usd ?? 0); set('.inp-avance',  m.avance_usd ?? 0);
     set('.inp-autres-frais', m.autres_frais_usd ?? 0);
@@ -1794,6 +1805,7 @@ function openFinancialCompletion(reportId) {
           <div class="col-md-6"><span class="form-label-sm">Destination :</span> ${escapeHtml(m.destination_province_label || '—')} ${m.territoire_label ? '/ '+escapeHtml(m.territoire_label) : ''}</div>
           <div class="col-md-3"><span class="form-label-sm">Début :</span> ${escapeHtml(m.date_debut || '—')}</div>
           <div class="col-md-3"><span class="form-label-sm">Fin prévue :</span> ${escapeHtml(m.date_fin || '—')}</div>
+          <div class="col-md-3"><span class="form-label-sm">Participants :</span> <strong>${Number(m.participants || 0)}</strong></div>
           <div class="col-md-3"><span class="form-label-sm">Nuitées :</span> <strong>${m.nuitees || 0}</strong></div>
           <div class="col-md-3"><span class="form-label-sm">Taux/nuit estimé :</span> <strong>${escapeHtml(formatCurrencyDisplay(Number(tauxVal)))}</strong> USD</div>
         </div>

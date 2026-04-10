@@ -591,7 +591,7 @@ async function loadReferenceAndUsers() {
 
 function hydrateSession() {
   const session = getSession();
-  if (!session?.user || !USERS[session.user] || !['admin', 'super_admin'].includes(session.role)) {
+  if (!session?.user || !USERS[session.user] || !['admin', 'super_admin', 'comptable'].includes(session.role)) {
     redirectToLogin(); return false;
   }
   openDashboard(session.user);
