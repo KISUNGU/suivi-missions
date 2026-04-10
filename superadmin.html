@@ -96,6 +96,16 @@
   /* ── PAGE TITLE ──────────────────────────────────────────── */
   .page-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--pnda-green); margin: 0; }
 
+  .is-hidden { display: none !important; }
+  .stat-label { font-size: 0.7rem; letter-spacing: 0.8px; }
+  .form-label-tight { letter-spacing: 0.6px; }
+  .filter-auto-width { width: auto; }
+  .rapporteur-filter-width { width: 160px; }
+  .stat-icon-green { color: var(--pnda-green); }
+  .stat-icon-blue { color: #2563a8; }
+  .stat-icon-gold { color: var(--pnda-gold); }
+  .stat-icon-success { color: #198754; }
+
   /* ── STAT CARDS ──────────────────────────────────────────── */
   .stat-value {
     font-family: 'Playfair Display', serif; font-size: 2rem;
@@ -212,8 +222,8 @@
     <div class="sidebar-sep"></div>
     <ul class="nav flex-column">
       <li class="nav-item">
-        <a href="index.html?manual-login=1" class="nav-link">
-          <i class="bi bi-file-earmark-text"></i> Formulaire
+        <a href="admin.html" class="nav-link">
+          <i class="bi bi-table"></i> Table mission
         </a>
       </li>
       <li class="nav-item">
@@ -255,10 +265,10 @@
           <div class="card h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
               <div>
-                <div class="text-muted small fw-semibold text-uppercase" style="font-size:.7rem;letter-spacing:.8px">Utilisateurs</div>
+                <div class="text-muted small fw-semibold text-uppercase stat-label">Utilisateurs</div>
                 <span class="stat-value" id="stat-users">—</span>
               </div>
-              <i class="bi bi-people stat-icon" style="color:var(--pnda-green)"></i>
+              <i class="bi bi-people stat-icon stat-icon-green"></i>
             </div>
           </div>
         </div>
@@ -266,10 +276,10 @@
           <div class="card h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
               <div>
-                <div class="text-muted small fw-semibold text-uppercase" style="font-size:.7rem;letter-spacing:.8px">Provinces</div>
+                <div class="text-muted small fw-semibold text-uppercase stat-label">Provinces</div>
                 <span class="stat-value" id="stat-provinces">—</span>
               </div>
-              <i class="bi bi-map stat-icon" style="color:#2563a8"></i>
+              <i class="bi bi-map stat-icon stat-icon-blue"></i>
             </div>
           </div>
         </div>
@@ -277,10 +287,10 @@
           <div class="card h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
               <div>
-                <div class="text-muted small fw-semibold text-uppercase" style="font-size:.7rem;letter-spacing:.8px">Rapports</div>
+                <div class="text-muted small fw-semibold text-uppercase stat-label">Rapports</div>
                 <span class="stat-value" id="stat-reports">—</span>
               </div>
-              <i class="bi bi-folder2-open stat-icon" style="color:var(--pnda-gold)"></i>
+              <i class="bi bi-folder2-open stat-icon stat-icon-gold"></i>
             </div>
           </div>
         </div>
@@ -288,10 +298,10 @@
           <div class="card h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
               <div>
-                <div class="text-muted small fw-semibold text-uppercase" style="font-size:.7rem;letter-spacing:.8px">Missions enreg.</div>
+                <div class="text-muted small fw-semibold text-uppercase stat-label">Missions enreg.</div>
                 <span class="stat-value" id="stat-missions">—</span>
               </div>
-              <i class="bi bi-check2-circle stat-icon" style="color:#198754"></i>
+              <i class="bi bi-check2-circle stat-icon stat-icon-success"></i>
             </div>
           </div>
         </div>
@@ -350,29 +360,29 @@
       </div>
 
       <!-- Formulaire utilisateur -->
-      <div class="card" id="user-form-card" style="display:none">
+      <div class="card is-hidden" id="user-form-card">
         <div class="card-header py-3">
           <h5 id="user-form-title"><i class="bi bi-person-gear me-2"></i>Nouvel utilisateur</h5>
           <button class="btn btn-outline-danger btn-sm" onclick="closeUserForm()"><i class="bi bi-x-lg"></i> Fermer</button>
         </div>
         <div class="card-body">
-          <div class="alert alert-danger py-2 small" id="user-form-error" style="display:none"></div>
+          <div class="alert alert-danger py-2 small is-hidden" id="user-form-error"></div>
           <input type="hidden" id="uid-edit">
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Email *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Email *</label>
               <input type="email" class="form-control form-control-sm" id="u-email" placeholder="utilisateur@pnda.cd">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Nom affiché</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Nom affiché</label>
               <input type="text" class="form-control form-control-sm" id="u-display" placeholder="Prénom NOM">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Mot de passe <small class="text-muted fw-normal text-lowercase">(vide = inchangé)</small></label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Mot de passe <small class="text-muted fw-normal text-lowercase">(vide = inchangé)</small></label>
               <input type="password" class="form-control form-control-sm" id="u-password" placeholder="Nouveau mot de passe">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Rôle attribué *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Rôle attribué *</label>
               <select class="form-select form-select-sm" id="u-role" onchange="onRoleChange()">
                 <option value="province">Missionnaire (Province)</option>
                 <option value="comptable">Comptable (Entité)</option>
@@ -382,7 +392,7 @@
               <div class="form-text small">Le rôle détermine l'écran d'accès après connexion et les droits métier accordés au compte.</div>
             </div>
             <div class="col-12" id="u-provinces-wrap">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Provinces accessibles</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Provinces accessibles</label>
               <div id="u-provinces-checkboxes" class="d-flex flex-wrap gap-3 mt-1"></div>
             </div>
           </div>
@@ -422,24 +432,24 @@
       </div>
 
       <!-- Formulaire province -->
-      <div class="card" id="province-form-card" style="display:none">
+      <div class="card is-hidden" id="province-form-card">
         <div class="card-header py-3">
           <h5 id="province-form-title"><i class="bi bi-plus-circle me-2"></i>Nouvelle province</h5>
-          <button class="btn btn-outline-danger btn-sm" onclick="document.getElementById('province-form-card').style.display='none'"><i class="bi bi-x-lg"></i></button>
+          <button class="btn btn-outline-danger btn-sm" onclick="closeProvinceForm()"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="card-body">
           <input type="hidden" id="prov-edit-name">
           <div class="row g-3">
             <div class="col-md-4">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Nom (clé unique) *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Nom (clé unique) *</label>
               <input class="form-control form-control-sm" id="prov-name" placeholder="Ex. Kongo_Central">
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Label affiché *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Label affiché *</label>
               <input class="form-control form-control-sm" id="prov-label" placeholder="Ex. Kongo Central">
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Code numérique *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Code numérique *</label>
               <input class="form-control form-control-sm" id="prov-code" placeholder="Ex. 5">
             </div>
           </div>
@@ -465,7 +475,7 @@
         <div class="card-header py-3">
           <h5><i class="bi bi-journal-bookmark me-2"></i>Catalogue missions</h5>
           <div class="d-flex gap-2 align-items-center flex-wrap">
-            <select class="form-select form-select-sm" id="mr-filter-province" onchange="loadMissionsRef()" style="width:auto">
+            <select class="form-select form-select-sm filter-auto-width" id="mr-filter-province" onchange="loadMissionsRef()">
               <option value="">Toutes provinces</option>
             </select>
             <button class="btn btn-pnda btn-sm" onclick="loadMissionsRef()"><i class="bi bi-arrow-clockwise"></i></button>
@@ -484,20 +494,20 @@
       </div>
 
       <!-- Formulaire mission ref -->
-      <div class="card" id="mr-form-card" style="display:none">
+      <div class="card is-hidden" id="mr-form-card">
         <div class="card-header py-3">
           <h5 id="mr-form-title"><i class="bi bi-plus-circle me-2"></i>Nouvelle mission de référence</h5>
-          <button class="btn btn-outline-danger btn-sm" onclick="document.getElementById('mr-form-card').style.display='none'"><i class="bi bi-x-lg"></i></button>
+          <button class="btn btn-outline-danger btn-sm" onclick="closeMissionRefForm()"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="card-body">
           <input type="hidden" id="mr-edit-id">
           <div class="row g-3">
             <div class="col-md-4">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Province *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Province *</label>
               <select class="form-select form-select-sm" id="mr-province"><option value="">— Choisir —</option></select>
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Catégorie *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Catégorie *</label>
               <select class="form-select form-select-sm" id="mr-category">
                 <option value="implementation">Mission d'implémentation</option>
                 <option value="activite">Mission d'activité</option>
@@ -506,19 +516,19 @@
               </select>
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Ordre d'affichage</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Ordre d'affichage</label>
               <input class="form-control form-control-sm" id="mr-ordre" type="number" value="99">
             </div>
             <div class="col-md-8">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Nature *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Nature *</label>
               <input class="form-control form-control-sm" id="mr-nature" placeholder="Nature de la mission…">
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Ref ID <span class="fw-normal text-muted text-lowercase">(optionnel)</span></label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Ref ID <span class="fw-normal text-muted text-lowercase">(optionnel)</span></label>
               <input class="form-control form-control-sm" id="mr-ref-id" placeholder="Auto-généré si vide">
             </div>
             <div class="col-12">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Objectif</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Objectif</label>
               <input class="form-control form-control-sm" id="mr-objectif" placeholder="Objectif conseillé…">
             </div>
           </div>
@@ -544,7 +554,7 @@
         <div class="card-header py-3">
           <h5><i class="bi bi-pin-map me-2"></i>Territoires enregistrés</h5>
           <div class="d-flex gap-2 align-items-center flex-wrap">
-            <select class="form-select form-select-sm" id="terr-filter-province" onchange="loadTerritoires()" style="width:auto">
+            <select class="form-select form-select-sm filter-auto-width" id="terr-filter-province" onchange="loadTerritoires()">
               <option value="">Toutes provinces</option>
             </select>
             <button class="btn btn-pnda btn-sm" onclick="loadTerritoires()"><i class="bi bi-arrow-clockwise"></i></button>
@@ -562,24 +572,24 @@
         </div>
       </div>
 
-      <div class="card" id="terr-form-card" style="display:none">
+      <div class="card is-hidden" id="terr-form-card">
         <div class="card-header py-3">
           <h5 id="terr-form-title"><i class="bi bi-plus-circle me-2"></i>Nouveau territoire</h5>
-          <button class="btn btn-outline-danger btn-sm" onclick="document.getElementById('terr-form-card').style.display='none'"><i class="bi bi-x-lg"></i></button>
+          <button class="btn btn-outline-danger btn-sm" onclick="closeTerritoireForm()"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="card-body">
           <input type="hidden" id="terr-edit-id">
           <div class="row g-3">
             <div class="col-md-4">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Province *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Province *</label>
               <select class="form-select form-select-sm" id="terr-province"><option value="">— Choisir —</option></select>
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Nom interne *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Nom interne *</label>
               <input class="form-control form-control-sm" id="terr-name" placeholder="Ex. BULUNGU">
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Label affiché *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Label affiché *</label>
               <input class="form-control form-control-sm" id="terr-label" placeholder="Ex. Bulungu">
             </div>
           </div>
@@ -605,10 +615,10 @@
         <div class="card-header py-3">
           <h5><i class="bi bi-geo me-2"></i>Secteurs enregistrés</h5>
           <div class="d-flex gap-2 align-items-center flex-wrap">
-            <select class="form-select form-select-sm" id="sect-filter-province" onchange="onSectFilterProvinceChange()" style="width:auto">
+            <select class="form-select form-select-sm filter-auto-width" id="sect-filter-province" onchange="onSectFilterProvinceChange()">
               <option value="">Toutes provinces</option>
             </select>
-            <select class="form-select form-select-sm" id="sect-filter-territoire" onchange="loadSecteurs()" style="width:auto">
+            <select class="form-select form-select-sm filter-auto-width" id="sect-filter-territoire" onchange="loadSecteurs()">
               <option value="">Tous territoires</option>
             </select>
             <button class="btn btn-pnda btn-sm" onclick="loadSecteurs()"><i class="bi bi-arrow-clockwise"></i></button>
@@ -626,28 +636,28 @@
         </div>
       </div>
 
-      <div class="card" id="sect-form-card" style="display:none">
+      <div class="card is-hidden" id="sect-form-card">
         <div class="card-header py-3">
           <h5 id="sect-form-title"><i class="bi bi-plus-circle me-2"></i>Nouveau secteur</h5>
-          <button class="btn btn-outline-danger btn-sm" onclick="document.getElementById('sect-form-card').style.display='none'"><i class="bi bi-x-lg"></i></button>
+          <button class="btn btn-outline-danger btn-sm" onclick="closeSecteurForm()"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="card-body">
           <input type="hidden" id="sect-edit-id">
           <div class="row g-3">
             <div class="col-md-4">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Province *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Province *</label>
               <select class="form-select form-select-sm" id="sect-province" onchange="onSectFormProvinceChange()"><option value="">— Choisir —</option></select>
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Territoire *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Territoire *</label>
               <select class="form-select form-select-sm" id="sect-territoire"><option value="">— Choisir —</option></select>
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Nom interne *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Nom interne *</label>
               <input class="form-control form-control-sm" id="sect-name" placeholder="Ex. Imbongo">
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Label affiché *</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Label affiché *</label>
               <input class="form-control form-control-sm" id="sect-label" placeholder="Ex. Imbongo">
             </div>
           </div>
@@ -673,10 +683,10 @@
         <div class="card-header py-3">
           <h5><i class="bi bi-folder2-open me-2"></i>Rapports soumis</h5>
           <div class="d-flex gap-2 flex-wrap align-items-center">
-            <select class="form-select form-select-sm" id="rp-filter-province" onchange="loadAllReports()" style="width:auto">
+            <select class="form-select form-select-sm filter-auto-width" id="rp-filter-province" onchange="loadAllReports()">
               <option value="">Toutes provinces</option>
             </select>
-            <input class="form-control form-control-sm" id="rp-filter-rapporteur" type="text" placeholder="Rapporteur…" oninput="loadAllReports()" style="width:160px">
+            <input class="form-control form-control-sm rapporteur-filter-width" id="rp-filter-rapporteur" type="text" placeholder="Rapporteur…" oninput="loadAllReports()">
           </div>
         </div>
         <div class="card-body p-0">
@@ -767,6 +777,12 @@ function askConfirm(message, onOk, title = 'Confirmer', okLabel = 'Confirmer', o
   _confirmModal.show();
 }
 
+function setHidden(target, hidden) {
+  const el = typeof target === 'string' ? document.getElementById(target) : target;
+  if (el) el.classList.toggle('is-hidden', hidden);
+  return el;
+}
+
 // ─── INIT ────────────────────────────────────────────────────────────────────
 (async function init() {
   const session = getSession();
@@ -780,6 +796,7 @@ function askConfirm(message, onOk, title = 'Confirmer', okLabel = 'Confirmer', o
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
   await Promise.all([loadProvinces(), loadUsers()]);
+  showView('users');
   await loadDashboard();
 })();
 
@@ -879,10 +896,10 @@ async function loadUsers() {
 }
 
 function openUserModal(user) {
-  document.getElementById('user-form-card').style.display = '';
+  setHidden('user-form-card', false);
   document.getElementById('user-form-title').innerHTML = '<i class="bi bi-person-gear me-2"></i>'+(user ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur');
   const errEl = document.getElementById('user-form-error');
-  errEl.style.display = 'none'; errEl.textContent = '';
+  setHidden(errEl, true); errEl.textContent = '';
   document.getElementById('uid-edit').value   = user?.id || '';
   document.getElementById('u-email').value    = user?.email || '';
   document.getElementById('u-display').value  = user?.display_name || '';
@@ -892,7 +909,7 @@ function openUserModal(user) {
   onRoleChange();
   document.getElementById('user-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-function closeUserForm() { document.getElementById('user-form-card').style.display = 'none'; }
+function closeUserForm() { setHidden('user-form-card', true); }
 function editUser(id) { const u = USERS_CACHE.find((u) => u.id === id); if (u) openUserModal(u); }
 
 function buildProvinceCheckboxes(selected) {
@@ -917,7 +934,7 @@ function formatUserAccess(user) {
 
 function onRoleChange() {
   const role = document.getElementById('u-role').value;
-  document.getElementById('u-provinces-wrap').style.display = ['province','comptable'].includes(role) ? '' : 'none';
+  setHidden('u-provinces-wrap', !['province','comptable'].includes(role));
 }
 
 async function saveUser() {
@@ -930,16 +947,16 @@ async function saveUser() {
   const provinces = ['province','comptable'].includes(role)
     ? Array.from(document.querySelectorAll('#u-provinces-checkboxes input:checked')).map((c) => c.value) : null;
 
-  errEl.style.display = 'none'; errEl.textContent = '';
+  setHidden(errEl, true); errEl.textContent = '';
 
-  if (!email) { errEl.textContent = 'L\'email est obligatoire.'; errEl.style.display = ''; errEl.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
-  if (!id && !password) { errEl.textContent = 'Le mot de passe est obligatoire pour un nouveau compte.'; errEl.style.display = ''; errEl.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
-  if (['province','comptable'].includes(role) && (!provinces||!provinces.length)) { errEl.textContent = 'Sélectionnez au moins une province.'; errEl.style.display = ''; errEl.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
+  if (!email) { errEl.textContent = 'L\'email est obligatoire.'; setHidden(errEl, false); errEl.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
+  if (!id && !password) { errEl.textContent = 'Le mot de passe est obligatoire pour un nouveau compte.'; setHidden(errEl, false); errEl.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
+  if (['province','comptable'].includes(role) && (!provinces||!provinces.length)) { errEl.textContent = 'Sélectionnez au moins une province.'; setHidden(errEl, false); errEl.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
 
   const payload = { email, display_name: display||null, role, provinces };
   if (password) {
     try { payload.password_b64 = safeB64(password); }
-    catch (e) { errEl.textContent = 'Erreur d\'encodage du mot de passe.'; errEl.style.display = ''; return; }
+    catch (e) { errEl.textContent = 'Erreur d\'encodage du mot de passe.'; setHidden(errEl, false); return; }
   }
 
   const btn = document.querySelector('#user-form-card button[onclick="saveUser()"]');
@@ -957,7 +974,7 @@ async function saveUser() {
     console.error('saveUser error:', e);
     const msg = e?.message || 'Erreur d\'enregistrement. Vérifiez les politiques RLS dans Supabase.';
     errEl.textContent = msg;
-    errEl.style.display = '';
+    setHidden(errEl, false);
     errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     showToast('Erreur : ' + msg);
   } finally {
@@ -1014,7 +1031,7 @@ async function loadProvinces() {
 }
 
 function openProvinceModal(prov) {
-  document.getElementById('province-form-card').style.display = '';
+  setHidden('province-form-card', false);
   document.getElementById('province-form-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>'+(prov ? 'Modifier la province' : 'Nouvelle province');
   document.getElementById('prov-edit-name').value = prov?.name  || '';
   document.getElementById('prov-name').value      = prov?.name  || '';
@@ -1023,6 +1040,7 @@ function openProvinceModal(prov) {
   document.getElementById('prov-name').disabled   = !!prov;
   document.getElementById('province-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+function closeProvinceForm() { setHidden('province-form-card', true); }
 function editProvince(name) { const p = PROVINCES_CACHE.find((p)=>p.name===name); if (p) openProvinceModal(p); }
 
 async function saveProvince() {
@@ -1037,7 +1055,7 @@ async function saveProvince() {
       : await db.from('provinces').insert({ name, label, code });
     if (error) throw error;
     showToast(origName ? '✓ Province mise à jour.' : '✓ Province créée.');
-    document.getElementById('province-form-card').style.display = 'none';
+    closeProvinceForm();
     await loadProvinces();
   } catch (e) { console.error(e); showToast('Erreur : ' + (e?.message || 'Vérifiez les politiques RLS Supabase.')); }
 }
@@ -1070,7 +1088,7 @@ async function loadMissionsRef() {
 
 function openMissionRefModal(m) {
   const card = document.getElementById('mr-form-card');
-  card.style.display = '';
+  setHidden(card, false);
   document.getElementById('mr-form-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>'+(m ? 'Modifier la mission' : 'Nouvelle mission de référence');
   document.getElementById('mr-edit-id').value   = m?.id            || '';
   document.getElementById('mr-province').value  = m?.province_name || '';
@@ -1081,6 +1099,7 @@ function openMissionRefModal(m) {
   document.getElementById('mr-ordre').value     = m?.ordre         || 99;
   card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+function closeMissionRefForm() { setHidden('mr-form-card', true); }
 function editMissionRef(id) { const m = MR_CACHE.find((m)=>m.id===id); if (m) openMissionRefModal(m); }
 
 async function deleteMissionRef(id) {
@@ -1117,7 +1136,7 @@ async function saveMissionRef() {
       : await db.from('missions_ref').insert(payload);
     if (error) throw error;
     showToast(editId ? '✓ Mission mise à jour.' : '✓ Mission créée.');
-    document.getElementById('mr-form-card').style.display = 'none';
+    closeMissionRefForm();
     await loadMissionsRef();
   } catch (e) { console.error(e); showToast('Erreur : ' + (e?.message || 'Vérifiez les politiques RLS Supabase.')); }
 }
@@ -1145,7 +1164,7 @@ async function loadTerritoires() {
 
 function openTerritoireModal(t) {
   const card = document.getElementById('terr-form-card');
-  card.style.display = '';
+  setHidden(card, false);
   document.getElementById('terr-form-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>'+(t ? 'Modifier le territoire' : 'Nouveau territoire');
   document.getElementById('terr-edit-id').value  = t?.id            || '';
   document.getElementById('terr-province').value = t?.province_name || '';
@@ -1153,7 +1172,7 @@ function openTerritoireModal(t) {
   document.getElementById('terr-label').value    = t?.label         || '';
   card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-function closeTerritoireForm() { document.getElementById('terr-form-card').style.display = 'none'; }
+function closeTerritoireForm() { setHidden('terr-form-card', true); }
 function editTerritoire(id) { const t = TERRITOIRES_CACHE.find((t) => String(t.id) === String(id)); if (t) openTerritoireModal(t); }
 
 async function saveTerritoire() {
@@ -1244,7 +1263,7 @@ async function onSectFormProvinceChange() {
 
 function openSecteurModal(s) {
   const card = document.getElementById('sect-form-card');
-  card.style.display = '';
+  setHidden(card, false);
   document.getElementById('sect-form-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>'+(s ? 'Modifier le secteur' : 'Nouveau secteur');
   document.getElementById('sect-edit-id').value = s?.id || '';
   // Pre-fill province and territoire
@@ -1261,7 +1280,7 @@ function openSecteurModal(s) {
   document.getElementById('sect-label').value = s?.label || '';
   card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-function closeSecteurForm() { document.getElementById('sect-form-card').style.display = 'none'; }
+function closeSecteurForm() { setHidden('sect-form-card', true); }
 function editSecteur(id) { const s = SECTEURS_CACHE.find((s) => String(s.id) === String(id)); if (s) openSecteurModal(s); }
 
 async function saveSecteur() {

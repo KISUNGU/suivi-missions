@@ -216,6 +216,12 @@
     border: 1px solid rgba(211,165,44,0.3);
     border-radius: 6px; padding: 12px;
   }
+  .workflow-alerts .alert {
+    border-left: 4px solid rgba(18,53,36,0.35);
+  }
+  .feedback-comment {
+    white-space: pre-line;
+  }
 </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -278,7 +284,7 @@
     </div>
     <div class="d-flex align-items-center gap-3 flex-wrap">
       <span class="badge bg-warning text-dark" id="header-province-label">—</span>
-      <button class="btn btn-sm position-relative p-1" id="btn-notif" onclick="document.getElementById('archive-section').scrollIntoView({behavior:'smooth'})" title="Missions enregistrées">
+      <button class="btn btn-sm position-relative p-1" id="btn-notif" onclick="scrollToWorkflowPanel()" title="Notifications de workflow">
         <i class="bi bi-bell-fill text-white fs-5"></i>
         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notif-badge" style="display:none;font-size:.6rem">0</span>
       </button>
@@ -308,9 +314,15 @@
       <p class="text-muted small border-bottom pb-3 mb-4">
         Remplissez les informations ci-dessous. Le formulaire génère un fichier JSON standardisé pour la saisie, le suivi et la consolidation du budget des missions.
       </p>
+      <div id="workflow-alerts" class="workflow-alerts mb-4"></div>
 
       <!-- ════ VUE MISSIONNAIRE (province) ════ -->
       <div id="main-form-section">
+
+      <div class="alert alert-warning d-none" id="mission-feedback-alert">
+        <div class="fw-semibold mb-1"><i class="bi bi-exclamation-circle-fill me-1"></i><span id="mission-feedback-title">Mission renvoyée par le comptable</span></div>
+        <div class="small feedback-comment mb-0" id="mission-feedback-body"></div>
+      </div>
 
       <!-- ── ÉTAPE 1 : IDENTIFICATION ── -->
       <div class="card mb-4">
@@ -449,6 +461,34 @@
         </div>
       </div>
 
+      <div id="comptable-active-section" style="display:none" class="mb-4">
+        <div class="card">
+          <div class="card-header card-header-pnda py-3 d-flex align-items-center gap-3">
+            <span class="step-num step-num-gold"><i class="bi bi-lightning-charge-fill" style="font-size:.85rem"></i></span>
+            <div>
+              <h5 class="mb-0">Missions activées en cours</h5>
+              <small class="text-muted ms-1">Suivi des missions exécutées et clôture après justification.</small>
+            </div>
+            <button class="btn btn-pnda btn-sm ms-auto" onclick="loadActiveMissions()" title="Actualiser">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small mb-3">Quand les pièces justificatives sont validées, le comptable signale la mission comme effectuée et le litige passe à <strong>0 USD</strong>.</p>
+            <div class="table-responsive">
+              <table class="table table-hover table-sm summary-table mb-0">
+                <thead>
+                  <tr><th>Date</th><th>Rapporteur</th><th>Période</th><th>Missions</th><th>Litige USD</th><th>Action</th></tr>
+                </thead>
+                <tbody id="active-tbody">
+                  <tr><td colspan="6" class="text-center text-muted py-4">Chargement…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── Complétion financière (formulaire) ── -->
       <div id="comptable-completion-section" style="display:none" class="mb-4">
         <div class="card">
@@ -466,10 +506,17 @@
             <div class="alert alert-info small py-2 mb-3">
               <i class="bi bi-info-circle-fill me-1"></i>
               Les champs <strong>Nature, Objectif, Destination et Dates</strong> sont en lecture seule (saisis par le missionnaire).
-              Remplissez les champs financiers surlignés, puis cliquez sur <strong>Activer la mission</strong>.
+              Remplissez les champs financiers surlignés, puis cliquez sur <strong>Activer la mission</strong>. Si la mission doit être corrigée, retournez-la au missionnaire avec commentaire.
             </div>
             <div id="completion-missions-list"></div>
+            <div class="mt-3">
+              <label class="form-label form-label-sm">Commentaire du comptable</label>
+              <textarea class="form-control form-control-sm" id="completion-comment" rows="3" placeholder="Décrivez ici les corrections attendues ou les points à revoir."></textarea>
+            </div>
             <div class="d-flex gap-2 mt-3 flex-wrap">
+              <button class="btn btn-outline-warning" onclick="returnMissionToMissionnaire()">
+                <i class="bi bi-arrow-return-left me-1"></i>Retourner au missionnaire
+              </button>
               <button class="btn btn-success" onclick="saveFinancialCompletion()">
                 <i class="bi bi-lightning-charge-fill me-1"></i>Activer la mission
               </button>
@@ -515,7 +562,7 @@
   <div id="toast" class="toast align-items-center text-bg-dark border-0" role="alert">
     <div class="d-flex">
       <div class="toast-body fw-semibold" id="toast-body">—</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" title="Fermer la notification" aria-label="Fermer la notification"></button>
     </div>
   </div>
 </div>
@@ -569,12 +616,103 @@ let USER_MISSIONS_CACHE = [];
 let CURRENT_USER_ROLE = 'province'; // 'province' | 'comptable'
 let CURRENT_COMPLETION_REPORT_ID = null;
 let PENDING_REPORTS_CACHE = [];
+let CURRENT_EDIT_REPORT_ID = null;
+let ACTIVE_REPORTS_CACHE = [];
+
+const WORKFLOW_STATUS = {
+  EN_ATTENTE: 'en_attente',
+  RETOURNEE: 'retournee',
+  ACTIVEE: 'activee',
+  REALISEE: 'realisee'
+};
 
 function encodePassword(pw) { try { return window.btoa(pw); } catch { return pw; } }
 function isPasswordMatch(account, pw) {
   if (!account) return false;
   const enc = encodePassword(pw);
   return account.password === pw || account.password === enc;
+}
+
+function normalizeReportStatus(status) {
+  return Object.values(WORKFLOW_STATUS).includes(status) ? status : WORKFLOW_STATUS.ACTIVEE;
+}
+
+function getWorkflowComment(report) {
+  return report?.meta?.workflow_comment || '';
+}
+
+function calculateReportLitige(report) {
+  return (report?.missions || []).reduce((sum, mission) => sum + Number(mission.solde_usd || 0), 0);
+}
+
+function updateFeedbackAlert(comment, title = 'Mission renvoyée par le comptable') {
+  const alert = document.getElementById('mission-feedback-alert');
+  const body = document.getElementById('mission-feedback-body');
+  const heading = document.getElementById('mission-feedback-title');
+  if (!alert || !body || !heading) return;
+  if (!comment) {
+    alert.classList.add('d-none');
+    body.textContent = '';
+    return;
+  }
+  heading.textContent = title;
+  body.textContent = comment;
+  alert.classList.remove('d-none');
+}
+
+function clearCurrentEditContext() {
+  CURRENT_EDIT_REPORT_ID = null;
+  updateFeedbackAlert('');
+}
+
+function getMissionnaireNotificationCount(reports = USER_MISSIONS_CACHE) {
+  return (reports || []).filter((report) => {
+    const statut = normalizeReportStatus(report.statut);
+    return statut === WORKFLOW_STATUS.RETOURNEE || statut === WORKFLOW_STATUS.ACTIVEE;
+  }).length;
+}
+
+function getComptableNotificationCount() {
+  return (PENDING_REPORTS_CACHE?.length || 0) + (ACTIVE_REPORTS_CACHE?.length || 0);
+}
+
+function renderWorkflowAlerts() {
+  const container = document.getElementById('workflow-alerts');
+  if (!container) return;
+
+  if (CURRENT_USER_ROLE === 'comptable') {
+    const pendingCount = PENDING_REPORTS_CACHE?.length || 0;
+    const activeCount = ACTIVE_REPORTS_CACHE?.length || 0;
+    const totalLitige = ACTIVE_REPORTS_CACHE.reduce((sum, report) => sum + calculateReportLitige(report), 0);
+    const alerts = [];
+    if (pendingCount > 0) {
+      alerts.push(`<div class="alert alert-warning small mb-2"><i class="bi bi-hourglass-split me-1"></i><strong>${pendingCount}</strong> mission(s) attendent une complétion financière.</div>`);
+    }
+    if (activeCount > 0) {
+      alerts.push(`<div class="alert alert-info small mb-2"><i class="bi bi-lightning-charge-fill me-1"></i><strong>${activeCount}</strong> mission(s) sont en cours avec un litige cumulé de <strong>${escapeHtml(formatCurrencyDisplay(totalLitige))} USD</strong>.</div>`);
+    }
+    container.innerHTML = alerts.join('');
+    return;
+  }
+
+  const returnedCount = USER_MISSIONS_CACHE.filter((report) => normalizeReportStatus(report.statut) === WORKFLOW_STATUS.RETOURNEE).length;
+  const activeCount = USER_MISSIONS_CACHE.filter((report) => normalizeReportStatus(report.statut) === WORKFLOW_STATUS.ACTIVEE).length;
+  const alerts = [];
+  if (returnedCount > 0) {
+    alerts.push(`<div class="alert alert-warning small mb-2"><i class="bi bi-arrow-return-left me-1"></i><strong>${returnedCount}</strong> mission(s) ont été retournées par le comptable pour correction.</div>`);
+  }
+  if (activeCount > 0) {
+    alerts.push(`<div class="alert alert-success small mb-2"><i class="bi bi-lightning-charge-fill me-1"></i><strong>${activeCount}</strong> mission(s) sont activées et en cours d'exécution.</div>`);
+  }
+  container.innerHTML = alerts.join('');
+}
+
+function scrollToWorkflowPanel() {
+  const missionnaireHasReturned = (USER_MISSIONS_CACHE || []).some((report) => normalizeReportStatus(report.statut) === WORKFLOW_STATUS.RETOURNEE);
+  const targetId = CURRENT_USER_ROLE === 'comptable'
+    ? ((PENDING_REPORTS_CACHE?.length || 0) > 0 ? 'comptable-pending-section' : 'comptable-active-section')
+    : (missionnaireHasReturned ? 'workflow-alerts' : 'archive-section');
+  document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
@@ -776,16 +914,20 @@ function openProvinceSession(user, province) {
 
   if (CURRENT_USER_ROLE === 'comptable') {
     // ── Mode comptable ──
+    document.body.classList.remove('mode-missionnaire');
     document.getElementById('main-form-section').style.display = 'none';
     document.getElementById('selected-missions-section').style.display = 'none';
     document.getElementById('comptable-pending-section').style.display = '';
+    document.getElementById('comptable-active-section').style.display = '';
     const lbl = document.getElementById('comptable-province-label');
     if (lbl) lbl.textContent = getProvinceData(province)?.label || province;
     loadPendingMissions(province);
+    loadActiveMissions(province);
     loadUserArchive(user, province);
   } else {
     // ── Mode missionnaire ──
     document.body.classList.add('mode-missionnaire');
+    clearCurrentEditContext();
     document.getElementById('f-rapporteur').value = user;
     document.getElementById('f-province').value   = province;
     document.getElementById('f-province').disabled = true;
@@ -1266,31 +1408,58 @@ async function persistReport(data) {
   const fpKey = 'PNDA_LAST_REPORT_FINGERPRINT';
   const fp = stableStringify(data);
   if (sessionStorage.getItem(fpKey) === fp) return;
-  const rid = `${Date.now()}-${Math.random().toString(16).slice(2,8)}`;
   try {
-    const seq = await getNextSeqNumber(data.meta.province, data.meta.trimestre, data.meta.annee);
-    const { error } = await db.from('reports').insert({
-      id: rid, saved_at: new Date().toISOString(), source: 'formulaire-html',
-      province: data.meta.province, province_label: data.meta.province_label,
-      province_code: data.meta.province_code, trimestre: data.meta.trimestre,
-      annee: data.meta.annee, rapporteur: data.meta.rapporteur,
-      rapporteur_role: data.meta.role, date_generation: data.meta.date_generation || null,
-      missions: data.missions, meta: { ...data.meta, seq_number: seq }, seq_number: seq,
-      statut: 'en_attente'
-    });
-    if (error) {
-      // If statut column doesn't exist yet (migration not run), retry without it
-      if (error.code === 'PGRST204' || (error.message && error.message.includes('statut'))) {
-        const { error: e2 } = await db.from('reports').insert({
-          id: rid, saved_at: new Date().toISOString(), source: 'formulaire-html',
-          province: data.meta.province, province_label: data.meta.province_label,
-          province_code: data.meta.province_code, trimestre: data.meta.trimestre,
-          annee: data.meta.annee, rapporteur: data.meta.rapporteur,
-          rapporteur_role: data.meta.role, date_generation: data.meta.date_generation || null,
-          missions: data.missions, meta: { ...data.meta, seq_number: seq }, seq_number: seq
-        });
-        if (e2) throw e2;
-      } else { throw error; }
+    const now = new Date().toISOString();
+    const existing = CURRENT_EDIT_REPORT_ID ? USER_MISSIONS_CACHE.find((report) => report.id === CURRENT_EDIT_REPORT_ID) : null;
+    const seq = existing?.seq_number || await getNextSeqNumber(data.meta.province, data.meta.trimestre, data.meta.annee);
+    const payload = {
+      saved_at: now,
+      source: 'formulaire-html',
+      province: data.meta.province,
+      province_label: data.meta.province_label,
+      province_code: data.meta.province_code,
+      trimestre: data.meta.trimestre,
+      annee: data.meta.annee,
+      rapporteur: data.meta.rapporteur,
+      rapporteur_role: data.meta.role,
+      date_generation: data.meta.date_generation || null,
+      missions: data.missions,
+      meta: {
+        ...(existing?.meta || {}),
+        ...data.meta,
+        seq_number: seq,
+        workflow_comment: null,
+        last_resubmitted_at: existing ? now : null,
+        last_resubmitted_by: existing ? data.meta.rapporteur : null
+      },
+      seq_number: seq,
+      statut: WORKFLOW_STATUS.EN_ATTENTE,
+      activated_by: null,
+      activated_at: null,
+      completed_by: null,
+      completed_at: null
+    };
+
+    if (existing) {
+      const { error } = await db.from('reports').update(payload).eq('id', CURRENT_EDIT_REPORT_ID);
+      if (error) throw error;
+    } else {
+      const rid = `${Date.now()}-${Math.random().toString(16).slice(2,8)}`;
+      const { error } = await db.from('reports').insert({ id: rid, ...payload });
+      if (error) {
+        if (error.code === 'PGRST204' || (error.message && error.message.includes('statut'))) {
+          const fallbackPayload = { id: rid, ...payload };
+          delete fallbackPayload.statut;
+          delete fallbackPayload.activated_by;
+          delete fallbackPayload.activated_at;
+          delete fallbackPayload.completed_by;
+          delete fallbackPayload.completed_at;
+          const { error: e2 } = await db.from('reports').insert(fallbackPayload);
+          if (e2) throw e2;
+        } else {
+          throw error;
+        }
+      }
     }
     sessionStorage.setItem(fpKey, fp);
     window.dispatchEvent(new Event('PNDA_DATA_UPDATED'));
@@ -1306,10 +1475,11 @@ async function enregistrerMissions() {
   try {
     const ok = await persistReport(data);
     if (ok) {
-      showToast('✓ Mission soumise en attente de validation financière !');
+      showToast(CURRENT_EDIT_REPORT_ID ? '✓ Mission corrigée et renvoyée au comptable.' : '✓ Mission soumise en attente de validation financière !');
       const user = document.getElementById('f-rapporteur').value;
       await loadUserArchive(user, data.meta.province);
       updateNotifBadge();
+      clearCurrentEditContext();
       // Reset form for next mission entry
       sessionStorage.removeItem('PNDA_LAST_REPORT_FINGERPRINT');
     }
@@ -1319,7 +1489,7 @@ async function enregistrerMissions() {
 }
 
 function updateNotifBadge() {
-  const count = USER_MISSIONS_CACHE?.length || 0;
+  const count = CURRENT_USER_ROLE === 'comptable' ? getComptableNotificationCount() : getMissionnaireNotificationCount();
   const badge = document.getElementById('notif-badge');
   if (!badge) return;
   if (count > 0) { badge.style.display = ''; badge.textContent = count; }
@@ -1368,6 +1538,7 @@ async function loadUserArchive(rapporteur, province) {
 
     const STATUT_BADGE = {
       en_attente: '<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>En attente</span>',
+      retournee:  '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-arrow-return-left me-1"></i>Retournée</span>',
       activee:    '<span class="badge bg-success"><i class="bi bi-lightning-charge-fill me-1"></i>Activée</span>',
       realisee:   '<span class="badge bg-secondary"><i class="bi bi-check2-all me-1"></i>Réalisée</span>'
     };
@@ -1375,20 +1546,32 @@ async function loadUserArchive(rapporteur, province) {
     tbody.innerHTML = data.map((r) => {
       const nb = r.missions?.length || r.meta?.total_missions || 0;
       const tot = r.meta?.total_montant_usd || '0.00';
-      const st = r.statut || 'activee';
+      const st = normalizeReportStatus(r.statut);
       const badge = STATUT_BADGE[st] || STATUT_BADGE.activee;
       const rid = escapeHtml(r.id);
+      const workflowComment = escapeHtml(getWorkflowComment(r));
+      const litige = calculateReportLitige(r);
       let actions = '';
       if (CURRENT_USER_ROLE !== 'comptable') {
-        if (st === 'en_attente') {
-          actions = `<button class="btn btn-pnda btn-sm me-1" onclick="restoreReport('${rid}')"><i class="bi bi-pencil-fill me-1"></i>Modifier</button>`;
-        } else if (st === 'activee') {
-          actions = `<button class="btn btn-outline-secondary btn-sm me-1" onclick="marquerRealisee('${rid}')"><i class="bi bi-flag-fill me-1"></i>Réalisée</button>`;
+        if (st === WORKFLOW_STATUS.RETOURNEE) {
+          actions = `<button class="btn btn-warning btn-sm me-1" onclick="restoreReport('${rid}')"><i class="bi bi-pencil-fill me-1"></i>Corriger</button>${workflowComment ? `<div class="small text-muted mt-1 feedback-comment"><i class="bi bi-chat-left-text me-1"></i>${workflowComment}</div>` : ''}`;
+        } else if (st === WORKFLOW_STATUS.EN_ATTENTE) {
+          actions = '<span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>En attente de validation financière</span>';
+        } else if (st === WORKFLOW_STATUS.ACTIVEE) {
+          actions = `<span class="text-success small"><i class="bi bi-lightning-charge-fill me-1"></i>Mission en cours · Litige ${escapeHtml(formatCurrencyDisplay(litige))} USD</span>`;
         } else {
           actions = `<span class="text-muted small">Mission terminée</span>`;
         }
       } else {
-        actions = `<span class="text-muted small">${st === 'activee' ? 'Budget validé' : st === 'realisee' ? 'Réalisée' : '—'}</span>`;
+        if (st === WORKFLOW_STATUS.EN_ATTENTE) {
+          actions = '<span class="text-muted small">À analyser</span>';
+        } else if (st === WORKFLOW_STATUS.RETOURNEE) {
+          actions = '<span class="text-warning small">En attente de correction missionnaire</span>';
+        } else if (st === WORKFLOW_STATUS.ACTIVEE) {
+          actions = `<button class="btn btn-outline-secondary btn-sm" onclick="signalerMissionRealisee('${rid}')"><i class="bi bi-check2-circle me-1"></i>Clôturer</button><div class="small text-muted mt-1">Litige ${escapeHtml(formatCurrencyDisplay(litige))} USD</div>`;
+        } else {
+          actions = '<span class="text-muted small">Clôturée</span>';
+        }
       }
       return `<tr>
         <td>${escapeHtml(r.seq_number ? '#'+r.seq_number : '—')}</td>
@@ -1401,6 +1584,7 @@ async function loadUserArchive(rapporteur, province) {
       </tr>`;
     }).join('');
     USER_MISSIONS_CACHE = data;
+    renderWorkflowAlerts();
     updateNotifBadge();
   } catch (e) { console.error(e); tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Erreur de chargement.</td></tr>'; }
 }
@@ -1408,6 +1592,7 @@ async function loadUserArchive(rapporteur, province) {
 async function restoreReport(reportId) {
   const report = USER_MISSIONS_CACHE.find((r) => r.id === reportId);
   if (!report?.missions?.length) { showToast('Rapport introuvable ou vide.'); return; }
+  CURRENT_EDIT_REPORT_ID = reportId;
   document.getElementById('missions-container').innerHTML = '';
   missionCount = 0;
 
@@ -1456,23 +1641,29 @@ async function restoreReport(reportId) {
   sId('f-role', meta.role);
   sId('f-date', meta.date_generation);
   renderSelectedMissionsTable();
+  updateFeedbackAlert(getWorkflowComment(report), 'Commentaires du comptable');
   showToast('✓ Rapport restauré.');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ─── MARQUER RÉALISÉE (missionnaire) ─────────────────────────────────────────
-async function marquerRealisee(reportId) {
-  if (!confirm('Marquer cette mission comme réalisée ? Elle ne pourra plus être modifiée.')) return;
+// ─── CLÔTURE COMPTABLE ──────────────────────────────────────────────────────
+async function signalerMissionRealisee(reportId) {
   try {
     const session = getSession();
+    const report = USER_MISSIONS_CACHE.find((entry) => entry.id === reportId) || ACTIVE_REPORTS_CACHE.find((entry) => entry.id === reportId);
+    if (!report) { showToast('Mission introuvable.'); return; }
+    const missions = (report.missions || []).map((mission) => ({ ...mission, solde_usd: 0 }));
     const { error } = await db.from('reports').update({
-      statut: 'realisee',
+      missions,
+      meta: { ...(report.meta || {}), total_solde_usd: '0.00', litige_usd: '0.00' },
+      statut: WORKFLOW_STATUS.REALISEE,
       completed_by: session?.user || null,
       completed_at: new Date().toISOString()
     }).eq('id', reportId);
     if (error) throw error;
-    showToast('✓ Mission marquée comme réalisée.');
+    showToast('✓ Mission clôturée. Litige remis à 0 USD.');
     await loadUserArchive(session?.user, session?.province);
+    await loadActiveMissions(session?.province);
   } catch (e) { console.error(e); showToast('Erreur lors de la mise à jour.'); }
 }
 
@@ -1515,14 +1706,49 @@ async function loadPendingMissions(province) {
         </td>
       </tr>`;
     }).join('');
-    // Update notification badge
-    const badge = document.getElementById('notif-badge');
-    if (badge) {
-      const n = PENDING_REPORTS_CACHE.length;
-      badge.style.display = n > 0 ? '' : 'none';
-      badge.textContent = n;
-    }
+    renderWorkflowAlerts();
+    updateNotifBadge();
   } catch (e) { console.error(e); tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Erreur de chargement.</td></tr>'; }
+}
+
+async function loadActiveMissions(province) {
+  const tbody = document.getElementById('active-tbody');
+  if (!tbody) return;
+  const prov = province || getSession()?.province;
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Chargement…</td></tr>';
+  try {
+    const { data, error } = await db.from('reports')
+      .select('id, saved_at, trimestre, annee, seq_number, meta, missions, rapporteur, statut')
+      .eq('province', prov)
+      .eq('statut', WORKFLOW_STATUS.ACTIVEE)
+      .order('saved_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    ACTIVE_REPORTS_CACHE = data || [];
+    if (!ACTIVE_REPORTS_CACHE.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-check2-circle me-1 text-success"></i>Aucune mission activée en cours.</td></tr>';
+      renderWorkflowAlerts();
+      updateNotifBadge();
+      return;
+    }
+    tbody.innerHTML = ACTIVE_REPORTS_CACHE.map((report) => {
+      const rid = escapeHtml(report.id);
+      const litige = calculateReportLitige(report);
+      return `<tr>
+        <td>${escapeHtml(new Date(report.saved_at).toLocaleDateString('fr-FR'))}</td>
+        <td>${escapeHtml(report.rapporteur || report.meta?.rapporteur || '—')}</td>
+        <td>${escapeHtml(`${report.trimestre||report.meta?.trimestre||''} ${report.annee||report.meta?.annee||''}`.trim())}</td>
+        <td><span class="badge bg-secondary">${escapeHtml(String(report.missions?.length || 0))}</span></td>
+        <td><span class="badge ${litige > 0 ? 'bg-warning text-dark' : 'bg-success'}">${escapeHtml(formatCurrencyDisplay(litige))}</span></td>
+        <td><button class="btn btn-outline-secondary btn-sm" onclick="signalerMissionRealisee('${rid}')"><i class="bi bi-check2-circle me-1"></i>Mission effectuée</button></td>
+      </tr>`;
+    }).join('');
+    renderWorkflowAlerts();
+    updateNotifBadge();
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Erreur de chargement.</td></tr>';
+  }
 }
 
 // ─── COMPTABLE — COMPLÉTION FINANCIÈRE ───────────────────────────────────────
@@ -1542,6 +1768,8 @@ function openFinancialCompletion(reportId) {
   const listEl = document.getElementById('completion-missions-list');
   if (!listEl) return;
   listEl.innerHTML = '';
+  const commentEl = document.getElementById('completion-comment');
+  if (commentEl) commentEl.value = getWorkflowComment(report);
 
   (report.missions || []).forEach((m, i) => {
     const div = document.createElement('div');
@@ -1653,6 +1881,36 @@ function closeFinancialCompletion() {
   CURRENT_COMPLETION_REPORT_ID = null;
   const sect = document.getElementById('comptable-completion-section');
   if (sect) sect.style.display = 'none';
+  const commentEl = document.getElementById('completion-comment');
+  if (commentEl) commentEl.value = '';
+}
+
+async function returnMissionToMissionnaire() {
+  if (!CURRENT_COMPLETION_REPORT_ID) { showToast('Aucun rapport sélectionné.'); return; }
+  const comment = document.getElementById('completion-comment')?.value.trim() || '';
+  if (!comment) { showToast('Ajoutez un commentaire avant de retourner la mission.'); return; }
+  const session = getSession();
+  const report = PENDING_REPORTS_CACHE.find((entry) => entry.id === CURRENT_COMPLETION_REPORT_ID);
+  if (!report) { showToast('Rapport introuvable.'); return; }
+  try {
+    const { error } = await db.from('reports').update({
+      statut: WORKFLOW_STATUS.RETOURNEE,
+      meta: {
+        ...(report.meta || {}),
+        workflow_comment: comment,
+        returned_by: session?.user || null,
+        returned_at: new Date().toISOString()
+      }
+    }).eq('id', CURRENT_COMPLETION_REPORT_ID);
+    if (error) throw error;
+    showToast('✓ Mission retournée au missionnaire avec commentaire.');
+    closeFinancialCompletion();
+    await loadPendingMissions(session?.province);
+    await loadUserArchive(session?.user, session?.province);
+  } catch (e) {
+    console.error(e);
+    showToast('Erreur lors du retour de mission.');
+  }
 }
 
 async function saveFinancialCompletion() {
@@ -1682,16 +1940,20 @@ async function saveFinancialCompletion() {
   const session = getSession();
   const totalMontant = updatedMissions.reduce((s, m) => s + Number(m.montant_usd || 0), 0);
   const totalGeneral = updatedMissions.reduce((s, m) => s + Number(m.total_usd || 0), 0);
+  const totalSolde   = updatedMissions.reduce((s, m) => s + Number(m.solde_usd || 0), 0);
   const updatedMeta  = {
     ...(report.meta || {}),
     total_montant_usd: totalMontant.toFixed(2),
-    total_general_usd: totalGeneral.toFixed(2)
+    total_general_usd: totalGeneral.toFixed(2),
+    total_solde_usd: totalSolde.toFixed(2),
+    litige_usd: totalSolde.toFixed(2),
+    workflow_comment: null
   };
 
   try {
     const { error } = await db.from('reports').update({
       missions: updatedMissions, meta: updatedMeta,
-      statut: 'activee',
+      statut: WORKFLOW_STATUS.ACTIVEE,
       activated_by: session?.user || null,
       activated_at: new Date().toISOString()
     }).eq('id', CURRENT_COMPLETION_REPORT_ID);
@@ -1699,6 +1961,7 @@ async function saveFinancialCompletion() {
     showToast('✓ Mission activée ! Le budget a été validé.');
     closeFinancialCompletion();
     await loadPendingMissions(session?.province);
+    await loadActiveMissions(session?.province);
     await loadUserArchive(session?.user, session?.province);
   } catch (e) { console.error(e); showToast('Erreur lors de l\'activation.'); }
 }

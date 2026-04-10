@@ -45,6 +45,14 @@ npm start
 
 Au lancement, l'application ouvre le formulaire principal de saisie.
 
+Workflow metier principal :
+
+- le missionnaire cree et enregistre une mission avec statut `en_attente` ;
+- le comptable ouvre son tableau de bord, complete la partie financiere puis active la mission ;
+- si le dossier doit etre corrige, le comptable retourne la mission au missionnaire avec commentaire, via le statut `retournee` ;
+- le missionnaire corrige la meme mission puis la renvoie au comptable ;
+- une fois la mission executee et justifiee, le comptable la cloture avec le statut `realisee` et le litige est ramene a `0 USD`.
+
 Le menu de l'application permet ensuite de :
 
 - revenir au formulaire de saisie ;
@@ -74,6 +82,8 @@ Le build genere un executable Windows portable dans le dossier `dist/` avec un n
 - `index.html` : interface de saisie.
 - `admin.html` : tableau de bord administrateur.
 - `superadmin.html` : espace RNSE pour la gestion des utilisateurs, rôles et référentiels.
+- `migration_v5_statut_roles.sql` : statuts `en_attente`, `activee`, `realisee` et role comptable.
+- `migration_v6_retournee_workflow.sql` : statut `retournee` et traçabilité du retour comptable.
 - `pnda_reference.json` : referentiel de donnees.
 
 ## Depot GitHub

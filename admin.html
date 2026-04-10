@@ -95,6 +95,23 @@
 
   /* ── PAGE TITLE ──────────────────────────────────────────── */
   .page-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--pnda-green); margin: 0; }
+  .page-title-sm { font-size: 1.15rem; }
+  .is-hidden { display: none !important; }
+  .stat-label-admin { font-size: 0.65rem; letter-spacing: 0.8px; }
+  .form-label-tight { letter-spacing: 0.6px; }
+  .content-narrow { max-width: 600px; }
+  .notif-badge { font-size: 0.6rem; }
+  .export-icon-lg { font-size: 3rem; }
+  .status-badge-small { font-size: 0.65rem; }
+  .report-row-clickable { cursor: pointer; }
+  .report-actions-cell { min-width: 170px; }
+  .report-detail-table { font-size: 0.82rem; }
+  .icon-green { color: var(--pnda-green); }
+  .icon-gold { color: #d3a52c; }
+  .icon-success { color: #198754; }
+  .icon-secondary { color: #6c757d; }
+  .icon-green-light { color: var(--pnda-green-lt); }
+  .icon-blue { color: #2563a8; }
 
   /* ── STAT CARDS ──────────────────────────────────────────── */
   .stat-value {
@@ -191,9 +208,10 @@
     <p>RNSE · RAF · Consolidation trimestrielle des missions</p>
   </div>
   <div class="ms-auto d-flex align-items-center gap-3">
+    <span class="badge bg-warning text-dark fw-semibold d-none" id="admin-super-badge">Session RNSE</span>
     <button class="btn btn-sm position-relative p-1" id="btn-admin-notif" onclick="refreshDashboard()" title="Nouveaux rapports">
       <i class="bi bi-bell-fill text-white fs-5"></i>
-      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="admin-notif-badge" style="display:none;font-size:.6rem">0</span>
+      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notif-badge d-none" id="admin-notif-badge">0</span>
     </button>
     <div class="text-end">
       <span class="session-user" id="session-user">—</span>
@@ -245,7 +263,7 @@
 
     <div class="sidebar-sep"></div>
     <ul class="nav flex-column">
-      <li class="nav-item" id="nav-back-superadmin" style="display:none">
+      <li class="nav-item d-none" id="nav-back-superadmin">
         <a href="superadmin.html" class="nav-link">
           <i class="bi bi-shield-lock-fill"></i> Retour espace RNSE
         </a>
@@ -289,10 +307,10 @@
           <div class="card h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
               <div>
-                <div class="text-muted small fw-semibold text-uppercase" style="font-size:.65rem;letter-spacing:.8px">Rapports</div>
+                <div class="text-muted small fw-semibold text-uppercase stat-label-admin">Rapports</div>
                 <span class="stat-value" id="stat-reports">—</span>
               </div>
-              <i class="bi bi-folder2 stat-icon" style="color:var(--pnda-green)"></i>
+              <i class="bi bi-folder2 stat-icon icon-green"></i>
             </div>
           </div>
         </div>
@@ -300,10 +318,10 @@
           <div class="card h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
               <div>
-                <div class="text-muted small fw-semibold text-uppercase" style="font-size:.65rem;letter-spacing:.8px">En attente</div>
+                <div class="text-muted small fw-semibold text-uppercase stat-label-admin">En attente</div>
                 <span class="stat-value text-warning" id="stat-en-attente">—</span>
               </div>
-              <i class="bi bi-hourglass-split stat-icon" style="color:#d3a52c"></i>
+              <i class="bi bi-hourglass-split stat-icon icon-gold"></i>
             </div>
           </div>
         </div>
@@ -311,10 +329,10 @@
           <div class="card h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
               <div>
-                <div class="text-muted small fw-semibold text-uppercase" style="font-size:.65rem;letter-spacing:.8px">Activées</div>
+                <div class="text-muted small fw-semibold text-uppercase stat-label-admin">Activées</div>
                 <span class="stat-value text-success" id="stat-activee">—</span>
               </div>
-              <i class="bi bi-lightning-charge stat-icon" style="color:#198754"></i>
+              <i class="bi bi-lightning-charge stat-icon icon-success"></i>
             </div>
           </div>
         </div>
@@ -322,10 +340,10 @@
           <div class="card h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
               <div>
-                <div class="text-muted small fw-semibold text-uppercase" style="font-size:.65rem;letter-spacing:.8px">Réalisées</div>
+                <div class="text-muted small fw-semibold text-uppercase stat-label-admin">Réalisées</div>
                 <span class="stat-value text-secondary" id="stat-realisee">—</span>
               </div>
-              <i class="bi bi-check2-all stat-icon" style="color:#6c757d"></i>
+              <i class="bi bi-check2-all stat-icon icon-secondary"></i>
             </div>
           </div>
         </div>
@@ -333,10 +351,10 @@
           <div class="card h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
               <div>
-                <div class="text-muted small fw-semibold text-uppercase" style="font-size:.65rem;letter-spacing:.8px">Total USD</div>
+                <div class="text-muted small fw-semibold text-uppercase stat-label-admin">Total USD</div>
                 <span class="stat-value" id="stat-total">—</span>
               </div>
-              <i class="bi bi-cash-coin stat-icon" style="color:var(--pnda-green-lt)"></i>
+              <i class="bi bi-cash-coin stat-icon icon-green-light"></i>
             </div>
           </div>
         </div>
@@ -344,10 +362,10 @@
           <div class="card h-100">
             <div class="card-body d-flex justify-content-between align-items-center">
               <div>
-                <div class="text-muted small fw-semibold text-uppercase" style="font-size:.65rem;letter-spacing:.8px">Missions</div>
+                <div class="text-muted small fw-semibold text-uppercase stat-label-admin">Missions</div>
                 <span class="stat-value" id="stat-missions">—</span>
               </div>
-              <i class="bi bi-list-check stat-icon" style="color:#2563a8"></i>
+              <i class="bi bi-list-check stat-icon icon-blue"></i>
             </div>
           </div>
         </div>
@@ -368,7 +386,7 @@
       </div>
       <div class="card">
         <div class="card-body text-center py-5">
-          <i class="bi bi-file-earmark-excel text-success" style="font-size:3rem"></i>
+          <i class="bi bi-file-earmark-excel text-success export-icon-lg"></i>
           <p class="text-muted mt-3 mb-3">Cliquez ci-dessous pour télécharger le classeur Excel consolidé.</p>
           <button class="btn btn-gold btn-lg" onclick="exportExcelWorkbook()">
             <i class="bi bi-download me-1"></i>Télécharger le classeur Excel
@@ -388,17 +406,17 @@
           <h5><i class="bi bi-pen me-2"></i>Signataire</h5>
         </div>
         <div class="card-body">
-          <div class="row g-3" style="max-width:600px">
+          <div class="row g-3 content-narrow">
             <div class="col-12">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Nom du signataire</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Nom du signataire</label>
               <input class="form-control form-control-sm" id="signatory-name" placeholder="Ex. Jean-Pierre Mukeba">
             </div>
             <div class="col-12">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Poste</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Poste</label>
               <input class="form-control form-control-sm" id="signatory-position" placeholder="Ex. Coordonnateur National">
             </div>
             <div class="col-12">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Lieu de signature</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Lieu de signature</label>
               <input class="form-control form-control-sm" id="signatory-location" placeholder="Ex. Kinshasa">
             </div>
           </div>
@@ -417,30 +435,31 @@
           <h5><i class="bi bi-funnel me-2"></i>Critères de filtre</h5>
         </div>
         <div class="card-body">
-          <div class="row g-3" style="max-width:600px">
+          <div class="row g-3 content-narrow">
             <div class="col-12">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Province</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Province</label>
               <select class="form-select form-select-sm" id="filter-province"><option value="">Toutes les provinces</option></select>
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Statut de la mission</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Statut de la mission</label>
               <select class="form-select form-select-sm" id="filter-statut">
                 <option value="">Tous les statuts</option>
                 <option value="en_attente">⏳ En attente</option>
+                <option value="retournee">↩ À corriger</option>
                 <option value="activee">⚡ Activée</option>
                 <option value="realisee">✓ Réalisée</option>
               </select>
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Rapporteur</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Rapporteur</label>
               <input class="form-control form-control-sm" id="filter-rapporteur" placeholder="Nom du rapporteur">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Période du</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Période du</label>
               <input class="form-control form-control-sm" id="filter-start-date" type="date">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold small text-uppercase" style="letter-spacing:.6px">Période au</label>
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Période au</label>
               <input class="form-control form-control-sm" id="filter-end-date" type="date">
             </div>
             <div class="col-12">
@@ -461,7 +480,7 @@
   <div id="toast" class="toast align-items-center text-bg-dark border-0" role="alert">
     <div class="d-flex">
       <div class="toast-body fw-semibold" id="toast-body">—</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" title="Fermer la notification" aria-label="Fermer la notification"></button>
     </div>
   </div>
 </div>
@@ -620,8 +639,10 @@ function openDashboard(user) {
   document.getElementById('session-date').textContent = new Date().toLocaleDateString('fr-FR', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
+  const rnseBadge = document.getElementById('admin-super-badge');
+  if (rnseBadge) rnseBadge.classList.toggle('d-none', session?.role !== 'super_admin');
   const backLink = document.getElementById('nav-back-superadmin');
-  if (backLink) backLink.style.display = session?.role === 'super_admin' ? '' : 'none';
+  if (backLink) backLink.classList.toggle('d-none', session?.role !== 'super_admin');
   importedReports = getPersistedImportedReports();
   hydrateSignatory();
 }
@@ -691,9 +712,10 @@ function updateAdminNotifBadge() {
   const badge = document.getElementById('admin-notif-badge');
   if (!badge) return;
   if (unreadCount > 0) {
-    badge.style.display = ''; badge.textContent = unreadCount;
+    badge.classList.remove('d-none');
+    badge.textContent = unreadCount;
   } else {
-    badge.style.display = 'none';
+    badge.classList.add('d-none');
   }
 }
 
@@ -1057,10 +1079,12 @@ function buildGeneralPanel(reports = getFilteredReports()) {
                 const rTotal = rm.reduce((s,m) => s + Number(m.total_usd||0), 0);
                 const st = report.statut || 'activee';
                 const sb = st === 'en_attente'
-                  ? '<span class="badge bg-warning text-dark" style="font-size:.65rem">En attente</span>'
+                  ? '<span class="badge bg-warning text-dark status-badge-small">En attente</span>'
+                  : st === 'retournee'
+                    ? '<span class="badge bg-danger-subtle text-danger border border-danger-subtle status-badge-small">À corriger</span>'
                   : st === 'realisee'
-                    ? '<span class="badge bg-secondary" style="font-size:.65rem">Réalisée</span>'
-                    : '<span class="badge bg-success" style="font-size:.65rem">Activée</span>';
+                    ? '<span class="badge bg-secondary status-badge-small">Réalisée</span>'
+                    : '<span class="badge bg-success status-badge-small">Activée</span>';
                 return `
                 <tr><td>${formatDate(report.savedAt)}</td><td>${escapeHtml(getReportProvinceLabel(report) || '—')}</td>
                 <td>${escapeHtml(report.meta?.rapporteur || '—')}</td>
@@ -1093,7 +1117,7 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
   panel.innerHTML = `
     <div class="d-flex justify-content-between align-items-baseline mb-3">
       <div>
-        <h5 class="page-title" style="font-size:1.15rem">${escapeHtml(province.label)}</h5>
+        <h5 class="page-title page-title-sm">${escapeHtml(province.label)}</h5>
         <p class="text-muted small mb-0">${reports.length} rapport(s) · ${missions.length} mission(s) · Total: ${formatCurrency(totalGeneral)} USD</p>
       </div>
     </div>
@@ -1111,6 +1135,8 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
               const st = report.statut || 'activee';
               const statutBadge = st === 'en_attente'
                 ? '<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>En attente</span>'
+                : st === 'retournee'
+                  ? '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-arrow-return-left me-1"></i>À corriger</span>'
                 : st === 'realisee'
                   ? '<span class="badge bg-secondary"><i class="bi bi-check2-all me-1"></i>Réalisée</span>'
                   : '<span class="badge bg-success"><i class="bi bi-lightning-charge-fill me-1"></i>Activée</span>';
@@ -1118,15 +1144,15 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
               const importId = escapeHtml(report.importId || '');
               const isLocalOnly = !report.id && !!report.importId;
               return `
-                <tr class="report-row${isUnread ? ' unread' : ''}" data-report-idx="${idx}" data-report-id="${rid}" data-province="${escapeHtml(province.name)}" style="cursor:pointer">
+                <tr class="report-row report-row-clickable${isUnread ? ' unread' : ''}" data-report-idx="${idx}" data-report-id="${rid}" data-province="${escapeHtml(province.name)}">
                   <td>${formatDate(report.savedAt)}</td>
                   <td>${escapeHtml(report.meta?.rapporteur || '—')}</td>
                   <td>${escapeHtml(((report.meta?.trimestre||'')+' '+(report.meta?.annee||'')).trim()||'—')}</td>
                   <td><span class="badge bg-secondary">${rm.length}</span></td>
                   <td class="text-end fw-bold">${formatCurrency(rTotal)}</td>
                   <td>${statutBadge}</td>
-                  <td class="text-center">${isUnread ? '<span class="badge bg-danger badge-nouveau">Nouveau</span>' : '<span class="badge bg-light text-muted border" style="font-size:.65rem">Lu</span>'}</td>
-                  <td class="text-nowrap" style="min-width:170px">
+                  <td class="text-center">${isUnread ? '<span class="badge bg-danger badge-nouveau">Nouveau</span>' : '<span class="badge bg-light text-muted border status-badge-small">Lu</span>'}</td>
+                  <td class="text-nowrap report-actions-cell">
                     ${isUnread && isSuperAdmin ? `<button class="btn btn-outline-success btn-sm me-1" onclick="event.stopPropagation();markAsRead('${rid}')" title="Marquer comme lu"><i class="bi bi-check2-circle"></i></button>` : ''}
                     ${st === 'activee' ? `<button class="btn btn-sm btn-outline-secondary me-1" onclick="event.stopPropagation();updateReportStatut('${rid}','realisee')" title="Marquer réalisée"><i class="bi bi-flag-fill"></i></button>` : ''}
                     ${st === 'realisee' ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="event.stopPropagation();updateReportStatut('${rid}','activee')" title="Remettre en Activée"><i class="bi bi-arrow-counterclockwise"></i></button>` : ''}
@@ -1134,12 +1160,12 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
                     <i class="bi bi-chevron-down text-muted small ms-1 chevron-icon"></i>
                   </td>
                 </tr>
-                <tr class="report-detail" id="detail-${escapeHtml(province.name)}-${idx}" style="display:none">
+                <tr class="report-detail is-hidden" id="detail-${escapeHtml(province.name)}-${idx}">
                   <td colspan="8" class="p-0">
                     <div class="bg-light p-3">
                       <h6 class="small fw-bold text-uppercase text-muted mb-2"><i class="bi bi-list-check me-1"></i>Missions du rapport</h6>
                       <div class="table-responsive">
-                        <table class="table table-sm table-bordered mb-0" style="font-size:.82rem">
+                        <table class="table table-sm table-bordered mb-0 report-detail-table">
                           <thead><tr>
                             <th>N°</th><th>Nature</th><th>Objectif</th><th>Prov. dest.</th><th>Territoire</th><th>Secteur</th>
                             <th>Début</th><th>Fin</th><th>Nuitées</th><th>Taux</th>
@@ -1195,8 +1221,8 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
       const prov = row.dataset.province;
       const detail = document.getElementById(`detail-${prov}-${idx}`);
       if (detail) {
-        const isOpen = detail.style.display !== 'none';
-        detail.style.display = isOpen ? 'none' : '';
+        const isOpen = !detail.classList.contains('is-hidden');
+        detail.classList.toggle('is-hidden', isOpen);
         const chevron = row.querySelector('.chevron-icon');
         if (chevron) chevron.className = isOpen ? 'bi bi-chevron-down text-muted small ms-1 chevron-icon' : 'bi bi-chevron-up text-muted small ms-1 chevron-icon';
       }
@@ -1218,7 +1244,7 @@ async function markAsRead(reportId) {
 }
 
 async function updateReportStatut(reportId, newStatut) {
-  const labels = { en_attente: 'En attente', activee: 'Activée', realisee: 'Réalisée' };
+  const labels = { en_attente: 'En attente', retournee: 'À corriger', activee: 'Activée', realisee: 'Réalisée' };
   const okClass = newStatut === 'realisee' ? 'btn-secondary' : 'btn-warning';
   askConfirm(
     `Changer le statut de ce rapport en "${labels[newStatut] || newStatut}" ?`,
