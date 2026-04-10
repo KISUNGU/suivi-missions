@@ -172,9 +172,9 @@ ON CONFLICT (province_name, ref_id) DO UPDATE SET nature = EXCLUDED.nature, obje
 -- Pour changer un mot de passe : btoa("NouveauMotDePasse") dans la console du navigateur.
 
 INSERT INTO users (email, password_b64, provinces, role) VALUES
-  ('compte_kwilu@pnda.cd',  'S3dpbHUjMjAyNg==', ARRAY['Kwilu'],          'province'),
-  ('compte_kasaic@pnda.cd', 'S2FzYWlDIzIwMjY=', ARRAY['Kasaï Central'], 'province'),
-  ('compte_kasai@pnda.cd',  'S2FzYWkjMjAyNg==', ARRAY['Kasaï'],         'province'),
+  ('compte_kwilu@pnda.cd',  'S3dpbHUjMjAyNg==', ARRAY['Kwilu'],          'comptable'),
+  ('compte_kasaic@pnda.cd', 'S2FzYWlDIzIwMjY=', ARRAY['Kasaï Central'], 'comptable'),
+  ('compte_kasai@pnda.cd',  'S2FzYWkjMjAyNg==', ARRAY['Kasaï'],         'comptable'),
   ('compte_uncp@pnda.cd',   'VU5DUCMyMDI2',     ARRAY['UN'],             'comptable'),
   ('rnse@pnda.cd',          'Uk5TRSMyMDI2',     NULL,                    'super_admin'),
   ('raf@pnda.cd',           'UkFGIzIwMjY=',     NULL,                    'admin')
