@@ -210,6 +210,205 @@
     .table { font-size: 0.84rem; }
     .table th { font-size: 0.68rem; }
   }
+  /* ── WORKFLOW BADGES ─────────────────────────────────────── */
+.workflow-badge-btn {
+  transition: transform 0.15s ease;
+}
+.workflow-badge-btn:hover {
+  transform: scale(1.08);
+}
+.status-filter-active {
+  opacity: 0.6;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+}
+.notif-badge {
+  font-size: 0.6rem;
+}
+
+/* ─── STATUT BADGES ───────────────────────────────────────── */
+.statut-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.statut-badge.en-attente { 
+  background: #fff3cd; 
+  color: #856404; 
+  border: 1px solid #ffeeba; 
+}
+.statut-badge.activee { 
+  background: #d1ecf1; 
+  color: #0c5460; 
+  border: 1px solid #bee5eb; 
+}
+.statut-badge.realisee { 
+  background: #d4edda; 
+  color: #155724; 
+  border: 1px solid #c3e6cb; 
+}
+.statut-badge.retournee { 
+  background: #f8d7da; 
+  color: #721c24; 
+  border: 1px solid #f5c6cb; 
+}
+
+/* ─── WORKFLOW TRACKER ────────────────────────────────────── */
+.workflow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 120px;
+}
+.workflow-step .step-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+}
+.workflow-step.en-attente .step-icon { 
+  background: #fff3cd; 
+  color: #856404; 
+  border: 3px solid #ffc107; 
+}
+.workflow-step.activee .step-icon { 
+  background: #d1ecf1; 
+  color: #0c5460; 
+  border: 3px solid #17a2b8; 
+}
+.workflow-step.realisee .step-icon { 
+  background: #d4edda; 
+  color: #155724; 
+  border: 3px solid #28a745; 
+}
+.workflow-step.retournee .step-icon { 
+  background: #f8d7da; 
+  color: #721c24; 
+  border: 3px solid #dc3545; 
+}
+.workflow-arrow {
+  font-size: 2rem;
+  color: #adb5bd;
+  margin: 0 15px;
+}
+@media (max-width: 767.98px) {
+  .workflow-step {
+    min-width: 90px;
+  }
+  .workflow-step .step-icon {
+    width: 45px;
+    height: 45px;
+    font-size: 1.4rem;
+  }
+  .workflow-arrow {
+    font-size: 1.5rem;
+    margin: 0 5px;
+  }
+  .workflow-step .fw-bold {
+    font-size: 1rem !important;
+  }
+  .workflow-step small {
+    font-size: 0.65rem;
+  }
+}
+
+/* ─── STAT ICONS ──────────────────────────────────────────── */
+.stat-icon-green { color: var(--pnda-green); opacity: 0.15; }
+.stat-icon-blue { color: #2563a8; opacity: 0.15; }
+.stat-icon-gold { color: var(--pnda-gold); opacity: 0.15; }
+.stat-icon-success { color: #198754; opacity: 0.15; }
+
+/* ─── FILTER WIDTHS ───────────────────────────────────────── */
+.filter-auto-width {
+  min-width: 150px;
+  width: auto;
+}
+.rapporteur-filter-width {
+  min-width: 180px;
+  width: auto;
+}
+@media (max-width: 767.98px) {
+  .filter-auto-width,
+  .rapporteur-filter-width {
+    width: 100%;
+    min-width: 100%;
+  }
+}
+
+/* ─── TABLE IMPROVEMENTS ──────────────────────────────────── */
+.table td {
+  vertical-align: middle;
+}
+.badge {
+  font-weight: 500;
+}
+
+/* ─── CARD HEADER FLEX IMPROVEMENT ───────────────────────── */
+.card-header {
+  flex-wrap: wrap;
+}
+.card-header .d-flex.gap-2 {
+  flex-wrap: wrap;
+}
+
+/* ─── HOVER EFFECTS ───────────────────────────────────────── */
+.workflow-step {
+  cursor: default;
+}
+.workflow-step.en-attente:hover .step-icon {
+  box-shadow: 0 0 15px rgba(255, 193, 7, 0.3);
+}
+.workflow-step.activee:hover .step-icon {
+  box-shadow: 0 0 15px rgba(23, 162, 184, 0.3);
+}
+.workflow-step.realisee:hover .step-icon {
+  box-shadow: 0 0 15px rgba(40, 167, 69, 0.3);
+}
+.workflow-step.retournee:hover .step-icon {
+  box-shadow: 0 0 15px rgba(220, 53, 69, 0.3);
+}
+
+/* ─── RESPONSIVE ADJUSTMENTS ──────────────────────────────── */
+@media (max-width: 991.98px) {
+  #workflow-badges {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    margin-top: 5px;
+  }
+  .top-navbar .ms-auto {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .workflow-step .step-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+  .workflow-step {
+    min-width: 75px;
+  }
+  .workflow-arrow {
+    display: none;
+  }
+  .workflow-step.retournee {
+    flex-direction: column !important;
+    text-align: center;
+  }
+}
 </style>
 </head>
 <body>
@@ -881,15 +1080,11 @@
 <script src="supabase_config.js"></script>
 
 <script>
+  // ─── CLIENT SUPABASE ──────────────────────────────────────────────────────────
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let USERS_CACHE        = [];
-let PROVINCES_CACHE    = [];
-let TERRITOIRES_CACHE  = [];
-let SECTEURS_CACHE     = [];
-
-// ─── BOOTSTRAP TOAST ────────────────────────────────────────────────────────
+// ─── BOOTSTRAP TOAST ──────────────────────────────────────────────────────────
 const _toastEl = document.getElementById('toast');
 const _bsToast = new bootstrap.Toast(_toastEl, { delay: 3500 });
 function showToast(msg) {
@@ -897,6 +1092,7 @@ function showToast(msg) {
   _bsToast.show();
 }
 
+// ─── CONFIRMATION MODAL ───────────────────────────────────────────────────────
 const _confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
 let _confirmOkCallback = null;
 document.getElementById('confirmModalOk').addEventListener('click', () => {
@@ -918,10 +1114,65 @@ function askConfirm(message, onOk, title = 'Confirmer', okLabel = 'Confirmer', o
   _confirmModal.show();
 }
 
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let USERS_CACHE        = [];
+let PROVINCES_CACHE    = [];
+let TERRITOIRES_CACHE  = [];
+let SECTEURS_CACHE     = [];
+let ALL_REPORTS_CACHE  = [];
+let MR_CACHE           = [];
+let currentReportStatusFilter = '';
+
+const WORKFLOW_STATUS = {
+  EN_ATTENTE: 'en_attente',
+  RETOURNEE: 'retournee',
+  ACTIVEE: 'activee',
+  REALISEE: 'realisee'
+};
+
+// ─── UTILITIES ────────────────────────────────────────────────────────────────
 function setHidden(target, hidden) {
   const el = typeof target === 'string' ? document.getElementById(target) : target;
   if (el) el.classList.toggle('is-hidden', hidden);
   return el;
+}
+
+function esc(v) {
+  return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function fmtCur(v) {
+  return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v || 0));
+}
+
+function safeB64(str) {
+  try { return window.btoa(unescape(encodeURIComponent(str))); }
+  catch { return window.btoa(String(str)); }
+}
+
+function getStatusLabel(status) {
+  const labels = {
+    'en_attente': '⏳ En attente',
+    'activee': '⚡ Activées',
+    'realisee': '✓ Réalisées',
+    'retournee': '↩ À corriger'
+  };
+  return labels[status] || status;
+}
+
+function getStatusBadge(status) {
+  const config = {
+    'en_attente': { icon: 'hourglass-split', label: 'En attente', class: 'en-attente' },
+    'activee': { icon: 'lightning-charge-fill', label: 'Activée', class: 'activee' },
+    'realisee': { icon: 'check2-all', label: 'Réalisée', class: 'realisee' },
+    'retournee': { icon: 'arrow-return-left', label: 'À corriger', class: 'retournee' }
+  };
+  const cfg = config[status] || { icon: 'question-circle', label: status || 'Inconnu', class: 'secondary' };
+  return `<span class="statut-badge ${cfg.class}"><i class="bi bi-${cfg.icon} me-1"></i>${cfg.label}</span>`;
+}
+
+function calculateLitige(report) {
+  return (report.missions || []).reduce((sum, m) => sum + Number(m.solde_usd || 0), 0);
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
@@ -937,18 +1188,20 @@ function setHidden(target, hidden) {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
   await Promise.all([loadProvinces(), loadUsers()]);
-  showView('users');
+  showView('dashboard');
   await loadDashboard();
 })();
 
 function getSession() {
   try { return JSON.parse(localStorage.getItem('PNDA_SESSION') || 'null'); } catch { return null; }
 }
+
 function logout() {
   localStorage.removeItem('PNDA_SESSION');
   window.location.href = 'index.html?manual-login=1';
 }
 
+// ─── SIDEBAR TOGGLE ──────────────────────────────────────────────────────────
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   const backdrop = document.getElementById('mobile-sidebar-backdrop');
@@ -968,28 +1221,124 @@ function closeSidebar() {
   document.body.classList.remove('sidebar-open');
 }
 
+window.addEventListener('resize', () => {
+  if (window.innerWidth >= 992) closeSidebar();
+});
+
 // ─── NAVIGATION ──────────────────────────────────────────────────────────────
 function showView(name) {
   document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
   const el = document.getElementById(`view-${name}`);
   if (el) el.classList.add('active');
+  
   document.querySelectorAll('#sidebar .nav-link').forEach((b) => b.classList.remove('active'));
-  const map = { dashboard: 'bord', users: 'utilisateurs', provinces: 'provinces',
-                'missions-ref': 'missions', territoires: 'territoire', secteurs: 'secteur',
-                reports: 'rapports' };
+  const map = { 
+    dashboard: 'bord', 
+    users: 'utilisateurs', 
+    provinces: 'provinces',
+    'missions-ref': 'missions', 
+    territoires: 'territoire', 
+    secteurs: 'secteur',
+    reports: 'rapports' 
+  };
   document.querySelectorAll('#sidebar .nav-link').forEach((b) => {
     if (b.textContent.toLowerCase().includes(map[name] || name)) b.classList.add('active');
   });
+  
   closeSidebar();
+  
+  if (name === 'dashboard') loadDashboard();
   if (name === 'missions-ref') loadMissionsRef();
-  if (name === 'territoires')  loadTerritoires();
-  if (name === 'secteurs')     loadSecteurs();
-  if (name === 'reports')      loadAllReports();
+  if (name === 'territoires') loadTerritoires();
+  if (name === 'secteurs') loadSecteurs();
+  if (name === 'reports') loadAllReports();
+  
+  loadWorkflowStats();
 }
 
-window.addEventListener('resize', () => {
-  if (window.innerWidth >= 992) closeSidebar();
-});
+// ─── WORKFLOW STATS ───────────────────────────────────────────────────────────
+async function loadWorkflowStats() {
+  try {
+    const { data, error } = await db.from('reports').select('statut, missions');
+    if (error) {
+      console.warn('Statut column may not exist yet:', error.message);
+      return;
+    }
+    
+    ALL_REPORTS_CACHE = data || [];
+    
+    const stats = {
+      en_attente: 0,
+      activee: 0,
+      realisee: 0,
+      retournee: 0,
+      totalLitige: 0
+    };
+    
+    ALL_REPORTS_CACHE.forEach(report => {
+      const status = report.statut || 'activee';
+      stats[status] = (stats[status] || 0) + 1;
+      
+      if (status === 'activee') {
+        const litige = calculateLitige(report);
+        stats.totalLitige += litige;
+      }
+    });
+    
+    // Mise à jour du workflow tracker
+    const wfEnAttente = document.getElementById('wf-en-attente');
+    const wfActivee = document.getElementById('wf-activee');
+    const wfRealisee = document.getElementById('wf-realisee');
+    const wfRetournee = document.getElementById('wf-retournee');
+    
+    if (wfEnAttente) wfEnAttente.textContent = stats.en_attente;
+    if (wfActivee) wfActivee.textContent = stats.activee;
+    if (wfRealisee) wfRealisee.textContent = stats.realisee;
+    if (wfRetournee) wfRetournee.textContent = stats.retournee;
+    
+    const statLitige = document.getElementById('stat-litige');
+    if (statLitige) statLitige.textContent = fmtCur(stats.totalLitige);
+    
+    // Mise à jour des badges de la navbar
+    updateWorkflowBadges(stats);
+    
+  } catch (e) {
+    console.error('Erreur workflow stats:', e);
+  }
+}
+
+function updateWorkflowBadges(stats) {
+  ['en_attente', 'activee', 'realisee', 'retournee'].forEach(status => {
+    const badge = document.getElementById(`badge-${status}`);
+    if (!badge) return;
+    const count = stats[status] || 0;
+    if (count > 0) {
+      badge.classList.remove('d-none');
+      badge.textContent = count;
+    } else {
+      badge.classList.add('d-none');
+    }
+  });
+}
+
+function filterReportsByStatus(status) {
+  if (currentReportStatusFilter === status) {
+    currentReportStatusFilter = '';
+    document.querySelectorAll('.workflow-badge-btn').forEach(btn => btn.classList.remove('status-filter-active'));
+  } else {
+    currentReportStatusFilter = status;
+    document.querySelectorAll('.workflow-badge-btn').forEach(btn => btn.classList.remove('status-filter-active'));
+    if (event?.currentTarget) event.currentTarget.classList.add('status-filter-active');
+  }
+  
+  const filterSelect = document.getElementById('rp-filter-statut');
+  if (filterSelect) filterSelect.value = currentReportStatusFilter;
+  
+  showView('reports');
+  loadAllReports();
+  
+  showToast(currentReportStatusFilter ? `Filtre actif : ${getStatusLabel(currentReportStatusFilter)}` : 'Filtre désactivé');
+}
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 async function loadDashboard() {
@@ -1002,16 +1351,22 @@ async function loadDashboard() {
     ] = await Promise.all([
       db.from('users').select('*',    { count: 'exact', head: true }),
       db.from('provinces').select('*',{ count: 'exact', head: true }),
-      db.from('reports').select('id,saved_at,province_label,rapporteur,seq_number,meta,missions').order('saved_at',{ascending:false}).limit(10),
+      db.from('reports').select('id,saved_at,province_label,rapporteur,seq_number,statut,meta,missions').order('saved_at',{ascending:false}).limit(10),
       db.from('reports').select('*',  { count: 'exact', head: true })
     ]);
+    
     const nbMissions = (reports || []).reduce((s, r) => s + (r.missions?.length || 0), 0);
     document.getElementById('stat-users').textContent     = nbUsers     ?? '—';
     document.getElementById('stat-provinces').textContent = nbProvs     ?? '—';
     document.getElementById('stat-reports').textContent   = nbReports   ?? '—';
-    document.getElementById('stat-missions').textContent  = nbMissions;
-
-    document.getElementById('tbl-recent-reports').innerHTML = (reports || []).map((r) => `
+    
+    // Charger les stats du workflow
+    await loadWorkflowStats();
+    
+    // Tableau des derniers rapports avec statut
+    document.getElementById('tbl-recent-reports').innerHTML = (reports || []).map((r) => {
+      const status = r.statut || 'activee';
+      return `
       <tr>
         <td>${esc(r.seq_number ? '#'+r.seq_number : '—')}</td>
         <td>${esc(new Date(r.saved_at).toLocaleDateString('fr-FR'))}</td>
@@ -1019,18 +1374,14 @@ async function loadDashboard() {
         <td>${esc(r.rapporteur || '—')}</td>
         <td><span class="badge bg-secondary">${esc(String(r.missions?.length||0))}</span></td>
         <td>${esc(fmtCur(Number(r.meta?.total_montant_usd||0)))}</td>
+        <td>${getStatusBadge(status)}</td>
       </tr>
-    `).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">Aucun rapport.</td></tr>';
+    `}).join('') || '<tr><td colspan="7" class="text-center text-muted py-4">Aucun rapport.</td></tr>';
+    
   } catch (e) {
     console.error(e);
     showToast('Erreur de chargement du dashboard.');
   }
-}
-
-// ─── HELPER: encodage base64 UTF-8 safe ──────────────────────────────────────
-function safeB64(str) {
-  try { return window.btoa(unescape(encodeURIComponent(str))); }
-  catch { return window.btoa(String(str)); }
 }
 
 // ─── UTILISATEURS ────────────────────────────────────────────────────────────
@@ -1060,6 +1411,17 @@ async function loadUsers() {
   `).join('') || '<tr><td colspan="5" class="text-center text-muted py-4">Aucun utilisateur.</td></tr>';
 }
 
+function formatUserAccess(user) {
+  if (!user?.provinces || user.provinces === '*') {
+    return '<span class="badge bg-light text-dark border">Toutes provinces</span>';
+  }
+  const labels = user.provinces.map((provinceName) => {
+    const province = PROVINCES_CACHE.find((entry) => entry.name === provinceName);
+    return province?.label || provinceName;
+  });
+  return labels.map((label) => `<span class="badge bg-light text-dark border me-1 mb-1">${esc(label)}</span>`).join('');
+}
+
 function openUserModal(user) {
   setHidden('user-form-card', false);
   document.getElementById('user-form-title').innerHTML = '<i class="bi bi-person-gear me-2"></i>'+(user ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur');
@@ -1074,27 +1436,23 @@ function openUserModal(user) {
   onRoleChange();
   document.getElementById('user-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
 function closeUserForm() { setHidden('user-form-card', true); }
-function editUser(id) { const u = USERS_CACHE.find((u) => u.id === id); if (u) openUserModal(u); }
+
+function editUser(id) { 
+  const u = USERS_CACHE.find((u) => u.id === id); 
+  if (u) openUserModal(u); 
+}
 
 function buildProvinceCheckboxes(selected) {
-  document.getElementById('u-provinces-checkboxes').innerHTML = PROVINCES_CACHE.map((p) => `
+  const container = document.getElementById('u-provinces-checkboxes');
+  if (!container) return;
+  container.innerHTML = PROVINCES_CACHE.map((p) => `
     <div class="form-check">
       <input class="form-check-input" type="checkbox" value="${esc(p.name)}" id="ck-${esc(p.name)}" ${(selected||[]).includes(p.name)?'checked':''}>
       <label class="form-check-label small" for="ck-${esc(p.name)}">${esc(p.label)}</label>
     </div>
   `).join('');
-}
-
-function formatUserAccess(user) {
-  if (!user?.provinces || user.provinces === '*') {
-    return '<span class="badge bg-light text-dark border">Toutes provinces</span>';
-  }
-  const labels = user.provinces.map((provinceName) => {
-    const province = PROVINCES_CACHE.find((entry) => entry.name === provinceName);
-    return province?.label || provinceName;
-  });
-  return labels.map((label) => `<span class="badge bg-light text-dark border me-1 mb-1">${esc(label)}</span>`).join('');
 }
 
 function onRoleChange() {
@@ -1172,6 +1530,7 @@ async function loadProvinces() {
   const { data, error } = await db.from('provinces').select('*').order('code');
   if (error) { showToast('Erreur chargement provinces.'); return; }
   PROVINCES_CACHE = data || [];
+  
   ['mr-filter-province','mr-province','rp-filter-province',
    'terr-filter-province','terr-province','sect-filter-province','sect-province'].forEach((selId) => {
     const sel = document.getElementById(selId);
@@ -1182,6 +1541,7 @@ async function loadProvinces() {
       '<option value="'+esc(p.name)+'" '+(p.name===cur?'selected':'')+'>'+esc(p.label)+'</option>'
     ).join('');
   });
+  
   const tbody = document.getElementById('tbl-provinces');
   if (!tbody) return;
   tbody.innerHTML = PROVINCES_CACHE.map((p) => `
@@ -1192,6 +1552,7 @@ async function loadProvinces() {
       <td><button class="btn btn-pnda btn-sm" onclick="editProvince('${esc(p.name)}')"><i class="bi bi-pencil-fill"></i></button></td>
     </tr>
   `).join('') || '<tr><td colspan="4" class="text-center text-muted py-4">Aucune province.</td></tr>';
+  
   buildProvinceCheckboxes(Array.from(document.querySelectorAll('#u-provinces-checkboxes input:checked')).map((c)=>c.value));
 }
 
@@ -1205,8 +1566,13 @@ function openProvinceModal(prov) {
   document.getElementById('prov-name').disabled   = !!prov;
   document.getElementById('province-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
 function closeProvinceForm() { setHidden('province-form-card', true); }
-function editProvince(name) { const p = PROVINCES_CACHE.find((p)=>p.name===name); if (p) openProvinceModal(p); }
+
+function editProvince(name) { 
+  const p = PROVINCES_CACHE.find((p)=>p.name===name); 
+  if (p) openProvinceModal(p); 
+}
 
 async function saveProvince() {
   const origName = document.getElementById('prov-edit-name').value;
@@ -1226,7 +1592,6 @@ async function saveProvince() {
 }
 
 // ─── MISSIONS DE RÉFÉRENCE ────────────────────────────────────────────────────
-let MR_CACHE = [];
 async function loadMissionsRef() {
   const province = document.getElementById('mr-filter-province')?.value || '';
   let query = db.from('missions_ref').select('*').order('province_name').order('ordre');
@@ -1264,8 +1629,13 @@ function openMissionRefModal(m) {
   document.getElementById('mr-ordre').value     = m?.ordre         || 99;
   card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
 function closeMissionRefForm() { setHidden('mr-form-card', true); }
-function editMissionRef(id) { const m = MR_CACHE.find((m)=>m.id===id); if (m) openMissionRefModal(m); }
+
+function editMissionRef(id) { 
+  const m = MR_CACHE.find((m)=>m.id===id); 
+  if (m) openMissionRefModal(m); 
+}
 
 async function deleteMissionRef(id) {
   askConfirm(
@@ -1337,8 +1707,13 @@ function openTerritoireModal(t) {
   document.getElementById('terr-label').value    = t?.label         || '';
   card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
 function closeTerritoireForm() { setHidden('terr-form-card', true); }
-function editTerritoire(id) { const t = TERRITOIRES_CACHE.find((t) => String(t.id) === String(id)); if (t) openTerritoireModal(t); }
+
+function editTerritoire(id) { 
+  const t = TERRITOIRES_CACHE.find((t) => String(t.id) === String(id)); 
+  if (t) openTerritoireModal(t); 
+}
 
 async function saveTerritoire() {
   const editId   = document.getElementById('terr-edit-id').value;
@@ -1384,7 +1759,6 @@ async function loadSecteurs() {
   if (provFilter && !terrId) query = query.eq('territoires.province_name', provFilter);
   const { data, error } = await query;
   if (error) { showToast('Erreur chargement secteurs.'); return; }
-  // When filtering via nested table, Supabase may return rows with null join — filter them out
   const filtered = provFilter && !terrId ? (data || []).filter((s) => s.territoires) : (data || []);
   SECTEURS_CACHE = filtered;
   document.getElementById('tbl-secteurs').innerHTML = SECTEURS_CACHE.map((s) => `
@@ -1431,7 +1805,6 @@ function openSecteurModal(s) {
   setHidden(card, false);
   document.getElementById('sect-form-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>'+(s ? 'Modifier le secteur' : 'Nouveau secteur');
   document.getElementById('sect-edit-id').value = s?.id || '';
-  // Pre-fill province and territoire
   if (s && s.territoires) {
     document.getElementById('sect-province').value = s.territoires.province_name || '';
     onSectFormProvinceChange().then(() => {
@@ -1445,8 +1818,13 @@ function openSecteurModal(s) {
   document.getElementById('sect-label').value = s?.label || '';
   card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
 function closeSecteurForm() { setHidden('sect-form-card', true); }
-function editSecteur(id) { const s = SECTEURS_CACHE.find((s) => String(s.id) === String(id)); if (s) openSecteurModal(s); }
+
+function editSecteur(id) { 
+  const s = SECTEURS_CACHE.find((s) => String(s.id) === String(id)); 
+  if (s) openSecteurModal(s); 
+}
 
 async function saveSecteur() {
   const editId      = document.getElementById('sect-edit-id').value;
@@ -1487,14 +1865,27 @@ async function deleteSecteur(id, label) {
 async function loadAllReports() {
   const province   = document.getElementById('rp-filter-province')?.value || '';
   const rapporteur = document.getElementById('rp-filter-rapporteur')?.value.trim().toLowerCase() || '';
+  const statut     = document.getElementById('rp-filter-statut')?.value || currentReportStatusFilter || '';
+  
   let query = db.from('reports')
-    .select('id,saved_at,province_label,province,rapporteur,trimestre,annee,seq_number,meta,missions')
+    .select('id,saved_at,province_label,province,rapporteur,trimestre,annee,seq_number,statut,meta,missions')
     .order('saved_at', { ascending: false }).limit(200);
+  
   if (province)   query = query.eq('province', province);
   if (rapporteur) query = query.ilike('rapporteur', '%'+rapporteur+'%');
+  if (statut)     query = query.eq('statut', statut);
+  
   const { data, error } = await query;
-  if (error) { showToast('Erreur chargement rapports.'); return; }
-  document.getElementById('tbl-all-reports').innerHTML = (data||[]).map((r) => `
+  if (error) { 
+    showToast('Erreur chargement rapports.'); 
+    return; 
+  }
+  
+  const tbody = document.getElementById('tbl-all-reports');
+  tbody.innerHTML = (data||[]).map((r) => {
+    const litige = calculateLitige(r);
+    const status = r.statut || 'activee';
+    return `
     <tr>
       <td>${esc(r.seq_number ? '#'+r.seq_number : '—')}</td>
       <td class="text-nowrap small">${esc(new Date(r.saved_at).toLocaleDateString('fr-FR'))}</td>
@@ -1502,10 +1893,16 @@ async function loadAllReports() {
       <td class="small">${esc(r.rapporteur||'—')}</td>
       <td class="small text-muted">${esc(((r.trimestre||'')+' '+(r.annee||'')).trim()||'—')}</td>
       <td><span class="badge bg-secondary">${esc(String(r.missions?.length||0))}</span></td>
-      <td class="small">${esc(fmtCur(Number(r.meta?.total_montant_usd||0)))}</td>
-      <td><button class="btn btn-outline-danger btn-sm" onclick="deleteReport('${esc(r.id)}')"><i class="bi bi-trash3-fill"></i></button></td>
+      <td class="small">${esc(fmtCur(Number(r.meta?.total_general_usd || r.meta?.total_montant_usd || 0)))}</td>
+      <td class="small ${litige > 0 ? 'text-warning fw-bold' : 'text-success'}">${esc(fmtCur(litige))}</td>
+      <td>${getStatusBadge(status)}</td>
+      <td>
+        <button class="btn btn-outline-danger btn-sm" onclick="deleteReport('${esc(r.id)}')">
+          <i class="bi bi-trash3-fill"></i>
+        </button>
+      </td>
     </tr>
-  `).join('') || '<tr><td colspan="8" class="text-center text-muted py-4">Aucun rapport.</td></tr>';
+  `}).join('') || '<tr><td colspan="10" class="text-center text-muted py-4">Aucun rapport.</td></tr>';
 }
 
 async function deleteReport(id) {
@@ -1516,19 +1913,12 @@ async function deleteReport(id) {
       if (error) { showToast('Erreur de suppression.'); return; }
       showToast('✓ Rapport supprimé.');
       await loadAllReports();
+      await loadWorkflowStats();
     },
     'Supprimer le rapport',
     'Supprimer',
     'btn-danger'
   );
-}
-
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-function esc(v) {
-  return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-function fmtCur(v) {
-  return new Intl.NumberFormat('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(v||0));
 }
 </script>
 </body>
