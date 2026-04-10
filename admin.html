@@ -46,11 +46,21 @@
   }
   .top-navbar .session-user { font-weight: 700; color: var(--pnda-gold-lt); font-size: 0.9rem; display: block; }
   .top-navbar .session-date { font-size: 0.72rem; color: rgba(255,255,255,0.5); }
+  .menu-toggle {
+    display: none; border: 1px solid rgba(255,255,255,0.22); color: #fff;
+    background: rgba(255,255,255,0.08);
+  }
+  .menu-toggle:hover { background: rgba(255,255,255,0.16); color: #fff; }
 
   /* ── LAYOUT WRAPPER ─────────────────────────────────────── */
   #layout-wrapper {
     display: flex; min-height: 100vh; padding-top: 66px;
   }
+  .mobile-sidebar-backdrop {
+    position: fixed; inset: 66px 0 0; background: rgba(10, 20, 14, 0.45);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s ease; z-index: 1035;
+  }
+  .mobile-sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
 
   /* ── SIDEBAR ────────────────────────────────────────────── */
   #sidebar {
@@ -159,6 +169,36 @@
   .panel-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; }
   @media (max-width: 960px) { .panel-grid { grid-template-columns: 1fr; } }
 
+  @media (max-width: 991.98px) {
+    .top-navbar {
+      height: auto; min-height: 66px; padding: 10px 14px; gap: 10px; flex-wrap: wrap;
+    }
+    .top-navbar img { height: 38px; }
+    .top-navbar .brand-text { min-width: 0; flex: 1; }
+    .top-navbar .brand-text h1 { font-size: 0.96rem; }
+    .top-navbar .brand-text p { font-size: 0.62rem; }
+    .top-navbar .session-date { display: none; }
+    .menu-toggle { display: inline-flex; align-items: center; justify-content: center; }
+    #layout-wrapper { padding-top: 88px; }
+    #sidebar {
+      position: fixed; top: 88px; left: 0; bottom: 0; height: auto; min-height: 0;
+      width: min(82vw, 300px); transform: translateX(-100%); transition: transform 0.22s ease;
+      z-index: 1045; box-shadow: 12px 0 28px rgba(0,0,0,0.22);
+    }
+    #sidebar.is-open { transform: translateX(0); }
+    #content { padding: 20px 16px 48px; }
+    body.sidebar-open { overflow: hidden; }
+  }
+
+  @media (max-width: 575.98px) {
+    .top-navbar { padding: 10px 12px; }
+    .top-navbar .brand-text p { display: none; }
+    .top-navbar .session-user { font-size: 0.78rem; }
+    #layout-wrapper { padding-top: 78px; }
+    #sidebar { top: 78px; width: min(88vw, 320px); }
+    #content { padding: 16px 12px 40px; }
+  }
+
   /* ── IMPORT SECTION ──────────────────────────────────────── */
   .import-badge {
     display: inline-flex; align-items: center; gap: 8px;
@@ -203,6 +243,9 @@
 
 <!-- ░░ TOP NAVBAR ░░ -->
 <div class="top-navbar">
+  <button class="btn btn-sm menu-toggle" type="button" onclick="toggleSidebar()" aria-label="Ouvrir le menu">
+    <i class="bi bi-list fs-4"></i>
+  </button>
   <img src="logo_pnda.png" alt="PNDA">
   <div class="brand-text">
     <h1>PNDA-SE · Administration</h1>
@@ -220,6 +263,8 @@
     </div>
   </div>
 </div>
+
+<div class="mobile-sidebar-backdrop" id="mobile-sidebar-backdrop" onclick="closeSidebar()"></div>
 
 <!-- ░░ LAYOUT ░░ -->
 <div id="layout-wrapper">
@@ -610,6 +655,26 @@ function showAdminView(name) {
   document.querySelectorAll('#sidebar .nav-link').forEach((btn) => {
     if (btn.textContent.toLowerCase().includes(map[name] || name)) btn.classList.add('active');
   });
+  closeSidebar();
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('mobile-sidebar-backdrop');
+  if (!sidebar || !backdrop || window.innerWidth >= 992) return;
+  const nextOpen = !sidebar.classList.contains('is-open');
+  sidebar.classList.toggle('is-open', nextOpen);
+  backdrop.classList.toggle('show', nextOpen);
+  document.body.classList.toggle('sidebar-open', nextOpen);
+}
+
+function closeSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('mobile-sidebar-backdrop');
+  if (!sidebar || !backdrop) return;
+  sidebar.classList.remove('is-open');
+  backdrop.classList.remove('show');
+  document.body.classList.remove('sidebar-open');
 }
 
 function bindEvents() {
@@ -623,6 +688,9 @@ function bindEvents() {
   document.getElementById('filter-statut').addEventListener('change', refreshDashboard);
   window.addEventListener('storage', handleStorageSync);
   window.addEventListener('PNDA_DATA_UPDATED', refreshDashboard);
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 992) closeSidebar();
+  });
 }
 
 function getSession() {
