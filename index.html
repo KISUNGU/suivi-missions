@@ -714,6 +714,7 @@ let PENDING_REPORTS_CACHE = [];
 let CURRENT_EDIT_REPORT_ID = null;
 let ACTIVE_REPORTS_CACHE = [];
 let IS_SAVING_COMPLETION = false;
+const REPORT_SYNC_KEY = 'PNDA_REPORTS_SYNC';
 
 const WORKFLOW_STATUS = {
   EN_ATTENTE: 'en_attente',
@@ -729,12 +730,18 @@ function isPasswordMatch(account, pw) {
   return account.password === pw || account.password === enc;
 }
 
-function normalizeReportStatus(status) {
-  return Object.values(WORKFLOW_STATUS).includes(status) ? status : WORKFLOW_STATUS.ACTIVEE;
+function normalizeReportStatus(status, fallback = WORKFLOW_STATUS.ACTIVEE) {
+  const normalized = String(status || '').trim().toLowerCase();
+  return Object.values(WORKFLOW_STATUS).includes(normalized) ? normalized : fallback;
 }
 
 function getWorkflowComment(report) {
   return report?.meta?.workflow_comment || '';
+}
+
+function notifyReportDataChanged() {
+  try { localStorage.setItem(REPORT_SYNC_KEY, new Date().toISOString()); } catch {}
+  try { window.dispatchEvent(new Event('PNDA_DATA_UPDATED')); } catch {}
 }
 
 function calculateReportLitige(report) {
@@ -2239,6 +2246,7 @@ async function signalerMissionRealisee(reportId) {
     }).eq('id', reportId);
     if (error) throw error;
     showToast('✓ Mission clôturée. Litige remis à 0 USD.');
+    notifyReportDataChanged();
     await loadUserArchive(session?.user, session?.province);
     await loadActiveMissions(session?.province);
   } catch (e) { console.error(e); showToast('Erreur lors de la mise à jour.'); }
@@ -2497,6 +2505,7 @@ async function returnMissionToMissionnaire() {
     }).eq('id', CURRENT_COMPLETION_REPORT_ID);
     if (error) throw error;
     showToast('✓ Mission retournée au missionnaire avec commentaire.');
+    notifyReportDataChanged();
     closeFinancialCompletion();
     await loadPendingMissions(session?.province);
     await loadUserArchive(session?.user, session?.province);
@@ -2524,27 +2533,47 @@ async function saveFinancialCompletion() {
     ...(report.meta || {}),
     total_montant_usd: totalMontant.toFixed(2),
     total_general_usd: totalGeneral.toFixed(2),
+    total_autres_frais_usd: updatedMissions.reduce((s, m) => s + Number(m.autres_frais_usd || 0), 0).toFixed(2),
+    total_avance_usd: updatedMissions.reduce((s, m) => s + Number(m.avance_usd || 0), 0).toFixed(2),
     total_solde_usd: totalSolde.toFixed(2),
     litige_usd: totalSolde.toFixed(2),
     workflow_comment: null
   };
 
   try {
-    const { data, error } = await db.from('reports').update({
+    const { data: currentRow, error: currentError } = await db.from('reports')
+      .select('id, statut')
+      .eq('id', CURRENT_COMPLETION_REPORT_ID)
+      .maybeSingle();
+    if (currentError) throw currentError;
+    if (!currentRow) throw new Error('missing-report');
+    const currentStatus = normalizeReportStatus(currentRow.statut || report.statut, WORKFLOW_STATUS.EN_ATTENTE);
+    if (currentStatus !== WORKFLOW_STATUS.EN_ATTENTE) {
+      throw new Error('already-processed');
+    }
+
+    const { error } = await db.from('reports').update({
       missions: updatedMissions, meta: updatedMeta,
       statut: WORKFLOW_STATUS.ACTIVEE,
       returned_by: null,
       returned_at: null,
       activated_by: session?.user || null,
       activated_at: new Date().toISOString()
-    }).eq('id', CURRENT_COMPLETION_REPORT_ID).eq('statut', WORKFLOW_STATUS.EN_ATTENTE).select('id');
+    }).eq('id', CURRENT_COMPLETION_REPORT_ID);
     if (error) throw error;
-    if (!data?.length) {
-      throw new Error('already-processed');
+
+    const { data: verifiedRow, error: verifyError } = await db.from('reports')
+      .select('id, statut')
+      .eq('id', CURRENT_COMPLETION_REPORT_ID)
+      .maybeSingle();
+    if (verifyError) throw verifyError;
+    if (!verifiedRow || normalizeReportStatus(verifiedRow.statut, '') !== WORKFLOW_STATUS.ACTIVEE) {
+      throw new Error('activation-failed');
     }
     PENDING_REPORTS_CACHE = PENDING_REPORTS_CACHE.filter((entry) => entry.id !== CURRENT_COMPLETION_REPORT_ID);
     updatePendingSectionVisibility();
     showToast('✓ Mission activée ! Le budget a été validé.');
+    notifyReportDataChanged();
     closeFinancialCompletion();
     await loadPendingMissions(session?.province);
     await loadActiveMissions(session?.province);
@@ -2553,6 +2582,8 @@ async function saveFinancialCompletion() {
     console.error(e);
     showToast(e?.message === 'already-processed'
       ? 'Cette mission a déjà été activée.'
+      : e?.message === 'missing-report'
+        ? 'Rapport introuvable dans la base.'
       : 'Erreur lors de l\'activation.');
     IS_SAVING_COMPLETION = false;
     setCompletionActionsDisabled(false);

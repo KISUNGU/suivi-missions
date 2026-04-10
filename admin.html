@@ -638,6 +638,7 @@ let REFERENCE = { provinces: [] };
 let TAB_ORDER = ['general'];
 const IMPORT_STORAGE_KEY = 'PNDA_IMPORTED_REPORTS';
 const SIGNATORY_STORAGE_KEY = 'PNDA_EXPORT_SIGNATORY';
+const REPORT_SYNC_KEY = 'PNDA_REPORTS_SYNC';
 let REPORTS_CACHE = [];
 let importedReports = [];
 let activeTab = 'general';
@@ -856,7 +857,7 @@ function startPolling() {
 function stopPolling() { if (_pollInterval) { clearInterval(_pollInterval); _pollInterval = null; } }
 
 function handleStorageSync(event) {
-  if ([IMPORT_STORAGE_KEY, 'PNDA_SESSION'].includes(event.key)) {
+  if ([IMPORT_STORAGE_KEY, REPORT_SYNC_KEY, 'PNDA_SESSION'].includes(event.key)) {
     if (event.key === 'PNDA_SESSION' && !getSession()) { redirectToLogin(); return; }
     importedReports = getPersistedImportedReports();
     refreshDashboard();
