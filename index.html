@@ -1119,6 +1119,8 @@ function fillMissionOptions(sel, province, category) {
 function syncMissionRow(row) {
   const province  = document.getElementById('f-province').value;
   const catSelect = row.querySelector('.sel-nature-cat');
+  const catAutreWrap = row.querySelector('.inp-nature-cat-autre-wrap');
+  const catAutreInput = row.querySelector('.inp-nature-cat-autre');
   const misSelect = row.querySelector('.sel-mission');
   const misWrap   = row.querySelector('.sel-mission-wrap');
   const autreWrap = row.querySelector('.inp-nature-autre-wrap');
@@ -1126,30 +1128,57 @@ function syncMissionRow(row) {
   const info      = row.querySelector('.mission-meta');
   const category  = catSelect?.value || '';
 
+  // Gérer l'affichage du champ de catégorie personnalisée
+  if (category === 'autre_cat') {
+    if (catAutreWrap) catAutreWrap.style.display = '';
+    if (misWrap) misWrap.style.display = 'none';
+    if (autreWrap) autreWrap.style.display = 'none';
+    objInput.placeholder = 'Décrivez l\'objectif de cette mission…';
+    info.textContent = 'Saisissez librement la catégorie, la nature et l\'objectif.';
+    renderSelectedMissionsTable();
+    return;
+  }
+  
+  // Masquer le champ de catégorie personnalisée
+  if (catAutreWrap) catAutreWrap.style.display = 'none';
+  
   if (!category) {
     if (misWrap) misWrap.style.display = 'none';
     if (autreWrap) autreWrap.style.display = 'none';
     info.textContent = 'Sélectionnez d\'abord la catégorie de nature.';
     return;
   }
-  if (category === 'autre') {
-    if (misWrap) misWrap.style.display = 'none';
+  
+  // Charger les missions de référence pour cette catégorie
+  if (misWrap) misWrap.style.display = '';
+  fillMissionOptions(misSelect, province, category);
+  
+  // Ajouter l'option "Autre" dans le select des missions
+  const currentValue = misSelect.value;
+  const hasAutreOption = Array.from(misSelect.options).some(opt => opt.value === 'autre');
+  if (!hasAutreOption) {
+    const autreOption = new Option('Autre (à préciser)', 'autre');
+    misSelect.appendChild(autreOption);
+  }
+  
+  // Vérifier si "autre" est sélectionné
+  const selectedMission = misSelect.value;
+  
+  if (selectedMission === 'autre') {
     if (autreWrap) autreWrap.style.display = '';
     objInput.placeholder = 'Décrivez l\'objectif de cette mission…';
     info.textContent = 'Saisissez librement la nature et l\'objectif.';
-    renderSelectedMissionsTable();
-    return;
-  }
-  if (misWrap) misWrap.style.display = '';
-  if (autreWrap) autreWrap.style.display = 'none';
-  fillMissionOptions(misSelect, province, category);
-  const mission = getMissionById(province, misSelect?.value || '');
-  if (mission) {
-    if (objInput && !objInput.value) objInput.value = mission.objectif || '';
-    info.textContent = `Réf : ${mission.id} · Objectif conseillé : ${mission.objectif || 'Non renseigné'}`;
   } else {
-    info.textContent = 'Sélectionnez la mission de référence correspondante.';
+    if (autreWrap) autreWrap.style.display = 'none';
+    const mission = getMissionById(province, selectedMission);
+    if (mission) {
+      if (objInput && !objInput.value) objInput.value = mission.objectif || '';
+      info.textContent = `Réf : ${mission.id} · Objectif conseillé : ${mission.objectif || 'Non renseigné'}`;
+    } else {
+      info.textContent = 'Sélectionnez la mission de référence correspondante.';
+    }
   }
+  
   renderSelectedMissionsTable();
 }
 
@@ -1172,21 +1201,37 @@ function addMission() {
       <button class="btn btn-outline-danger btn-sm" onclick="removeMission('${id}')"><i class="bi bi-x-lg"></i> Retirer</button>
     </div>
     <div class="row g-2">
+      <!-- Catégorie de nature avec option "Autre" -->
       <div class="col-12">
         <label class="form-label form-label-sm">Catégorie de nature <span class="req">*</span></label>
         <select class="form-select form-select-sm sel-nature-cat">
           <option value="">— Sélectionner une catégorie —</option>
           ${NATURE_CATEGORIES.map((c) => `<option value="${c.val}">${c.label}</option>`).join('')}
+          <option value="autre_cat">Autre (à préciser)</option>
         </select>
       </div>
+      
+      <!-- Champ pour saisir une catégorie personnalisée -->
+      <div class="col-12 inp-nature-cat-autre-wrap" style="display:none">
+        <label class="form-label form-label-sm">Précisez la catégorie <span class="req">*</span></label>
+        <input type="text" class="form-control form-control-sm inp-nature-cat-autre" placeholder="Décrivez la catégorie…">
+      </div>
+      
+      <!-- Mission de référence (affichée uniquement si catégorie ≠ autre_cat) -->
       <div class="col-12 sel-mission-wrap" style="display:none">
         <label class="form-label form-label-sm">Mission de référence</label>
-        <select class="form-select form-select-sm sel-mission"><option value="">— Choisir la catégorie d'abord —</option></select>
+        <select class="form-select form-select-sm sel-mission">
+          <option value="">— Choisir la catégorie d'abord —</option>
+        </select>
       </div>
+      
+      <!-- Nature précisée (affichée si mission = "autre" ou catégorie = "autre_cat") -->
       <div class="col-12 inp-nature-autre-wrap" style="display:none">
         <label class="form-label form-label-sm">Nature précisée <span class="req">*</span></label>
         <input type="text" class="form-control form-control-sm inp-nature-autre" placeholder="Décrivez la nature…">
       </div>
+      
+      <!-- Objectif -->
       <div class="col-12">
         <label class="form-label form-label-sm">Objectif <span class="req">*</span></label>
         <input type="text" class="form-control form-control-sm inp-objectif-txt" placeholder="Objectif de la mission…">
@@ -1275,18 +1320,51 @@ function addMission() {
   `;
 
   container.appendChild(div);
+  
+  // Récupérer les éléments
   const catSel  = div.querySelector('.sel-nature-cat');
   const misSel  = div.querySelector('.sel-mission');
   const destProvSel = div.querySelector('.sel-dest-province');
   const terrSel = div.querySelector('.sel-territoire');
   const sectSel = div.querySelector('.sel-secteur');
+  const catAutreInput = div.querySelector('.inp-nature-cat-autre');
+  const natureAutreInput = div.querySelector('.inp-nature-autre');
+  
+  // Ajouter l'option "Autre" dans le select des missions (sera fait dans syncMissionRow aussi)
+  const autreOption = new Option('Autre (à préciser)', 'autre');
+  misSel.appendChild(autreOption);
+  
+  // Écouteurs d'événements
   catSel.addEventListener('change', () => syncMissionRow(div));
+  
   misSel.addEventListener('change', () => {
     const obj = div.querySelector('.inp-objectif-txt');
-    const m = getMissionById(document.getElementById('f-province').value, misSel.value);
-    if (m && obj && !obj.value) obj.value = m.objectif || '';
+    const autreWrap = div.querySelector('.inp-nature-autre-wrap');
+    const selectedValue = misSel.value;
+    
+    if (selectedValue === 'autre') {
+      if (autreWrap) autreWrap.style.display = '';
+      // Ne pas pré-remplir l'objectif pour "autre"
+    } else {
+      if (autreWrap) autreWrap.style.display = 'none';
+      const m = getMissionById(document.getElementById('f-province').value, selectedValue);
+      if (m && obj && !obj.value) obj.value = m.objectif || '';
+    }
     renderSelectedMissionsTable();
   });
+  
+  // Écouteur pour le champ de catégorie personnalisée
+  if (catAutreInput) {
+    catAutreInput.addEventListener('input', renderSelectedMissionsTable);
+    catAutreInput.addEventListener('input', scheduleAutoSave);
+  }
+  
+  // Écouteur pour le champ de nature personnalisée
+  if (natureAutreInput) {
+    natureAutreInput.addEventListener('input', renderSelectedMissionsTable);
+    natureAutreInput.addEventListener('input', scheduleAutoSave);
+  }
+  
   destProvSel.addEventListener('change', () => {
     const destProv = destProvSel.value;
     fillTerritoireOptions(terrSel, destProv);
@@ -1294,20 +1372,37 @@ function addMission() {
     recalcMissionFinancials(div);
     renderSelectedMissionsTable();
   });
+  
   terrSel.addEventListener('change', () => {
     fillSecteurOptions(sectSel, terrSel.value);
     recalcMissionFinancials(div);
     renderSelectedMissionsTable();
   });
+  
   sectSel.addEventListener('change', renderSelectedMissionsTable);
-  div.querySelector('.inp-date-debut').addEventListener('change', () => { recalcMissionFinancials(div); renderSelectedMissionsTable(); });
-  div.querySelector('.inp-date-fin').addEventListener('change', () => { recalcMissionFinancials(div); renderSelectedMissionsTable(); });
-  div.querySelector('.inp-autres-frais').addEventListener('input', () => { recalcMissionFinancials(div); renderSelectedMissionsTable(); });
+  
+  div.querySelector('.inp-date-debut').addEventListener('change', () => { 
+    recalcMissionFinancials(div); 
+    renderSelectedMissionsTable(); 
+  });
+  
+  div.querySelector('.inp-date-fin').addEventListener('change', () => { 
+    recalcMissionFinancials(div); 
+    renderSelectedMissionsTable(); 
+  });
+  
+  div.querySelector('.inp-autres-frais').addEventListener('input', () => { 
+    recalcMissionFinancials(div); 
+    renderSelectedMissionsTable(); 
+  });
+  
   // Default destination province = user's province
   destProvSel.value = prov;
   fillTerritoireOptions(terrSel, prov);
+  
   bindMissionRowListeners(div);
   syncMissionRow(div);
+  
   // Lock financial fields for missionnaire role
   if (CURRENT_USER_ROLE !== 'comptable') {
     div.querySelectorAll('.comptable-field input, .comptable-field select').forEach((el) => {
@@ -1315,6 +1410,7 @@ function addMission() {
       el.tabIndex = -1;
     });
   }
+  
   renumberMissions();
   renderSelectedMissionsTable();
 }
@@ -1351,10 +1447,43 @@ function buildData() {
 
   rows.forEach((row, i) => {
     const category = row.querySelector('.sel-nature-cat')?.value || '';
-    const isAutre  = category === 'autre';
-    const selId    = isAutre ? '' : (row.querySelector('.sel-mission')?.value || '');
-    const nature   = isAutre ? (row.querySelector('.inp-nature-autre')?.value.trim() || 'Autre') : (CAT_LABELS[category] || '');
-    const objectif = row.querySelector('.inp-objectif-txt')?.value.trim() || (!isAutre && getMissionById(province, selId)?.objectif) || '';
+    const isCatAutre = category === 'autre_cat';
+    const catAutreValue = isCatAutre ? (row.querySelector('.inp-nature-cat-autre')?.value.trim() || 'Autre') : '';
+    
+    const selId = isCatAutre ? '' : (row.querySelector('.sel-mission')?.value || '');
+    const isMissionAutre = selId === 'autre';
+    
+    // Déterminer la nature
+    let nature;
+    let categoryToStore;
+    
+    if (isCatAutre) {
+      // Catégorie personnalisée
+      nature = catAutreValue;
+      categoryToStore = 'autre';
+    } else if (isMissionAutre) {
+      // Mission "Autre" dans une catégorie standard
+      nature = row.querySelector('.inp-nature-autre')?.value.trim() || 'Autre';
+      categoryToStore = category;
+    } else {
+      // Mission standard
+      const CAT_LABELS = { 
+        implementation: "Mission d'implémentation", 
+        activite: "Mission d'activité", 
+        atelier: "Atelier" 
+      };
+      const missionRef = !isCatAutre && selId ? getMissionById(province, selId) : null;
+      nature = missionRef?.nature || CAT_LABELS[category] || '';
+      categoryToStore = category;
+    }
+    
+    // Déterminer l'objectif
+    let objectif = row.querySelector('.inp-objectif-txt')?.value.trim() || '';
+    if (!objectif && !isCatAutre && !isMissionAutre && selId) {
+      const missionRef = getMissionById(province, selId);
+      objectif = missionRef?.objectif || '';
+    }
+    
     const participants = Math.max(1, parseInt(row.querySelector('.inp-participants')?.value, 10) || 1);
     const montant  = parseFloat(row.querySelector('.inp-montant').value) || 0;
     const avance   = parseFloat(row.querySelector('.inp-avance').value)  || 0;
@@ -1371,19 +1500,36 @@ function buildData() {
     const destProvData = getProvinceData(destProv);
 
     missions.push({
-      numero: getMissionNum(province, i), mission_reference_id: selId, category, section: row.querySelector('.sel-section').value || '',
-      nature, objectif,
+      numero: getMissionNum(province, i), 
+      mission_reference_id: isCatAutre ? null : (isMissionAutre ? null : selId), 
+      category: categoryToStore, 
+      section: row.querySelector('.sel-section').value || '',
+      nature, 
+      objectif,
       date_debut: row.querySelector('.inp-date-debut').value || '',
       date_fin:   row.querySelector('.inp-date-fin').value   || '',
       participants,
-      destination_province: destProv, destination_province_label: destProvData?.label || destProv,
-      territoire_id: terrId, territoire_label: terrObj?.label || '',
-      secteur_id: sectId, secteur_label: sectObj?.label || '',
+      destination_province: destProv, 
+      destination_province_label: destProvData?.label || destProv,
+      territoire_id: terrId, 
+      territoire_label: terrObj?.label || '',
+      secteur_id: sectId, 
+      secteur_label: sectObj?.label || '',
       observation: row.querySelector('.inp-observation')?.value.trim() || '',
       hors_projet: parseInt(row.querySelector('.inp-hors-projet').value) || 0,
       projet: parseInt(row.querySelector('.inp-projet').value) || 0,
-      nuitees, taux_per_diem: taux, montant_usd: montant, autres_frais_usd: autresFrais,
-      total_usd: total, avance_usd: avance, solde_usd: total - avance
+      nuitees, 
+      taux_per_diem: taux, 
+      montant_usd: montant, 
+      autres_frais_usd: autresFrais,
+      total_usd: total, 
+      avance_usd: avance, 
+      solde_usd: total - avance,
+      // Stocker des métadonnées supplémentaires pour la restauration
+      is_cat_autre: isCatAutre,
+      cat_autre_value: isCatAutre ? catAutreValue : null,
+      is_mission_autre: isMissionAutre,
+      mission_autre_value: isMissionAutre ? nature : null
     });
   });
 
@@ -1391,7 +1537,9 @@ function buildData() {
     meta: {
       systeme: "PNDA-SE",
       titre: `Suivi des Missions ${document.getElementById('f-trimestre').value} ${document.getElementById('f-annee').value}`,
-      province, province_label: provinceData?.label || province, province_code: provinceData?.code || '',
+      province, 
+      province_label: provinceData?.label || province, 
+      province_code: provinceData?.code || '',
       trimestre: document.getElementById('f-trimestre').value,
       annee: parseInt(document.getElementById('f-annee').value),
       rapporteur: document.getElementById('f-rapporteur').value.trim(),
@@ -1407,7 +1555,6 @@ function buildData() {
     },
     missions
   };
-}
 
 // ─── RENDER TABLE ──────────────────────────────────────────────────────────────
 function formatCurrencyDisplay(v) { return new Intl.NumberFormat('fr-FR', { minimumFractionDigits:2, maximumFractionDigits:2 }).format(Number(v||0)); }
