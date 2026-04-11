@@ -1114,6 +1114,26 @@ function getReportFingerprint(report) {
   return JSON.stringify({ meta: report.meta, missions: report.missions });
 }
 
+function getReportIdentity(report) {
+  if (report?.id) return `id:${report.id}`;
+  const meta = report?.meta || {};
+  const province = meta.province || report?.province || getReportProvinceName(report) || '';
+  const rapporteur = meta.rapporteur || report?.rapporteur || '';
+  const trimestre = meta.trimestre || report?.trimestre || '';
+  const annee = meta.annee || report?.annee || '';
+  const sequence = meta.seq_number || report?.seq_number || '';
+  if (province && rapporteur && trimestre && annee && sequence) {
+    return `seq:${province}|${rapporteur}|${trimestre}|${annee}|${sequence}`;
+  }
+  return '';
+}
+
+function getReportPriority(report) {
+  if (report?.source === 'supabase') return 3;
+  if (report?.id) return 2;
+  return 1;
+}
+
 function getFilteredReports() {
   const selectedProvince = document.getElementById('filter-province').value;
   const rapporteurFilter = document.getElementById('filter-rapporteur').value.trim().toLowerCase();
@@ -1257,13 +1277,32 @@ async function getAllReports() {
 }
 
 function deduplicateReports(reports) {
-  const seen = new Set();
-  return reports.filter((report) => {
-    const fingerprint = getReportFingerprint(report);
-    if (seen.has(fingerprint)) return false;
-    seen.add(fingerprint); 
-    return true;
+  const byIdentity = new Map();
+  const anonymousReports = [];
+
+  reports.forEach((report) => {
+    const identity = getReportIdentity(report);
+    if (!identity) {
+      anonymousReports.push(report);
+      return;
+    }
+
+    const existing = byIdentity.get(identity);
+    if (!existing || getReportPriority(report) >= getReportPriority(existing)) {
+      byIdentity.set(identity, report);
+    }
   });
+
+  const dedupedAnonymous = [];
+  const seenFingerprints = new Set();
+  anonymousReports.forEach((report) => {
+    const fingerprint = getReportFingerprint(report);
+    if (seenFingerprints.has(fingerprint)) return;
+    seenFingerprints.add(fingerprint);
+    dedupedAnonymous.push(report);
+  });
+
+  return [...byIdentity.values(), ...dedupedAnonymous];
 }
 
 function removeReportFromLocalState(reportId, importId = '') {

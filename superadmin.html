@@ -1122,6 +1122,7 @@ let SECTEURS_CACHE     = [];
 let ALL_REPORTS_CACHE  = [];
 let MR_CACHE           = [];
 let currentReportStatusFilter = '';
+const REPORT_SYNC_KEY = 'PNDA_REPORTS_SYNC';
 
 const WORKFLOW_STATUS = {
   EN_ATTENTE: 'en_attente',
@@ -1175,6 +1176,36 @@ function calculateLitige(report) {
   return (report.missions || []).reduce((sum, m) => sum + Number(m.solde_usd || 0), 0);
 }
 
+function calculateReportTotal(report) {
+  const missions = Array.isArray(report?.missions) ? report.missions : [];
+  if (missions.length) {
+    return missions.reduce((sum, mission) => sum + Number(mission.total_usd || 0), 0);
+  }
+  return Number(report?.meta?.total_general_usd || report?.meta?.total_montant_usd || 0);
+}
+
+function scheduleVisibleDataRefresh() {
+  const activeView = document.querySelector('.view.active')?.id || 'view-dashboard';
+  loadWorkflowStats();
+  if (activeView === 'view-dashboard') {
+    loadDashboard();
+    return;
+  }
+  if (activeView === 'view-reports') {
+    loadAllReports();
+  }
+}
+
+function handleStorageSync(event) {
+  if (event.key === 'PNDA_SESSION' && !getSession()) {
+    logout();
+    return;
+  }
+  if ([REPORT_SYNC_KEY, 'PNDA_SESSION'].includes(event.key)) {
+    scheduleVisibleDataRefresh();
+  }
+}
+
 // ─── INIT ────────────────────────────────────────────────────────────────────
 (async function init() {
   const session = getSession();
@@ -1187,6 +1218,7 @@ function calculateLitige(report) {
   document.getElementById('session-date').textContent = new Date().toLocaleDateString('fr-FR', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
+  window.addEventListener('storage', handleStorageSync);
   await Promise.all([loadProvinces(), loadUsers()]);
   showView('dashboard');
   await loadDashboard();
@@ -1366,6 +1398,7 @@ async function loadDashboard() {
     // Tableau des derniers rapports avec statut
     document.getElementById('tbl-recent-reports').innerHTML = (reports || []).map((r) => {
       const status = r.statut || 'activee';
+      const total = calculateReportTotal(r);
       return `
       <tr>
         <td>${esc(r.seq_number ? '#'+r.seq_number : '—')}</td>
@@ -1373,7 +1406,7 @@ async function loadDashboard() {
         <td>${esc(r.province_label || '—')}</td>
         <td>${esc(r.rapporteur || '—')}</td>
         <td><span class="badge bg-secondary">${esc(String(r.missions?.length||0))}</span></td>
-        <td>${esc(fmtCur(Number(r.meta?.total_montant_usd||0)))}</td>
+        <td>${esc(fmtCur(total))}</td>
         <td>${getStatusBadge(status)}</td>
       </tr>
     `}).join('') || '<tr><td colspan="7" class="text-center text-muted py-4">Aucun rapport.</td></tr>';
@@ -1885,6 +1918,7 @@ async function loadAllReports() {
   tbody.innerHTML = (data||[]).map((r) => {
     const litige = calculateLitige(r);
     const status = r.statut || 'activee';
+    const total = calculateReportTotal(r);
     return `
     <tr>
       <td>${esc(r.seq_number ? '#'+r.seq_number : '—')}</td>
@@ -1893,7 +1927,7 @@ async function loadAllReports() {
       <td class="small">${esc(r.rapporteur||'—')}</td>
       <td class="small text-muted">${esc(((r.trimestre||'')+' '+(r.annee||'')).trim()||'—')}</td>
       <td><span class="badge bg-secondary">${esc(String(r.missions?.length||0))}</span></td>
-      <td class="small">${esc(fmtCur(Number(r.meta?.total_general_usd || r.meta?.total_montant_usd || 0)))}</td>
+      <td class="small">${esc(fmtCur(total))}</td>
       <td class="small ${litige > 0 ? 'text-warning fw-bold' : 'text-success'}">${esc(fmtCur(litige))}</td>
       <td>${getStatusBadge(status)}</td>
       <td>
