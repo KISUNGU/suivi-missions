@@ -771,10 +771,12 @@ let TAB_ORDER = ['general'];
 const IMPORT_STORAGE_KEY = 'PNDA_IMPORTED_REPORTS';
 const SIGNATORY_STORAGE_KEY = 'PNDA_EXPORT_SIGNATORY';
 const REPORT_SYNC_KEY = 'PNDA_REPORTS_SYNC';
+const REPORT_SYNC_CHANNEL = 'pnda-reports-sync';
 let REPORTS_CACHE = [];
 let importedReports = [];
 let activeTab = 'general';
 let currentStatusFilter = '';
+let reportSyncChannel = null;
 
 const WORKFLOW_STATUS = {
   EN_ATTENTE: 'en_attente',
@@ -789,10 +791,25 @@ async function initialize() {
   await loadReferenceAndUsers();
   TAB_ORDER = ['general', ...REFERENCE.provinces.map((province) => province.name)];
   if (!hydrateSession()) return;
+  initializeReportSyncChannel();
   bindEvents();
   buildTabs();
   await refreshDashboard();
   startPolling();
+}
+
+function initializeReportSyncChannel() {
+  if (!('BroadcastChannel' in window)) return;
+  try {
+    reportSyncChannel = new BroadcastChannel(REPORT_SYNC_CHANNEL);
+    reportSyncChannel.addEventListener('message', (event) => {
+      if (event?.data?.type === 'reports-updated') {
+        refreshDashboard();
+      }
+    });
+  } catch (error) {
+    console.warn('BroadcastChannel indisponible pour admin:', error);
+  }
 }
 
 async function loadReferenceAndUsers() {
@@ -877,6 +894,10 @@ function bindEvents() {
   document.getElementById('filter-statut').addEventListener('change', refreshDashboard);
   window.addEventListener('storage', handleStorageSync);
   window.addEventListener('PNDA_DATA_UPDATED', refreshDashboard);
+  window.addEventListener('focus', refreshDashboard);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshDashboard();
+  });
   window.addEventListener('resize', () => {
     if (window.innerWidth >= 992) closeSidebar();
   });
@@ -1046,37 +1067,60 @@ function updateWorkflowPanel() {
   if (wfRetournee) wfRetournee.textContent = stats.retournee;
 }
 
+function getReportsSnapshotSignature(reports = REPORTS_CACHE) {
+  const summary = reports.reduce((acc, report) => {
+    const status = report?.statut || 'activee';
+    const missions = Array.isArray(report?.missions) ? report.missions : [];
+    acc.count += 1;
+    acc.missions += missions.length;
+    acc.total += missions.reduce((sum, mission) => sum + Number(mission.total_usd || 0), 0);
+    acc.solde += missions.reduce((sum, mission) => sum + Number(mission.solde_usd || 0), 0);
+    acc.statusCounts[status] = (acc.statusCounts[status] || 0) + 1;
+    const savedAt = report?.savedAt || report?.meta?.date_generation || '';
+    if (savedAt > acc.latestSavedAt) acc.latestSavedAt = savedAt;
+    return acc;
+  }, {
+    count: 0,
+    missions: 0,
+    total: 0,
+    solde: 0,
+    latestSavedAt: '',
+    statusCounts: { en_attente: 0, activee: 0, realisee: 0, retournee: 0 }
+  });
+
+  return JSON.stringify({
+    count: summary.count,
+    missions: summary.missions,
+    total: Number(summary.total.toFixed(2)),
+    solde: Number(summary.solde.toFixed(2)),
+    latestSavedAt: summary.latestSavedAt,
+    statusCounts: summary.statusCounts
+  });
+}
+
 // ─── AUTO-POLL ────────────────────────────────────────────────────────────────
 let _pollInterval = null;
 function startPolling() {
   if (_pollInterval) clearInterval(_pollInterval);
   _pollInterval = setInterval(async () => {
-    const prevStats = {
-      en_attente: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'en_attente').length,
-      activee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'activee').length,
-      retournee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'retournee').length
-    };
+    const prevSignature = getReportsSnapshotSignature(REPORTS_CACHE);
     await refreshReportsCache();
-    const curStats = {
-      en_attente: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'en_attente').length,
-      activee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'activee').length,
-      retournee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'retournee').length
-    };
+    const curSignature = getReportsSnapshotSignature(REPORTS_CACHE);
+    const prevStats = JSON.parse(prevSignature);
+    const curStats = JSON.parse(curSignature);
     
-    if (curStats.en_attente !== prevStats.en_attente || 
-        curStats.activee !== prevStats.activee || 
-        curStats.retournee !== prevStats.retournee) {
+    if (curSignature !== prevSignature) {
       renderSummaryCards(); 
       renderPanels(); 
       updateActiveTab(); 
       updateWorkflowBadges();
       updateWorkflowPanel();
       
-      if (curStats.en_attente > prevStats.en_attente) {
-        showToast(`${curStats.en_attente - prevStats.en_attente} nouvelle(s) mission(s) en attente !`);
+      if (curStats.statusCounts.en_attente > prevStats.statusCounts.en_attente) {
+        showToast(`${curStats.statusCounts.en_attente - prevStats.statusCounts.en_attente} nouvelle(s) mission(s) en attente !`);
       }
-      if (curStats.retournee > prevStats.retournee) {
-        showToast(`${curStats.retournee - prevStats.retournee} mission(s) retournée(s) pour correction !`);
+      if (curStats.statusCounts.retournee > prevStats.statusCounts.retournee) {
+        showToast(`${curStats.statusCounts.retournee - prevStats.statusCounts.retournee} mission(s) retournée(s) pour correction !`);
       }
     }
   }, 30000);

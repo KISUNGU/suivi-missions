@@ -715,6 +715,7 @@ let CURRENT_EDIT_REPORT_ID = null;
 let ACTIVE_REPORTS_CACHE = [];
 let IS_SAVING_COMPLETION = false;
 const REPORT_SYNC_KEY = 'PNDA_REPORTS_SYNC';
+const REPORT_SYNC_CHANNEL = 'pnda-reports-sync';
 
 const WORKFLOW_STATUS = {
   EN_ATTENTE: 'en_attente',
@@ -741,6 +742,13 @@ function getWorkflowComment(report) {
 
 function notifyReportDataChanged() {
   try { localStorage.setItem(REPORT_SYNC_KEY, new Date().toISOString()); } catch {}
+  try {
+    if ('BroadcastChannel' in window) {
+      const channel = new BroadcastChannel(REPORT_SYNC_CHANNEL);
+      channel.postMessage({ type: 'reports-updated', at: new Date().toISOString() });
+      channel.close();
+    }
+  } catch {}
   try { window.dispatchEvent(new Event('PNDA_DATA_UPDATED')); } catch {}
 }
 
@@ -2086,32 +2094,58 @@ async function loadUserArchive(rapporteur, province) {
   const section = document.getElementById('archive-section');
   const tbody   = document.getElementById('archive-tbody');
   if (!section || !tbody) return;
+  
   const prov = province || document.getElementById('f-province')?.value;
   tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Chargement…</td></tr>';
   section.style.display = '';
+  
   try {
     let query = db.from('reports')
       .select('id, saved_at, trimestre, annee, seq_number, liquidation_seq_number, liquidation_number, liquidation_printed_at, liquidation_printed_by, meta, missions, statut, rapporteur')
       .eq('province', prov)
-      .order('saved_at', { ascending: false }).limit(50);
-    // For missionnaire: show their own reports. For comptable: show activee/realisee they handled.
+      .order('saved_at', { ascending: false })
+      .limit(50);
+    
+    // Pour missionnaire: montrer ses propres rapports
     if (CURRENT_USER_ROLE !== 'comptable') {
       query = query.eq('rapporteur', rapporteur);
     }
+    
     let { data, error } = await query;
-    // Fallback: if statut column doesn't exist yet (migration pending), retry without it
-    if (error) {
-      const fallback = await db.from('reports')
+    
+    // Fallback si la colonne statut n'existe pas
+    if (error && error.message && error.message.includes('statut')) {
+      console.warn('Colonne statut manquante, utilisation du fallback');
+      const fallbackQuery = db.from('reports')
         .select('id, saved_at, trimestre, annee, seq_number, meta, missions, rapporteur')
         .eq('province', prov)
-        .order('saved_at', { ascending: false }).limit(50);
+        .order('saved_at', { ascending: false })
+        .limit(50);
+      
+      if (CURRENT_USER_ROLE !== 'comptable') {
+        fallbackQuery.eq('rapporteur', rapporteur);
+      }
+      
+      const fallback = await fallbackQuery;
       if (fallback.error) throw fallback.error;
       data = fallback.data;
+    } else if (error) {
+      throw error;
     }
+    
+    // Filtrer pour le comptable : ne pas montrer les "en_attente"
     if (CURRENT_USER_ROLE === 'comptable') {
-      data = (data || []).filter((report) => normalizeReportStatus(report.statut) !== WORKFLOW_STATUS.EN_ATTENTE);
+      data = (data || []).filter((report) => {
+        const statut = report.statut || WORKFLOW_STATUS.ACTIVEE;
+        return statut !== WORKFLOW_STATUS.EN_ATTENTE;
+      });
     }
-    if (!data?.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Aucune mission enregistrée.</td></tr>'; return; }
+    
+    if (!data?.length) { 
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Aucune mission enregistrée.</td></tr>'; 
+      USER_MISSIONS_CACHE = [];
+      return; 
+    }
 
     const STATUT_BADGE = {
       en_attente: '<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>En attente</span>',
@@ -2123,53 +2157,64 @@ async function loadUserArchive(rapporteur, province) {
     tbody.innerHTML = data.map((r) => {
       const nb = r.missions?.length || r.meta?.total_missions || 0;
       const tot = r.meta?.total_general_usd || r.meta?.total_montant_usd || '0.00';
-      const st = normalizeReportStatus(r.statut);
+      const st = r.statut || WORKFLOW_STATUS.ACTIVEE;
       const badge = STATUT_BADGE[st] || STATUT_BADGE.activee;
-      const rid = escapeHtml(r.id);
-      const workflowComment = escapeHtml(getWorkflowComment(r));
+      const rid = esc(r.id);
+      const workflowComment = esc(r.meta?.workflow_comment || '');
       const litige = calculateReportLitige(r);
       const periode = `${r.trimestre || r.meta?.trimestre || ''} ${r.annee || r.meta?.annee || ''}`.trim();
+      
       let actions = '';
       if (CURRENT_USER_ROLE !== 'comptable') {
         if (st === WORKFLOW_STATUS.RETOURNEE) {
-          actions = `<button class="btn btn-warning btn-sm me-1" onclick="restoreReport('${rid}')"><i class="bi bi-pencil-fill me-1"></i>Corriger</button>${workflowComment ? `<div class="small text-muted mt-1 feedback-comment"><i class="bi bi-chat-left-text me-1"></i>${workflowComment}</div>` : ''}`;
+          actions = `<button class="btn btn-warning btn-sm me-1" onclick="restoreReport('${rid}')"><i class="bi bi-pencil-fill me-1"></i>Corriger</button>
+                     ${workflowComment ? `<div class="small text-muted mt-1 feedback-comment"><i class="bi bi-chat-left-text me-1"></i>${workflowComment}</div>` : ''}`;
         } else if (st === WORKFLOW_STATUS.EN_ATTENTE) {
-          actions = '<span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>En attente de validation financière</span>';
+          actions = '<span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>En attente de validation</span>';
         } else if (st === WORKFLOW_STATUS.ACTIVEE) {
-          actions = `<span class="text-success small"><i class="bi bi-lightning-charge-fill me-1"></i>Mission en cours · Litige ${escapeHtml(formatCurrencyDisplay(litige))} USD</span>`;
+          actions = `<span class="text-success small"><i class="bi bi-lightning-charge-fill me-1"></i>Mission en cours · Litige ${esc(formatCurrencyDisplay(litige))} USD</span>`;
+        } else if (st === WORKFLOW_STATUS.REALISEE) {
+          actions = '<span class="text-muted small"><i class="bi bi-check2-all me-1"></i>Mission terminée</span>';
         } else {
-          actions = `<span class="text-muted small">Mission terminée</span>`;
+          actions = `<span class="text-muted small">Statut inconnu</span>`;
         }
       } else {
+        // Vue comptable
         if (st === WORKFLOW_STATUS.EN_ATTENTE) {
           actions = '<span class="text-muted small">À analyser</span>';
         } else if (st === WORKFLOW_STATUS.RETOURNEE) {
-          actions = '<span class="text-warning small">En attente de correction missionnaire</span>';
+          actions = '<span class="text-warning small">En attente de correction</span>';
         } else if (st === WORKFLOW_STATUS.ACTIVEE) {
           actions = `
             <button class="btn btn-outline-primary btn-sm me-1" onclick="printLiquidationBordereau('${rid}')"><i class="bi bi-printer me-1"></i>Bordereau</button>
-            <button class="btn btn-outline-secondary btn-sm" onclick="signalerMissionRealisee('${rid}')"><i class="bi bi-check2-circle me-1"></i>Clôturer</button>
-            <div class="small text-muted mt-1">Litige ${escapeHtml(formatCurrencyDisplay(litige))} USD</div>`;
-        } else {
+            <button class="btn btn-outline-success btn-sm" onclick="signalerMissionRealisee('${rid}')"><i class="bi bi-check2-circle me-1"></i>Clôturer</button>
+            <div class="small text-muted mt-1">Litige ${esc(formatCurrencyDisplay(litige))} USD</div>`;
+        } else if (st === WORKFLOW_STATUS.REALISEE) {
           actions = `
             <button class="btn btn-outline-primary btn-sm me-1" onclick="printLiquidationBordereau('${rid}')"><i class="bi bi-printer me-1"></i>Bordereau</button>
-            <span class="text-muted small">Clôturée</span>`;
+            <span class="text-success small"><i class="bi bi-check2-all me-1"></i>Clôturée</span>`;
         }
       }
+      
       return `<tr>
-        <td>${escapeHtml(r.seq_number ? '#'+r.seq_number : '—')}</td>
-        <td>${escapeHtml(new Date(r.saved_at).toLocaleDateString('fr-FR'))}</td>
-        <td>${escapeHtml(periode || '—')}</td>
+        <td>${esc(r.seq_number ? '#'+r.seq_number : '—')}</td>
+        <td>${esc(new Date(r.saved_at).toLocaleDateString('fr-FR'))}</td>
+        <td>${esc(periode || '—')}</td>
         <td><span class="badge bg-secondary">${nb}</span></td>
-        <td class="text-end">${escapeHtml(formatCurrencyDisplay(Number(tot)))} USD</td>
+        <td class="text-end">${esc(formatCurrencyDisplay(Number(tot)))} USD</td>
         <td>${badge}</td>
         <td>${actions}</td>
       </tr>`;
     }).join('');
+    
     USER_MISSIONS_CACHE = data;
     renderWorkflowAlerts();
     updateNotifBadge();
-  } catch (e) { console.error(e); tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Erreur de chargement.</td></tr>'; }
+    
+  } catch (e) { 
+    console.error('Erreur loadUserArchive:', e); 
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Erreur de chargement.</td></tr>'; 
+  }
 }
 
 async function restoreReport(reportId) {
@@ -2232,26 +2277,66 @@ async function restoreReport(reportId) {
 
 // ─── CLÔTURE COMPTABLE ──────────────────────────────────────────────────────
 async function signalerMissionRealisee(reportId) {
-  try {
-    const session = getSession();
-    const report = USER_MISSIONS_CACHE.find((entry) => entry.id === reportId) || ACTIVE_REPORTS_CACHE.find((entry) => entry.id === reportId);
-    if (!report) { showToast('Mission introuvable.'); return; }
-    const missions = (report.missions || []).map((mission) => ({ ...mission, solde_usd: 0 }));
-    const { error } = await db.from('reports').update({
-      missions,
-      meta: { ...(report.meta || {}), total_solde_usd: '0.00', litige_usd: '0.00' },
-      statut: WORKFLOW_STATUS.REALISEE,
-      completed_by: session?.user || null,
-      completed_at: new Date().toISOString()
-    }).eq('id', reportId);
-    if (error) throw error;
-    showToast('✓ Mission clôturée. Litige remis à 0 USD.');
-    notifyReportDataChanged();
-    await loadUserArchive(session?.user, session?.province);
-    await loadActiveMissions(session?.province);
-  } catch (e) { console.error(e); showToast('Erreur lors de la mise à jour.'); }
+  askConfirm(
+    'Confirmer que cette mission est effectuée ? Le litige sera remis à 0 USD et la mission passera en statut "Réalisée".',
+    async () => {
+      try {
+        const session = getSession();
+        const report = USER_MISSIONS_CACHE.find((entry) => entry.id === reportId) 
+                    || ACTIVE_REPORTS_CACHE.find((entry) => entry.id === reportId);
+        
+        if (!report) { 
+          showToast('Mission introuvable.'); 
+          return; 
+        }
+        
+        // Mettre le solde à 0 pour toutes les missions
+        const missions = (report.missions || []).map((mission) => ({ 
+          ...mission, 
+          solde_usd: 0,
+          avance_usd: mission.total_usd || mission.montant_usd || 0
+        }));
+        
+        const updatedMeta = {
+          ...(report.meta || {}),
+          total_solde_usd: '0.00',
+          litige_usd: '0.00',
+          total_avance_usd: missions.reduce((s, m) => s + Number(m.avance_usd || 0), 0).toFixed(2)
+        };
+        
+        const { error } = await db.from('reports').update({
+          missions,
+          meta: updatedMeta,
+          statut: WORKFLOW_STATUS.REALISEE,
+          completed_by: session?.user || null,
+          completed_at: new Date().toISOString()
+        }).eq('id', reportId);
+        
+        if (error) throw error;
+        
+        showToast('✓ Mission clôturée. Litige remis à 0 USD.');
+        
+        // Forcer la mise à jour des caches
+        notifyReportDataChanged();
+        
+        // Recharger les listes
+        await loadActiveMissions(session?.province);
+        await loadUserArchive(session?.user, session?.province);
+        
+        // Mettre à jour l'interface
+        renderWorkflowAlerts();
+        updateNotifBadge();
+        
+      } catch (e) { 
+        console.error(e); 
+        showToast('Erreur lors de la mise à jour : ' + (e.message || ''));
+      }
+    },
+    'Clôturer la mission',
+    'Confirmer',
+    'btn-success'
+  );
 }
-
 // ─── COMPTABLE — MISSIONS EN ATTENTE ─────────────────────────────────────────
 async function loadPendingMissions(province) {
   const tbody = document.getElementById('pending-tbody');
@@ -2305,9 +2390,13 @@ async function loadPendingMissions(province) {
 
 async function loadActiveMissions(province) {
   const tbody = document.getElementById('active-tbody');
+  const activeSection = document.getElementById('comptable-active-section');
+  
   if (!tbody) return;
   const prov = province || getSession()?.province;
+  
   tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Chargement…</td></tr>';
+  
   try {
     const { data, error } = await db.from('reports')
       .select('id, saved_at, trimestre, annee, seq_number, liquidation_seq_number, liquidation_number, liquidation_printed_at, liquidation_printed_by, meta, missions, rapporteur, statut')
@@ -2315,34 +2404,56 @@ async function loadActiveMissions(province) {
       .eq('statut', WORKFLOW_STATUS.ACTIVEE)
       .order('saved_at', { ascending: false })
       .limit(100);
-    if (error) throw error;
-    ACTIVE_REPORTS_CACHE = data || [];
+    
+    if (error) {
+      // Si la colonne statut n'existe pas encore
+      if (error.message && error.message.includes('statut')) {
+        console.warn('Colonne statut manquante, utilisation du fallback');
+        const { data: fallbackData } = await db.from('reports')
+          .select('id, saved_at, trimestre, annee, seq_number, meta, missions, rapporteur')
+          .eq('province', prov)
+          .order('saved_at', { ascending: false })
+          .limit(100);
+        
+        ACTIVE_REPORTS_CACHE = (fallbackData || []).filter(r => 
+          (r.statut || WORKFLOW_STATUS.ACTIVEE) === WORKFLOW_STATUS.ACTIVEE
+        );
+      } else {
+        throw error;
+      }
+    } else {
+      ACTIVE_REPORTS_CACHE = data || [];
+    }
+    
     if (!ACTIVE_REPORTS_CACHE.length) {
       tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-check2-circle me-1 text-success"></i>Aucune mission activée en cours.</td></tr>';
-      renderWorkflowAlerts();
-      updateNotifBadge();
-      return;
+      if (activeSection) activeSection.style.display = 'none';
+    } else {
+      if (activeSection) activeSection.style.display = '';
+      
+      tbody.innerHTML = ACTIVE_REPORTS_CACHE.map((report) => {
+        const rid = esc(report.id);
+        const litige = calculateReportLitige(report);
+        return `<tr>
+          <td>${esc(new Date(report.saved_at).toLocaleDateString('fr-FR'))}</td>
+          <td>${esc(report.rapporteur || report.meta?.rapporteur || '—')}</td>
+          <td>${esc(`${report.trimestre||report.meta?.trimestre||''} ${report.annee||report.meta?.annee||''}`.trim())}</td>
+          <td><span class="badge bg-secondary">${esc(String(report.missions?.length || 0))}</span></td>
+          <td><span class="badge ${litige > 0 ? 'bg-warning text-dark' : 'bg-success'}">${esc(formatCurrencyDisplay(litige))}</span></td>
+          <td class="text-nowrap">
+            <button class="btn btn-outline-primary btn-sm me-1" onclick="printLiquidationBordereau('${rid}')"><i class="bi bi-printer me-1"></i>Bordereau</button>
+            <button class="btn btn-outline-success btn-sm" onclick="signalerMissionRealisee('${rid}')"><i class="bi bi-check2-circle me-1"></i>Clôturer</button>
+          </td>
+        </tr>`;
+      }).join('');
     }
-    tbody.innerHTML = ACTIVE_REPORTS_CACHE.map((report) => {
-      const rid = escapeHtml(report.id);
-      const litige = calculateReportLitige(report);
-      return `<tr>
-        <td>${escapeHtml(new Date(report.saved_at).toLocaleDateString('fr-FR'))}</td>
-        <td>${escapeHtml(report.rapporteur || report.meta?.rapporteur || '—')}</td>
-        <td>${escapeHtml(`${report.trimestre||report.meta?.trimestre||''} ${report.annee||report.meta?.annee||''}`.trim())}</td>
-        <td><span class="badge bg-secondary">${escapeHtml(String(report.missions?.length || 0))}</span></td>
-        <td><span class="badge ${litige > 0 ? 'bg-warning text-dark' : 'bg-success'}">${escapeHtml(formatCurrencyDisplay(litige))}</span></td>
-        <td class="text-nowrap">
-          <button class="btn btn-outline-primary btn-sm me-1" onclick="printLiquidationBordereau('${rid}')"><i class="bi bi-printer me-1"></i>Bordereau</button>
-          <button class="btn btn-outline-secondary btn-sm" onclick="signalerMissionRealisee('${rid}')"><i class="bi bi-check2-circle me-1"></i>Mission effectuée</button>
-        </td>
-      </tr>`;
-    }).join('');
+    
     renderWorkflowAlerts();
     updateNotifBadge();
+    
   } catch (e) {
-    console.error(e);
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Erreur de chargement.</td></tr>';
+    console.error('Erreur loadActiveMissions:', e);
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Erreur de chargement.</td></tr>';
   }
 }
 
@@ -2594,6 +2705,15 @@ function bindAutoSave() {
   });
 }
 
+// Ajouter cette fonction si elle n'existe pas déjà
+function refreshComptableView() {
+  const session = getSession();
+  if (session?.province) {
+    loadPendingMissions(session.province);
+    loadActiveMissions(session.province);
+    loadUserArchive(session.user, session.province);
+  }
+}
 renderSelectedMissionsTable();
 </script>
 </body>
