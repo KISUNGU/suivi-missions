@@ -687,13 +687,10 @@ function showToast(msg) {
   _bsToast.show();
 }
 
-function askConfirm(message, onOk) {
+function askConfirm(message, onOk, title = 'Confirmer', okLabel = 'Confirmer', okClass = 'btn-danger') {
   if (!window.confirm(message)) return;
   if (typeof onOk === 'function') {
-    Promise.resolve(onOk()).catch((error) => {
-      console.error('Confirmation callback failed:', error);
-      showToast('Une erreur est survenue.');
-    });
+    onOk();
   }
 }
 
@@ -2293,66 +2290,64 @@ async function restoreReport(reportId) {
 
 // ─── CLÔTURE COMPTABLE ──────────────────────────────────────────────────────
 async function signalerMissionRealisee(reportId) {
-  window.askConfirm(
-    'Confirmer que cette mission est effectuée ? Le litige sera remis à 0 USD et la mission passera en statut "Réalisée".',
-    async () => {
-      try {
-        const session = getSession();
-        const report = USER_MISSIONS_CACHE.find((entry) => entry.id === reportId) 
-                    || ACTIVE_REPORTS_CACHE.find((entry) => entry.id === reportId);
-        
-        if (!report) { 
-          showToast('Mission introuvable.'); 
-          return; 
-        }
-        
-        // Mettre le solde à 0 pour toutes les missions
-        const missions = (report.missions || []).map((mission) => ({ 
-          ...mission, 
-          solde_usd: 0,
-          avance_usd: mission.total_usd || mission.montant_usd || 0
-        }));
-        
-        const updatedMeta = {
-          ...(report.meta || {}),
-          total_solde_usd: '0.00',
-          litige_usd: '0.00',
-          total_avance_usd: missions.reduce((s, m) => s + Number(m.avance_usd || 0), 0).toFixed(2)
-        };
-        
-        const { error } = await db.from('reports').update({
-          missions,
-          meta: updatedMeta,
-          statut: WORKFLOW_STATUS.REALISEE,
-          completed_by: session?.user || null,
-          completed_at: new Date().toISOString()
-        }).eq('id', reportId);
-        
-        if (error) throw error;
-        
-        showToast('✓ Mission clôturée. Litige remis à 0 USD.');
-        
-        // Forcer la mise à jour des caches
-        notifyReportDataChanged();
-        
-        // Recharger les listes
-        await loadActiveMissions(session?.province);
-        await loadUserArchive(session?.user, session?.province);
-        
-        // Mettre à jour l'interface
-        renderWorkflowAlerts();
-        updateNotifBadge();
-        
-      } catch (e) { 
-        console.error(e); 
-        showToast('Erreur lors de la mise à jour : ' + (e.message || ''));
-      }
-    },
-    'Clôturer la mission',
-    'Confirmer',
-    'btn-success'
-  );
+  if (!confirm('Confirmer que cette mission est effectuée ? Le litige sera remis à 0 USD et la mission passera en statut "Réalisée".')) {
+    return;
+  }
+  
+  try {
+    const session = getSession();
+    const report = USER_MISSIONS_CACHE.find((entry) => entry.id === reportId) 
+                || ACTIVE_REPORTS_CACHE.find((entry) => entry.id === reportId);
+    
+    if (!report) { 
+      showToast('Mission introuvable.'); 
+      return; 
+    }
+    
+    // Mettre le solde à 0 pour toutes les missions
+    const missions = (report.missions || []).map((mission) => ({ 
+      ...mission, 
+      solde_usd: 0,
+      avance_usd: mission.total_usd || mission.montant_usd || 0
+    }));
+    
+    const updatedMeta = {
+      ...(report.meta || {}),
+      total_solde_usd: '0.00',
+      litige_usd: '0.00',
+      total_avance_usd: missions.reduce((s, m) => s + Number(m.avance_usd || 0), 0).toFixed(2)
+    };
+    
+    const { error } = await db.from('reports').update({
+      missions,
+      meta: updatedMeta,
+      statut: WORKFLOW_STATUS.REALISEE,
+      completed_by: session?.user || null,
+      completed_at: new Date().toISOString()
+    }).eq('id', reportId);
+    
+    if (error) throw error;
+    
+    showToast('✓ Mission clôturée. Litige remis à 0 USD.');
+    
+    // Forcer la mise à jour des caches
+    notifyReportDataChanged();
+    
+    // Recharger les listes
+    await loadActiveMissions(session?.province);
+    await loadUserArchive(session?.user, session?.province);
+    
+    // Mettre à jour l'interface
+    renderWorkflowAlerts();
+    updateNotifBadge();
+    
+  } catch (e) { 
+    console.error('Erreur dans signalerMissionRealisee:', e); 
+    showToast('Erreur lors de la mise à jour : ' + (e.message || ''));
+  }
 }
+
+
 // ─── COMPTABLE — MISSIONS EN ATTENTE ─────────────────────────────────────────
 async function loadPendingMissions(province) {
   const tbody = document.getElementById('pending-tbody');
@@ -2447,19 +2442,10 @@ async function loadActiveMissions(province) {
       if (activeSection) activeSection.style.display = '';
       
       tbody.innerHTML = ACTIVE_REPORTS_CACHE.map((report) => {
-        const rid = String(report.id || '').replace(/[&<>"']/g, function(m) {
-          const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-          return escapeMap[m];
-        });
+        const rid = escapeHtml(report.id);
         const litige = calculateReportLitige(report);
-        const rapporteur = String(report.rapporteur || report.meta?.rapporteur || '—').replace(/[&<>"']/g, function(m) {
-          const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-          return escapeMap[m];
-        });
-        const periode = String(`${report.trimestre||report.meta?.trimestre||''} ${report.annee||report.meta?.annee||''}`.trim()).replace(/[&<>"']/g, function(m) {
-          const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-          return escapeMap[m];
-        });
+        const rapporteur = escapeHtml(report.rapporteur || report.meta?.rapporteur || '—');
+        const periode = escapeHtml(`${report.trimestre||report.meta?.trimestre||''} ${report.annee||report.meta?.annee||''}`.trim());
         const nbMissions = String(report.missions?.length || 0);
         const litigeFormatted = formatCurrencyDisplay(litige);
         
