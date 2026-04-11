@@ -687,6 +687,16 @@ function showToast(msg) {
   _bsToast.show();
 }
 
+function askConfirm(message, onOk) {
+  if (!window.confirm(message)) return;
+  if (typeof onOk === 'function') {
+    Promise.resolve(onOk()).catch((error) => {
+      console.error('Confirmation callback failed:', error);
+      showToast('Une erreur est survenue.');
+    });
+  }
+}
+
 // ─── DONNÉES DE RÉFÉRENCE ─────────────────────────────────────────────────────
 let REFERENCE = { provinces: [] };
 let TERRITOIRES = [];   // { id, province_name, name, label }
