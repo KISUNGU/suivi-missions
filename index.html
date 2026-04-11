@@ -697,6 +697,8 @@ function askConfirm(message, onOk) {
   }
 }
 
+window.askConfirm = askConfirm;
+
 // ─── DONNÉES DE RÉFÉRENCE ─────────────────────────────────────────────────────
 let REFERENCE = { provinces: [] };
 let TERRITOIRES = [];   // { id, province_name, name, label }
@@ -704,8 +706,8 @@ let SECTEURS    = [];   // { id, territoire_id, name, label }
 let DATA_READY = false;
 
 const SECTIONS_PNDA = [
-  { val: "1", label: "1 — Coordination & Gestion" },
-  { val: "2", label: "2 — Activités de terrain" },
+  { val: "1", label: "1 — Coordination" },
+  { val: "2", label: "2 — Pronvince" },
   { val: "3", label: "3 — Suivi-évaluation" },
   { val: "4", label: "4 — Communication" },
   { val: "5", label: "5 — Formation & Renforcement" },
@@ -2291,7 +2293,7 @@ async function restoreReport(reportId) {
 
 // ─── CLÔTURE COMPTABLE ──────────────────────────────────────────────────────
 async function signalerMissionRealisee(reportId) {
-  askConfirm(
+  window.askConfirm(
     'Confirmer que cette mission est effectuée ? Le litige sera remis à 0 USD et la mission passera en statut "Réalisée".',
     async () => {
       try {
