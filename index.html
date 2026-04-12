@@ -697,6 +697,28 @@ const _authModal = new bootstrap.Modal(document.getElementById('authModal'));
 const _toastEl   = document.getElementById('toast');
 const _bsToast   = new bootstrap.Toast(_toastEl, { delay: 3500 });
 
+<!-- ░░ MODALE DE SÉLECTION DES PARTICIPANTS ░░ -->
+<div class="modal fade" id="participantSelectModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header" style="background: linear-gradient(135deg, var(--pnda-green) 0%, var(--pnda-green-md) 100%); color: #fff;">
+        <h6 class="modal-title"><i class="bi bi-people-fill me-2"></i>Sélectionner le participant pour le bordereau</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-muted mb-3">
+          <i class="bi bi-info-circle me-1"></i>
+          Cette mission comprend plusieurs participants. Sélectionnez celui pour lequel vous souhaitez imprimer un bordereau.
+        </p>
+        <div id="participant-select-list" class="list-group"></div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 // ─── UTILITIES ────────────────────────────────────────────────────────────────
 function esc(v) {
   return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -2008,7 +2030,67 @@ function collectCompletionMissions(report) {
   });
 }
 
-function buildLiquidationSnapshot(report, missionsOverride) {
+function buildLiquidationSnapshot(report, missionsOverride, participant = null, participantIndex = 0) {
+  // Si un participant spécifique est fourni
+  if (participant) {
+    const isChef = participant.est_chef || participant.role === 'chef_mission' || participantIndex === 0;
+    
+    // Seul le chef de mission a des "autres frais"
+    const autresFrais = isChef ? (participant.autres_frais_usd || 0) : 0;
+    
+    const totalPerDiem = participant.montant_usd || 0;
+    const totalJustificatifs = autresFrais;
+    const totalMission = totalPerDiem + autresFrais;
+    
+    const dateDebut = report.date_debut || report.meta?.date_debut;
+    const dateFin = report.date_fin || report.meta?.date_fin;
+    const totalTravelDays = getMissionTravelDays({ date_debut: dateDebut, date_fin: dateFin });
+    const totalNights = participant.nuitees || 0;
+    
+    const aPayer = +(totalPerDiem * 0.8 + totalJustificatifs).toFixed(2);
+    const soldeRetour = +(totalPerDiem * 0.2).toFixed(2);
+    
+    // Créer une mission virtuelle pour ce participant
+    const participantMission = {
+      ...report,
+      participant: participant,
+      participant_index: participantIndex,
+      is_chef: isChef,
+      missions: [{
+        nature: report.nature,
+        objectif: report.objectif,
+        date_debut: dateDebut,
+        date_fin: dateFin,
+        destination_province_label: report.destination_province_label || report.meta?.destination_province_label,
+        nuitees: participant.nuitees,
+        taux_per_diem: participant.taux_per_diem,
+        montant_usd: participant.montant_usd,
+        autres_frais_usd: autresFrais,
+        total_usd: totalMission,
+        avance_usd: participant.avance_usd,
+        solde_usd: participant.solde_usd,
+        participants: 1
+      }]
+    };
+    
+    return {
+      report: participantMission,
+      missions: participantMission.missions,
+      totalPerDiem,
+      totalJustificatifs,
+      totalMission,
+      totalTravelDays,
+      totalNights,
+      totalParticipants: 1,
+      aPayer,
+      soldeRetour,
+      participant: participant,
+      participantIndex: participantIndex,
+      isChef: isChef
+    };
+  }
+  
+  // Fallback : comportement original (pour rétrocompatibilité)
   const missions = missionsOverride || report?.missions || [];
   const totalPerDiem = missions.reduce((sum, mission) => sum + Number(mission.montant_usd || 0), 0);
   const totalJustificatifs = missions.reduce((sum, mission) => sum + Number(mission.autres_frais_usd || 0), 0);
@@ -2018,6 +2100,7 @@ function buildLiquidationSnapshot(report, missionsOverride) {
   const totalParticipants = missions.reduce((sum, mission) => sum + Number(mission.participants || 0), 0);
   const aPayer = +(totalPerDiem * 0.8 + totalJustificatifs).toFixed(2);
   const soldeRetour = +(totalPerDiem * 0.2).toFixed(2);
+  
   return {
     report: { ...report, missions },
     missions,
@@ -2036,9 +2119,17 @@ function buildLiquidationPrintHtml(snapshot) {
   const session = getSession();
   const report = snapshot.report;
   const meta = report.meta || {};
+  const participant = snapshot.participant || {};
+  const isMultiParticipant = !!participant.nom;
+  const isChef = snapshot.isChef || (participant.est_chef) || (snapshot.participantIndex === 0);
+  
+  const participantDisplayName = isMultiParticipant ? participant.nom : (report.rapporteur || meta.rapporteur || '—');
+  const participantRole = isMultiParticipant ? getRoleLabel(participant.role) : (meta.role || report.rapporteur_role || '—');
+  const chefMission = report.chef_mission || (report.participants || []).find(p => p.est_chef)?.nom || '—';
   const provinceLabel = meta.province_label || report.province || '—';
   const liquidationNumber = getLiquidationNumber(report);
   const printedAt = new Date();
+  
   const missionRows = snapshot.missions.map((mission, index) => `
     <tr>
       <td>${index + 1}</td>
@@ -2057,7 +2148,7 @@ function buildLiquidationPrintHtml(snapshot) {
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Bordereau de liquidation de mission</title>
+  <title>Bordereau - ${escapeHtml(participantDisplayName)}</title>
   <style>
     @page { size: A4 portrait; margin: 11mm 10mm; }
     * { box-sizing: border-box; }
@@ -2065,54 +2156,44 @@ function buildLiquidationPrintHtml(snapshot) {
     .sheet { width: 100%; min-height: 271mm; display: flex; flex-direction: column; }
     .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #123524; padding-bottom: 6px; margin-bottom: 8px; }
     .brand { display: flex; align-items: center; gap: 10px; }
-    .brand img { width: 42px; height: 42px; object-fit: contain; }
-    .brand h1 { margin: 0; font-size: 15px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .brand h1 { margin: 0; font-size: 15px; text-transform: uppercase; }
     .brand p { margin: 1px 0 0; font-size: 9px; color: #43584b; }
     .doc-meta { text-align: right; font-size: 9.5px; min-width: 180px; }
-    .doc-meta strong { display: block; font-size: 12px; color: #123524; }
-    .cartouche { border: 1.5px solid #123524; padding: 7px 9px; background: linear-gradient(180deg, #f8faf8 0%, #edf3ee 100%); }
-    .cartouche-label { display: block; text-transform: uppercase; font-size: 8px; letter-spacing: 0.8px; color: #5a6f62; margin-bottom: 2px; }
-    .cartouche-value { display: block; font-size: 13px; font-weight: 700; color: #123524; margin-bottom: 4px; }
-    .title { text-align: center; border: 1.5px solid #123524; background: #eef4ef; padding: 8px 10px; font-weight: 700; font-size: 13px; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.4px; }
+    .cartouche { border: 1.5px solid #123524; padding: 7px 9px; background: #f8faf8; }
+    .cartouche-label { display: block; text-transform: uppercase; font-size: 8px; color: #5a6f62; }
+    .cartouche-value { display: block; font-size: 13px; font-weight: 700; color: #123524; }
+    .title { text-align: center; border: 1.5px solid #123524; background: #eef4ef; padding: 8px; font-weight: 700; font-size: 13px; text-transform: uppercase; margin-bottom: 6px; }
     .copy-strip { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-    .copy-badge { flex: 1; border: 1px dashed #aebbb3; padding: 4px 8px; text-transform: uppercase; font-size: 8.3px; letter-spacing: 0.7px; color: #4c6054; background: #fafcfb; }
+    .copy-badge { flex: 1; border: 1px dashed #aebbb3; padding: 4px 8px; text-transform: uppercase; font-size: 8.3px; color: #4c6054; background: #fafcfb; }
     .section { border: 1px solid #b5c3ba; margin-bottom: 8px; }
-    .section-title { background: #eef3ef; color: #123524; padding: 5px 8px; font-weight: 700; text-transform: uppercase; font-size: 10px; border-bottom: 1px solid #c8d4cc; letter-spacing: 0.3px; }
+    .section-title { background: #eef3ef; color: #123524; padding: 5px 8px; font-weight: 700; text-transform: uppercase; font-size: 10px; }
     .section-body { padding: 8px 9px; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
     .grid-3 { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 8px 12px; }
-    .field strong { display: block; font-size: 9px; text-transform: uppercase; color: #5a6f62; margin-bottom: 2px; }
+    .field strong { display: block; font-size: 9px; text-transform: uppercase; color: #5a6f62; }
     .field span { display: block; font-weight: 600; }
     table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #cad4cd; padding: 5px 6px; vertical-align: top; font-size: 9.5px; }
-    th { background: #f1f4f1; text-transform: uppercase; font-size: 8.8px; letter-spacing: 0.2px; }
-    td.num, th.num { text-align: right; white-space: nowrap; }
+    th, td { border: 1px solid #cad4cd; padding: 5px 6px; font-size: 9.5px; }
+    th { background: #f1f4f1; text-transform: uppercase; font-size: 8.8px; }
+    td.num, th.num { text-align: right; }
     .totals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 9px; }
-    .totals table td { font-size: 10px; }
     .totals .highlight td { font-weight: 700; background: #f7f0d8; }
     .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .pay-card { border: 1.2px solid #123524; padding: 10px; min-height: 80px; background: #fcfdfc; }
-    .pay-card h3 { margin: 0 0 6px; font-size: 10px; text-transform: uppercase; color: #123524; }
-    .pay-card .amount { font-size: 18px; font-weight: 700; color: #123524; }
-    .pay-card small { display: block; color: #566b5f; margin-top: 4px; }
+    .pay-card { border: 1.2px solid #123524; padding: 10px; background: #fcfdfc; }
+    .pay-card h3 { margin: 0 0 6px; font-size: 10px; text-transform: uppercase; }
+    .pay-card .amount { font-size: 18px; font-weight: 700; }
     .amount-in-words { margin-top: 8px; border: 1px dashed #bcc8c0; padding: 7px 8px; background: #fbfcfb; font-size: 9.5px; }
-    .amount-in-words strong { display: block; text-transform: uppercase; font-size: 8.8px; color: #5a6f62; margin-bottom: 3px; }
-    .stamp-placeholder { margin-top: 8px; width: 78px; height: 78px; border: 1px dashed #8ea293; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 8px; color: #627568; align-self: flex-end; }
     .sign-grid { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 10px; margin-top: auto; padding-top: 8px; }
-    .signature-box { border: 1px solid #b8c5bd; min-height: 126px; padding: 10px; display: flex; flex-direction: column; background: #fcfdfc; }
-    .signature-box.engagement-box { min-height: 146px; }
-    .signature-box.approval-box { min-height: 126px; }
-    .signature-box.visa-box { min-height: 126px; }
-    .signature-box h4 { margin: 0 0 6px; font-size: 10px; text-transform: uppercase; color: #123524; }
-    .signature-line { margin-top: auto; border-top: 1px solid #8ea293; padding-top: 6px; font-size: 9.5px; color: #5b6e61; }
+    .signature-box { border: 1px solid #b8c5bd; min-height: 126px; padding: 10px; background: #fcfdfc; }
+    .signature-box h4 { margin: 0 0 6px; font-size: 10px; text-transform: uppercase; }
+    .signature-line { margin-top: auto; border-top: 1px solid #8ea293; padding-top: 6px; font-size: 9.5px; }
     .note { font-size: 9px; color: #495b50; }
+    .chef-badge { background: #d3a52c; color: #123524; padding: 2px 6px; border-radius: 4px; font-size: 8px; font-weight: 700; margin-left: 8px; }
   </style>
 </head>
 <body>
   <div class="sheet">
     <div class="header">
       <div class="brand">
-        <img src="logo_pnda.png" alt="PNDA">
         <div>
           <h1>PNDA-SE</h1>
           <p>Programme National de Développement Agricole</p>
@@ -2120,10 +2201,9 @@ function buildLiquidationPrintHtml(snapshot) {
       </div>
       <div class="doc-meta">
         <div class="cartouche">
-          <span class="cartouche-label">Numero officiel du bordereau</span>
+          <span class="cartouche-label">Bordereau N°</span>
           <span class="cartouche-value">${escapeHtml(liquidationNumber)}</span>
           <div>Émis le ${escapeHtml(printedAt.toLocaleDateString('fr-FR'))}</div>
-          <div>Par ${escapeHtml(session?.user || '—')}</div>
         </div>
       </div>
     </div>
@@ -2131,18 +2211,23 @@ function buildLiquidationPrintHtml(snapshot) {
     <div class="title">Bordereau de liquidation de mission</div>
     <div class="copy-strip">
       <div class="copy-badge">Exemplaire original</div>
-      <div class="copy-badge" style="text-align:right;">Copie comptabilite</div>
+      <div class="copy-badge" style="text-align:right;">Copie comptabilité</div>
     </div>
 
     <div class="section">
       <div class="section-title">1. Identité</div>
       <div class="section-body grid-3">
-        <div class="field"><strong>Missionnaire</strong><span>${escapeHtml(report.rapporteur || meta.rapporteur || '—')}</span></div>
-        <div class="field"><strong>Province / Entité</strong><span>${escapeHtml(provinceLabel)}</span></div>
-        <div class="field"><strong>Période</strong><span>${escapeHtml(`${report.trimestre || meta.trimestre || ''} ${report.annee || meta.annee || ''}`.trim() || '—')}</span></div>
-        <div class="field"><strong>Rôle</strong><span>${escapeHtml(meta.role || report.rapporteur_role || '—')}</span></div>
-        <div class="field"><strong>Participants</strong><span>${snapshot.totalParticipants}</span></div>
-        <div class="field"><strong>Référence rapport</strong><span>${escapeHtml((report.seq_number || meta.seq_number) ? `#${report.seq_number || meta.seq_number}` : '—')}</span></div>
+        <div class="field">
+          <strong>Participant</strong>
+          <span>${escapeHtml(participantDisplayName)} ${isChef ? '<span class="chef-badge">CHEF</span>' : ''}</span>
+        </div>
+        <div class="field"><strong>Rôle</strong><span>${escapeHtml(participantRole)}</span></div>
+        ${isMultiParticipant && chefMission !== participantDisplayName ? 
+          `<div class="field"><strong>Chef de mission</strong><span>${escapeHtml(chefMission)}</span></div>` : 
+          '<div></div>'}
+        <div class="field"><strong>Province</strong><span>${escapeHtml(provinceLabel)}</span></div>
+        <div class="field"><strong>Période</strong><span>${escapeHtml(`${report.trimestre || meta.trimestre || ''} ${report.annee || meta.annee || ''}`.trim())}</span></div>
+        <div class="field"><strong>Référence</strong><span>#${report.seq_number || meta.seq_number || '—'}</span></div>
       </div>
     </div>
 
@@ -2151,69 +2236,53 @@ function buildLiquidationPrintHtml(snapshot) {
       <div class="section-body">
         <table>
           <thead>
-            <tr><th style="width:28px">#</th><th>Nature</th><th>Objet / objectif</th><th style="width:110px">Destination</th></tr>
+            <tr><th>#</th><th>Nature</th><th>Objet</th><th>Destination</th></tr>
           </thead>
           <tbody>
-            ${snapshot.missions.map((mission, index) => `
+            ${snapshot.missions.map((m, i) => `
               <tr>
-                <td>${index + 1}</td>
-                <td>${escapeHtml(mission.nature || '—')}</td>
-                <td>${escapeHtml(mission.objectif || '—')}</td>
-                <td>${escapeHtml(mission.destination_province_label || '—')}</td>
-              </tr>`).join('')}
+                <td>${i + 1}</td>
+                <td>${escapeHtml(m.nature || '—')}</td>
+                <td>${escapeHtml(m.objectif || '—')}</td>
+                <td>${escapeHtml(m.destination_province_label || '—')}</td>
+              </tr>
+            `).join('')}
           </tbody>
         </table>
       </div>
     </div>
 
     <div class="section">
-      <div class="section-title">3. Déroulement de la mission</div>
+      <div class="section-title">3. Déroulement</div>
       <div class="section-body">
-        <div class="grid-2" style="margin-bottom:6px;">
-          <div class="field"><strong>Nombre total de jours de déplacement</strong><span>${snapshot.totalTravelDays}</span></div>
-          <div class="field"><strong>Total nuitées</strong><span>${snapshot.totalNights}</span></div>
-        </div>
         <table>
           <thead>
             <tr>
-              <th style="width:24px">#</th>
-              <th>Nature</th>
-              <th>Objet</th>
-              <th style="width:100px">Période</th>
-              <th class="num" style="width:38px">Jrs</th>
-              <th class="num" style="width:40px">Nuitées</th>
-              <th class="num" style="width:62px">Taux</th>
-              <th class="num" style="width:70px">Frais mission</th>
-              <th class="num" style="width:76px">Frais à justifier</th>
+              <th>#</th><th>Nature</th><th>Objet</th><th>Période</th><th>Jrs</th><th>Nuits</th><th>Taux</th><th>Per diem</th><th>Frais</th>
             </tr>
           </thead>
           <tbody>${missionRows}</tbody>
         </table>
         <div class="totals">
           <table>
-            <tr><td>Total frais de mission</td><td class="num">${escapeHtml(formatCurrencyDisplay(snapshot.totalPerDiem))} USD</td></tr>
-            <tr><td>Total frais à justifier</td><td class="num">${escapeHtml(formatCurrencyDisplay(snapshot.totalJustificatifs))} USD</td></tr>
-            <tr class="highlight"><td>Total général</td><td class="num">${escapeHtml(formatCurrencyDisplay(snapshot.totalMission))} USD</td></tr>
+            <tr><td>Total per diem</td><td class="num">${formatCurrencyDisplay(snapshot.totalPerDiem)} USD</td></tr>
+            <tr><td>Total frais à justifier ${!isChef ? '<span class="chef-badge">CHEF UNIQUEMENT</span>' : ''}</td><td class="num">${formatCurrencyDisplay(snapshot.totalJustificatifs)} USD</td></tr>
+            <tr class="highlight"><td>Total général</td><td class="num">${formatCurrencyDisplay(snapshot.totalMission)} USD</td></tr>
           </table>
-          <div class="note">
-            Les frais de mission correspondent au per diem calculé sur base des nuitées et du taux validé. Les frais à justifier sont payés à 100 % et doivent être couverts par les pièces justificatives au retour.
-          </div>
         </div>
       </div>
     </div>
 
     <div class="section">
-      <div class="section-title">4. Paiement à effectuer</div>
+      <div class="section-title">4. Paiement</div>
       <div class="section-body pay-grid">
         <div class="pay-card">
-          <h3>À payer avant mission</h3>
-          <div class="amount">${escapeHtml(formatCurrencyDisplay(snapshot.aPayer))} USD</div>
-          <small>80 % per diem + 100 % frais à justifier</small>
+          <h3>À payer (80% per diem + frais)</h3>
+          <div class="amount">${formatCurrencyDisplay(snapshot.aPayer)} USD</div>
         </div>
         <div class="pay-card">
-          <h3>5. Solde au retour</h3>
-          <div class="amount">${escapeHtml(formatCurrencyDisplay(snapshot.soldeRetour))} USD</div>
-          <small>20 % du per diem après dépôt du rapport et des pièces</small>
+          <h3>Solde au retour (20% per diem)</h3>
+          <div class="amount">${formatCurrencyDisplay(snapshot.soldeRetour)} USD</div>
         </div>
       </div>
       <div class="amount-in-words">
@@ -2223,27 +2292,12 @@ function buildLiquidationPrintHtml(snapshot) {
     </div>
 
     <div class="sign-grid">
-      <div class="signature-box engagement-box">
-        <h4>6. Engagement du missionnaire</h4>
-        <div class="note">Je m'engage à soumettre le rapport de mission et les pièces justificatives endéans 7 jours après le retour.</div>
-        <div class="signature-line">Nom et signature du missionnaire</div>
-      </div>
-      <div class="signature-box approval-box">
-        <h4>7. Approbation</h4>
-        <div class="note">Visa et approbation du comptable / autorité habilitée.</div>
-        <div class="signature-line">Nom, qualité et signature</div>
-      </div>
-      <div class="signature-box visa-box">
-        <h4>8. Visa RAF / Coordination</h4>
-        <div class="note">Espace réservé au visa administratif final, selon le circuit interne de validation.</div>
-        <div class="stamp-placeholder">Cachet officiel</div>
-        <div class="signature-line">Nom, fonction et cachet</div>
-      </div>
+      <div class="signature-box"><h4>Missionnaire</h4><div class="signature-line">${escapeHtml(participantDisplayName)}</div></div>
+      <div class="signature-box"><h4>Comptable</h4><div class="signature-line">Visa</div></div>
+      <div class="signature-box"><h4>RAF / Coordination</h4><div class="signature-line">Visa</div></div>
     </div>
   </div>
-  <script>
-    window.onload = function () { window.print(); };
-  <\/script>
+  <script>window.onload=function(){window.print()};<\/script>
 </body>
 </html>`;
 }
@@ -2268,13 +2322,151 @@ async function printCurrentLiquidationBordereau() {
   openLiquidationPrintWindow(buildLiquidationSnapshot(report, updatedMissions));
 }
 
-async function printLiquidationBordereau(reportId) {
-  let report = ACTIVE_REPORTS_CACHE.find((entry) => entry.id === reportId)
-    || PENDING_REPORTS_CACHE.find((entry) => entry.id === reportId)
-    || USER_MISSIONS_CACHE.find((entry) => entry.id === reportId);
-  if (!report) { showToast('Bordereau introuvable pour ce rapport.'); return; }
+let _participantSelectModalInstance = null;
+
+async function printBordereauForParticipant(reportId, participantIndex) {
+  _participantSelectModalInstance?.hide();
+  
+  let report = ACTIVE_REPORTS_CACHE.find(r => r.id === reportId)
+    || PENDING_REPORTS_CACHE.find(r => r.id === reportId)
+    || USER_MISSIONS_CACHE.find(r => r.id === reportId);
+  
+  if (!report) return;
+  
   report = await ensureLiquidationIdentity(report);
-  openLiquidationPrintWindow(buildLiquidationSnapshot(report));
+  
+  const participants = report.participants || [];
+  const participant = participants[participantIndex];
+  
+  if (!participant) {
+    showToast('Participant introuvable.');
+    return;
+  }
+  
+  const snapshot = buildLiquidationSnapshot(report, null, participant, participantIndex);
+  openLiquidationPrintWindow(snapshot);
+}
+
+async function printAllBordereaux(reportId) {
+  _participantSelectModalInstance?.hide();
+  
+  let report = ACTIVE_REPORTS_CACHE.find(r => r.id === reportId)
+    || PENDING_REPORTS_CACHE.find(r => r.id === reportId)
+    || USER_MISSIONS_CACHE.find(r => r.id === reportId);
+  
+  if (!report) return;
+  
+  report = await ensureLiquidationIdentity(report);
+  
+  const participants = report.participants || [];
+  
+  if (participants.length === 0) {
+    showToast('Aucun participant trouvé.');
+    return;
+  }
+  
+  const snapshots = participants.map((p, idx) => buildLiquidationSnapshot(report, null, p, idx));
+  openMultiLiquidationPrintWindow(snapshots, report);
+}
+
+function openMultiLiquidationPrintWindow(snapshots, report) {
+  const printWindow = window.open('', '_blank', 'width=900,height=1200');
+  if (!printWindow) {
+    showToast('Autorisez les pop-up.');
+    return;
+  }
+  
+  const allHtml = snapshots.map((s, i) => 
+    (i > 0 ? '<div style="page-break-before: always;"></div>' : '') + buildLiquidationPrintHtml(s)
+  ).join('');
+  
+  printWindow.document.write(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Bordereaux - ${escapeHtml(report.chef_mission || 'Mission')}</title>
+<style>@page{size:A4 portrait;margin:11mm 10mm}*{box-sizing:border-box}body{font-family:Arial;margin:0;font-size:11px;background:#fff}</style></head>
+<body>${allHtml}<script>window.onload=function(){window.print()};<\/script></body></html>`);
+  printWindow.document.close();
+}
+
+async function printLiquidationBordereau(reportId) {
+  let report = ACTIVE_REPORTS_CACHE.find(r => r.id === reportId)
+    || PENDING_REPORTS_CACHE.find(r => r.id === reportId)
+    || USER_MISSIONS_CACHE.find(r => r.id === reportId);
+  
+  if (!report) { showToast('Rapport introuvable.'); return; }
+  
+  report = await ensureLiquidationIdentity(report);
+  
+  // Récupérer les participants
+  const participants = report.participants || [];
+  
+  // Si un seul participant ou pas de tableau participants
+  if (participants.length <= 1) {
+    const participant = participants[0] || null;
+    const snapshot = buildLiquidationSnapshot(report, null, participant, 0);
+    openLiquidationPrintWindow(snapshot);
+    return;
+  }
+  
+  // Plusieurs participants : afficher la modale de sélection
+  if (!_participantSelectModalInstance) {
+    _participantSelectModalInstance = new bootstrap.Modal(document.getElementById('participantSelectModal'));
+  }
+  
+  const listContainer = document.getElementById('participant-select-list');
+  const missionInfo = report.meta || {};
+  const chefMission = report.chef_mission || participants.find(p => p.est_chef || p.role === 'chef_mission')?.nom || '—';
+  
+  listContainer.innerHTML = `
+    <div class="alert alert-light border small mb-3">
+      <strong>${escapeHtml(missionInfo.province_label || report.province || '—')}</strong><br>
+      ${escapeHtml(report.trimestre || missionInfo.trimestre || '')} ${escapeHtml(String(report.annee || missionInfo.annee || ''))}<br>
+      Chef de mission : <strong>${escapeHtml(chefMission)}</strong>
+    </div>
+    ${participants.map((p, idx) => {
+      const isChef = p.est_chef || p.role === 'chef_mission' || idx === 0;
+      const roleLabel = getRoleLabel(p.role);
+      // Note : autres frais = 0 pour les non-chefs
+      const autresFrais = isChef ? (p.autres_frais_usd || 0) : 0;
+      const totalParticipant = (p.montant_usd || 0) + autresFrais;
+      
+      return `
+        <a href="#" class="list-group-item list-group-item-action" onclick="printBordereauForParticipant('${reportId}', ${idx}); return false;">
+          <div class="d-flex w-100 justify-content-between align-items-center">
+            <div>
+              <i class="bi ${isChef ? 'bi-star-fill text-warning' : 'bi-person'} me-2"></i>
+              <strong>${escapeHtml(p.nom || '—')}</strong>
+              <span class="badge bg-secondary ms-2">${escapeHtml(roleLabel)}</span>
+              ${isChef ? '<span class="badge bg-warning text-dark ms-1">Chef</span>' : ''}
+            </div>
+            <div class="text-end">
+              <div><strong>${formatCurrencyDisplay(totalParticipant)} USD</strong></div>
+              <small class="text-muted">${isChef ? 'Per diem + frais' : 'Per diem uniquement'}</small>
+            </div>
+          </div>
+          <div class="small text-muted mt-1">
+            <i class="bi bi-calendar me-1"></i>${p.nuitees || 0} nuits × ${formatCurrencyDisplay(p.taux_per_diem || 0)} USD
+            ${isChef && autresFrais > 0 ? ` · Frais: ${formatCurrencyDisplay(autresFrais)} USD` : ''}
+          </div>
+        </a>
+      `;
+    }).join('')}
+    <a href="#" class="list-group-item list-group-item-action list-group-item-success mt-2" onclick="printAllBordereaux('${reportId}'); return false;">
+      <i class="bi bi-files me-2"></i><strong>Imprimer tous les bordereaux (${participants.length})</strong>
+    </a>
+  `;
+  
+  _participantSelectModalInstance.show();
+}
+
+function getRoleLabel(role) {
+  const labels = {
+    'chef_mission': 'Chef de mission',
+    'expert': 'Expert',
+    'chauffeur': 'Chauffeur',
+    'assistant': 'Assistant',
+    'autre': 'Autre'
+  };
+  return labels[role] || role || 'Participant';
 }
 
 function renderSelectedMissionsTable() {
