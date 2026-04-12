@@ -13,9 +13,7 @@
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-<!-- Custom CSS -->
- <style>
-  <style>
+<style>
   :root {
     --pnda-green:    #123524;
     --pnda-green-md: #1d4c34;
@@ -55,19 +53,36 @@
   .nav-user { text-align: right; font-size: 0.82rem; }
   .nav-user strong { color: var(--pnda-green); display: block; }
   .nav-user span { color: #6c757d; font-size: 0.72rem; }
-  .brand-heading { font-family: 'Playfair Display', serif; }
-  .notif-badge { display: none; font-size: 0.6rem; }
-  .main-container { max-width: 960px; }
-  .trimester-badge { letter-spacing: 1px; }
-  .summary-title-sm { font-size: 1.05rem; }
-  .step-icon { font-size: 0.85rem; }
+  .brand-heading {
+    font-family: 'Playfair Display', serif;
+  }
+  .notif-badge {
+    display: none;
+    font-size: 0.6rem;
+  }
+  .main-container {
+    max-width: 960px;
+  }
+  .trimester-badge {
+    letter-spacing: 1px;
+  }
+  .summary-title-sm {
+    font-size: 1.05rem;
+  }
+  .step-icon {
+    font-size: 0.85rem;
+  }
 
   @media (max-width: 767.98px) {
     .navbar-pnda .container {
       display: flex; flex-direction: column; align-items: stretch; gap: 10px;
     }
-    .navbar-pnda .navbar-brand { font-size: 0.95rem; }
-    .navbar-pnda .navbar-brand small { font-size: 0.62rem; }
+    .navbar-pnda .navbar-brand {
+      font-size: 0.95rem;
+    }
+    .navbar-pnda .navbar-brand small {
+      font-size: 0.62rem;
+    }
     .navbar-pnda .container > .d-flex {
       width: 100%; gap: 8px !important; justify-content: space-between;
     }
@@ -78,8 +93,12 @@
   @media (max-width: 575.98px) {
     .logos-bar img { height: 42px; }
     .nav-user { display: none !important; }
-    .navbar-pnda .container > .d-flex { flex-wrap: wrap; }
-    #header-date { width: 100%; text-align: right; }
+    .navbar-pnda .container > .d-flex {
+      flex-wrap: wrap;
+    }
+    #header-date {
+      width: 100%; text-align: right;
+    }
   }
 
   /* ── LOGOS HEADER ────────────────────────────────────────── */
@@ -90,7 +109,8 @@
   }
   .logos-bar img { height: 72px; object-fit: contain; }
   .logo-ministere { height: 70px; }
-  .logo-programme, .logo-pnda-main { height: 78px; }
+  .logo-programme,
+  .logo-pnda-main { height: 78px; }
 
   /* ── TITLES ──────────────────────────────────────────────── */
   .page-title { font-family: 'Playfair Display', serif; color: var(--pnda-green); }
@@ -138,21 +158,6 @@
     border-radius: 4px;
     padding: 8px 12px;
     margin-top: 10px;
-  }
-
-  /* ── PARTICIPANT CARD ───────────────────────────────────────── */
-  .participant-card {
-    background: #fff;
-    border: 1px solid rgba(211, 165, 44, 0.3);
-    transition: box-shadow 0.2s;
-  }
-  .participant-card:hover {
-    box-shadow: 0 2px 8px rgba(18, 53, 36, 0.08);
-  }
-  .participants-container {
-    max-height: 500px;
-    overflow-y: auto;
-    padding-right: 4px;
   }
 
   /* ── SUMMARY ─────────────────────────────────────────────── */
@@ -256,6 +261,47 @@
     border-radius: 6px; padding: 10px 12px; margin-bottom: 12px;
     font-size: 0.85rem;
   }
+
+  @media (max-width: 767.98px) {
+    main .container {
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+    .page-title { font-size: 1.3rem; }
+    .card-header-pnda {
+      padding: 0.9rem 1rem !important;
+      align-items: flex-start !important;
+    }
+    .card-header-pnda h5 { font-size: 0.94rem; }
+    .mission-row,
+    .completion-mission-card { padding: 14px; }
+    .summary-table { min-width: 860px; }
+    .table-responsive .table { font-size: 0.84rem; }
+    .summary-table th { font-size: 0.67rem; }
+    #main-form-section .d-flex.gap-2.mt-2,
+    #selected-missions-section .d-flex.gap-2.flex-wrap,
+    #comptable-completion-section .d-flex.gap-2.mt-3.flex-wrap {
+      flex-direction: column;
+    }
+    #main-form-section .d-flex.gap-2.mt-2 .btn,
+    #selected-missions-section .d-flex.gap-2.flex-wrap .btn,
+    #comptable-completion-section .d-flex.gap-2.mt-3.flex-wrap .btn {
+      width: 100%;
+    }
+    .footer-pnda {
+      padding-left: 12px;
+      padding-right: 12px;
+      line-height: 1.5;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    .step-num {
+      width: 28px;
+      height: 28px;
+    }
+    .mission-meta { padding: 8px 10px; }
+  }
   .completion-mission-card .readonly-section strong { color: var(--pnda-green); display: block; font-size: 0.92rem; }
   .completion-financial-section {
     background: rgba(211,165,44,0.08);
@@ -270,39 +316,29 @@
   }
 
   .sel-mission:has(option[value=""]:only-child) {
-    border-color: #ffc107;
-    background-color: #fff9e6;
-  }
+  border-color: #ffc107;
+  background-color: #fff9e6;
+}
 
-  @media (max-width: 767.98px) {
-    main .container { padding-left: 12px; padding-right: 12px; }
-    .page-title { font-size: 1.3rem; }
-    .card-header-pnda { padding: 0.9rem 1rem !important; align-items: flex-start !important; }
-    .card-header-pnda h5 { font-size: 0.94rem; }
-    .mission-row, .completion-mission-card { padding: 14px; }
-    .summary-table { min-width: 860px; }
-    .table-responsive .table { font-size: 0.84rem; }
-    .summary-table th { font-size: 0.67rem; }
-    #main-form-section .d-flex.gap-2.mt-2,
-    #selected-missions-section .d-flex.gap-2.flex-wrap,
-    #comptable-completion-section .d-flex.gap-2.mt-3.flex-wrap { flex-direction: column; }
-    #main-form-section .d-flex.gap-2.mt-2 .btn,
-    #selected-missions-section .d-flex.gap-2.flex-wrap .btn,
-    #comptable-completion-section .d-flex.gap-2.mt-3.flex-wrap .btn { width: 100%; }
-    .footer-pnda { padding-left: 12px; padding-right: 12px; line-height: 1.5; }
-  }
-
-  @media (max-width: 575.98px) {
-    .step-num { width: 28px; height: 28px; }
-    .mission-meta { padding: 8px 10px; }
-  }
+/* ── PARTICIPANT CARD ───────────────────────────────────────── */
+.participant-card {
+  background: #fff;
+  border: 1px solid rgba(211, 165, 44, 0.3);
+  transition: box-shadow 0.2s;
+}
+.participant-card:hover {
+  box-shadow: 0 2px 8px rgba(18, 53, 36, 0.08);
+}
+.participants-container {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
 </style>
- </style>
 </head>
-
 <body class="d-flex flex-column min-vh-100">
 
-<!-- ══════════════ AUTH MODAL ══════════════ -->
+<!-- ══════════════ AUTH MODAL (toujours visible au démarrage) ══════════════ -->
 <div class="modal fade" id="authModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg overflow-hidden">
@@ -394,116 +430,121 @@
 
       <!-- ════ VUE MISSIONNAIRE (province) ════ -->
       <div id="main-form-section">
-        <div class="alert alert-warning d-none" id="mission-feedback-alert">
-          <div class="fw-semibold mb-1"><i class="bi bi-exclamation-circle-fill me-1"></i><span id="mission-feedback-title">Mission renvoyée par le comptable</span></div>
-          <div class="small feedback-comment mb-0" id="mission-feedback-body"></div>
-        </div>
 
-        <!-- ── ÉTAPE 1 : IDENTIFICATION ── -->
-        <div class="card mb-4">
-          <div class="card-header card-header-pnda py-3 d-flex align-items-center gap-3">
-            <span class="step-num">1</span>
-            <h5>Identification — Contexte budgétaire</h5>
-          </div>
-          <div class="card-body">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label form-label-sm">Province <span class="req">*</span></label>
-                <select class="form-select form-select-sm" id="f-province" onchange="updateProvinceLabel()" title="Sélectionner la province">
-                  <option value="">— Chargement des provinces —</option>
-                </select>
-                <small class="text-muted">Les missions proposées dépendent de la province sélectionnée.</small>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label form-label-sm">Trimestre <span class="req">*</span></label>
-                <select class="form-select form-select-sm" id="f-trimestre" title="Sélectionner le trimestre">
-                  <option value="T1">T1 — Janvier à Mars</option>
-                  <option value="T2">T2 — Avril à Juin</option>
-                  <option value="T3">T3 — Juillet à Septembre</option>
-                  <option value="T4" selected>T4 — Octobre à Décembre</option>
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label form-label-sm">Année <span class="req">*</span></label>
-                <input type="number" class="form-control form-control-sm" id="f-annee" value="2025" min="2020" max="2030" placeholder="2025">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label form-label-sm">Rapporteur <span class="req">*</span></label>
-                <input type="text" class="form-control form-control-sm" id="f-rapporteur" placeholder="Nom & prénom">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label form-label-sm">Rôle / Poste</label>
-                <input type="text" class="form-control form-control-sm" id="f-role" placeholder="ex : Coordinateur RNSE">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label form-label-sm">Date de génération</label>
-                <input type="date" class="form-control form-control-sm" id="f-date">
-              </div>
+      <div class="alert alert-warning d-none" id="mission-feedback-alert">
+        <div class="fw-semibold mb-1"><i class="bi bi-exclamation-circle-fill me-1"></i><span id="mission-feedback-title">Mission renvoyée par le comptable</span></div>
+        <div class="small feedback-comment mb-0" id="mission-feedback-body"></div>
+      </div>
+
+      <!-- ── ÉTAPE 1 : IDENTIFICATION ── -->
+      <div class="card mb-4">
+        <div class="card-header card-header-pnda py-3 d-flex align-items-center gap-3">
+          <span class="step-num">1</span>
+          <h5>Identification — Contexte budgétaire</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label form-label-sm">Province <span class="req">*</span></label>
+              <select class="form-select form-select-sm" id="f-province" onchange="updateProvinceLabel()" title="Sélectionner la province">
+                <option value="">— Chargement des provinces —</option>
+              </select>
+              <small class="text-muted">Les missions proposées dépendent de la province sélectionnée.</small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label form-label-sm">Trimestre <span class="req">*</span></label>
+              <select class="form-select form-select-sm" id="f-trimestre" title="Sélectionner le trimestre">
+                <option value="T1">T1 — Janvier à Mars</option>
+                <option value="T2">T2 — Avril à Juin</option>
+                <option value="T3">T3 — Juillet à Septembre</option>
+                <option value="T4" selected>T4 — Octobre à Décembre</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label form-label-sm">Année <span class="req">*</span></label>
+              <input type="number" class="form-control form-control-sm" id="f-annee" value="2025" min="2020" max="2030" title="Saisir l'année budgétaire" placeholder="2025">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label form-label-sm">Rapporteur <span class="req">*</span></label>
+              <input type="text" class="form-control form-control-sm" id="f-rapporteur" placeholder="Nom & prénom">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label form-label-sm">Rôle / Poste</label>
+              <input type="text" class="form-control form-control-sm" id="f-role" placeholder="ex : Coordinateur RNSE">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label form-label-sm">Date de génération</label>
+              <input type="date" class="form-control form-control-sm" id="f-date" title="Sélectionner la date de génération" placeholder="Date de génération">
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- ── ÉTAPE 2 : MISSIONS ── -->
-        <div class="card mb-4">
-          <div class="card-header card-header-pnda py-3 d-flex align-items-center gap-3">
-            <span class="step-num">2</span>
-            <h5>Missions réalisées au cours du trimestre</h5>
+      <!-- ── ÉTAPE 2 : MISSIONS ── -->
+      <div class="card mb-4">
+        <div class="card-header card-header-pnda py-3 d-flex align-items-center gap-3">
+          <span class="step-num">2</span>
+          <h5>Missions réalisées au cours du trimestre</h5>
+        </div>
+        <div class="card-body">
+          <div id="missions-container"></div>
+          <div class="d-flex gap-2 mt-2">
+            <button class="btn btn-outline-success flex-fill d-flex align-items-center justify-content-center gap-2" onclick="addMission()">
+              <i class="bi bi-plus-circle-fill"></i> Ajouter une mission
+            </button>
+            <button class="btn btn-pnda flex-fill d-flex align-items-center justify-content-center gap-2" id="btn-enregistrer" onclick="enregistrerMissions()">
+              <i class="bi bi-cloud-arrow-up-fill"></i> Enregistrer
+            </button>
           </div>
-          <div class="card-body">
-            <div id="missions-container"></div>
-            <div class="d-flex gap-2 mt-2">
-              <button class="btn btn-outline-success flex-fill d-flex align-items-center justify-content-center gap-2" onclick="addMission()">
-                <i class="bi bi-plus-circle-fill"></i> Ajouter une mission
+        </div>
+      </div>
+
+      <!-- ── ÉTAPE 3 : TABLEAU RÉCAPITULATIF ── -->
+      <div class="card mb-4" id="selected-missions-section">
+        <div class="card-header card-header-pnda py-3 d-flex align-items-center gap-3">
+          <span class="step-num">3</span>
+          <h5>Tableau récapitulatif des missions sélectionnées</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+            <div>
+              <h6 class="page-title mb-1 summary-title-sm">Récapitulatif prêt à imprimer et à exporter</h6>
+              <p class="text-muted small mb-0">Le tableau se met à jour automatiquement.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              <button class="btn btn-info btn-sm text-white" onclick="exportSelectedMissionsExcel()">
+                <i class="bi bi-file-earmark-excel me-1"></i>Excel
               </button>
-              <button class="btn btn-pnda flex-fill d-flex align-items-center justify-content-center gap-2" id="btn-enregistrer" onclick="enregistrerMissions()">
-                <i class="bi bi-cloud-arrow-up-fill"></i> Enregistrer
+              <button class="btn btn-secondary btn-sm" onclick="printSelectedMissions()">
+                <i class="bi bi-printer me-1"></i>Imprimer
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- ── ÉTAPE 3 : TABLEAU RÉCAPITULATIF ── -->
-        <div class="card mb-4" id="selected-missions-section">
-          <div class="card-header card-header-pnda py-3 d-flex align-items-center gap-3">
-            <span class="step-num">3</span>
-            <h5>Tableau récapitulatif des missions sélectionnées</h5>
-          </div>
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
-              <div>
-                <h6 class="page-title mb-1 summary-title-sm">Récapitulatif prêt à imprimer et à exporter</h6>
-                <p class="text-muted small mb-0">Le tableau se met à jour automatiquement.</p>
-              </div>
-              <div class="d-flex gap-2 flex-wrap">
-                <button class="btn btn-info btn-sm text-white" onclick="exportSelectedMissionsExcel()">
-                  <i class="bi bi-file-earmark-excel me-1"></i>Excel
-                </button>
-                <button class="btn btn-secondary btn-sm" onclick="printSelectedMissions()">
-                  <i class="bi bi-printer me-1"></i>Imprimer
-                </button>
-              </div>
-            </div>
-            <div class="row g-2 mb-3" id="selected-missions-metrics"></div>
-            <div class="table-responsive">
-              <table class="table table-hover table-sm summary-table mb-0">
-                <thead>
-                  <tr>
-                    <th>N°</th><th>Province</th><th>Mission</th><th>Objectif</th>
-                    <th>Prov. dest.</th><th>Territoire</th><th>Secteur</th><th>Début</th><th>Fin prévue</th>
-                    <th>Participants</th><th>Nuitées</th><th>Taux/nuit</th><th>Section</th>
-                    <th>Montant USD</th><th>Autres frais</th><th>Total USD</th><th>Avance USD</th><th>Solde USD</th><th>Observation</th>
-                  </tr>
-                </thead>
-                <tbody id="selected-missions-body">
-                  <tr><td colspan="19" class="text-center text-muted py-4">Aucune mission sélectionnée pour le moment.</td></tr>
-                </tbody>
-              </table>
-            </div>
+          <div class="row g-2 mb-3" id="selected-missions-metrics"></div>
+
+          <div class="table-responsive">
+            <table class="table table-hover table-sm summary-table mb-0">
+              <thead>
+                <tr>
+                  <th>N°</th><th>Province</th><th>Mission</th><th>Objectif</th>
+                  <th>Prov. dest.</th><th>Territoire</th><th>Secteur</th><th>Début</th><th>Fin prévue</th><th>Participants</th><th>Nuitées</th>
+                  <th>Taux/nuit</th><th>Section</th><th>Hors projet</th><th>Projet</th>
+                  <th>Montant USD</th><th>Autres frais</th><th>Total USD</th><th>Avance USD</th><th>Solde USD</th><th>Observation</th>
+                </tr>
+              </thead>
+              <tbody id="selected-missions-body">
+                <tr><td colspan="20" class="text-center text-muted py-4">Aucune mission sélectionnée pour le moment.</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
+      </div>
+
       </div><!-- /#main-form-section -->
 
       <!-- ════ VUE COMPTABLE ════ -->
+      <!-- ── Missions en attente (liste) ── -->
       <div id="comptable-pending-section" class="mb-4" style="display:none">
         <div class="card">
           <div class="card-header card-header-pnda py-3 d-flex align-items-center gap-3">
@@ -512,14 +553,20 @@
               <h5 class="mb-0">Missions en attente — Complétion financière</h5>
               <small class="text-muted ms-1" id="comptable-province-label"></small>
             </div>
-            <button class="btn btn-pnda btn-sm ms-auto" onclick="loadPendingMissions()"><i class="bi bi-arrow-clockwise"></i></button>
+            <button class="btn btn-pnda btn-sm ms-auto" onclick="loadPendingMissions()" title="Actualiser">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
           </div>
           <div class="card-body">
-            <p class="text-muted small mb-3">Missions soumises par les missionnaires et en attente de validation financière.</p>
+            <p class="text-muted small mb-3">Missions soumises par les missionnaires et en attente de validation financière. Cliquez sur <strong>Compléter</strong> pour saisir la partie budgétaire.</p>
             <div class="table-responsive">
               <table class="table table-hover table-sm summary-table mb-0">
-                <thead><tr><th>Date</th><th>Rapporteur</th><th>Période</th><th>Missions</th><th>Action</th></tr></thead>
-                <tbody id="pending-tbody"><tr><td colspan="5" class="text-center text-muted py-4">Chargement…</td></tr></tbody>
+                <thead>
+                  <tr><th>Date</th><th>Rapporteur</th><th>Période</th><th>Missions</th><th>Action</th></tr>
+                </thead>
+                <tbody id="pending-tbody">
+                  <tr><td colspan="5" class="text-center text-muted py-4">Chargement…</td></tr>
+                </tbody>
               </table>
             </div>
           </div>
@@ -534,20 +581,27 @@
               <h5 class="mb-0">Missions activées en cours</h5>
               <small class="text-muted ms-1">Suivi des missions exécutées et clôture après justification.</small>
             </div>
-            <button class="btn btn-pnda btn-sm ms-auto" onclick="loadActiveMissions()"><i class="bi bi-arrow-clockwise"></i></button>
+            <button class="btn btn-pnda btn-sm ms-auto" onclick="loadActiveMissions()" title="Actualiser">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
           </div>
           <div class="card-body">
-            <p class="text-muted small mb-3">Quand les pièces justificatives sont validées, le comptable signale la mission comme effectuée.</p>
+            <p class="text-muted small mb-3">Quand les pièces justificatives sont validées, le comptable signale la mission comme effectuée et le litige passe à <strong>0 USD</strong>.</p>
             <div class="table-responsive">
               <table class="table table-hover table-sm summary-table mb-0">
-                <thead><tr><th>Date</th><th>Rapporteur</th><th>Période</th><th>Missions</th><th>Litige USD</th><th>Action</th></tr></thead>
-                <tbody id="active-tbody"><tr><td colspan="6" class="text-center text-muted py-4">Chargement…</td></tr></tbody>
+                <thead>
+                  <tr><th>Date</th><th>Rapporteur</th><th>Période</th><th>Missions</th><th>Litige USD</th><th>Action</th></tr>
+                </thead>
+                <tbody id="active-tbody">
+                  <tr><td colspan="6" class="text-center text-muted py-4">Chargement…</td></tr>
+                </tbody>
               </table>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- ── Complétion financière (formulaire) ── -->
       <div id="comptable-completion-section" class="mb-4" style="display:none">
         <div class="card">
           <div class="card-header card-header-pnda py-3 d-flex align-items-center gap-3">
@@ -556,22 +610,31 @@
               <h5 class="mb-0">Complétion financière</h5>
               <small class="text-muted" id="completion-report-info">—</small>
             </div>
-            <button class="btn btn-outline-secondary btn-sm ms-auto" onclick="closeFinancialCompletion()"><i class="bi bi-x-lg me-1"></i>Annuler</button>
+            <button class="btn btn-outline-secondary btn-sm ms-auto" onclick="closeFinancialCompletion()">
+              <i class="bi bi-x-lg me-1"></i>Annuler
+            </button>
           </div>
           <div class="card-body">
             <div class="alert alert-info small py-2 mb-3">
               <i class="bi bi-info-circle-fill me-1"></i>
-              Remplissez les champs financiers, puis cliquez sur <strong>Activer la mission</strong>.
+              Les champs <strong>Nature, Objectif, Destination et Dates</strong> sont en lecture seule (saisis par le missionnaire).
+              Remplissez les champs financiers surlignés, puis cliquez sur <strong>Activer la mission</strong>. Si la mission doit être corrigée, retournez-la au missionnaire avec commentaire.
             </div>
             <div id="completion-missions-list"></div>
             <div class="mt-3">
               <label class="form-label form-label-sm">Commentaire du comptable</label>
-              <textarea class="form-control form-control-sm" id="completion-comment" rows="3" placeholder="Décrivez ici les corrections attendues…"></textarea>
+              <textarea class="form-control form-control-sm" id="completion-comment" rows="3" placeholder="Décrivez ici les corrections attendues ou les points à revoir."></textarea>
             </div>
             <div class="d-flex gap-2 mt-3 flex-wrap">
-              <button class="btn btn-outline-warning" onclick="returnMissionToMissionnaire()"><i class="bi bi-arrow-return-left me-1"></i>Retourner au missionnaire</button>
-              <button class="btn btn-outline-primary" onclick="printCurrentLiquidationBordereau()"><i class="bi bi-printer me-1"></i>Imprimer le bordereau</button>
-              <button class="btn btn-success" onclick="saveFinancialCompletion()"><i class="bi bi-lightning-charge-fill me-1"></i>Activer la mission</button>
+              <button class="btn btn-outline-warning" onclick="returnMissionToMissionnaire()">
+                <i class="bi bi-arrow-return-left me-1"></i>Retourner au missionnaire
+              </button>
+              <button class="btn btn-outline-primary" onclick="printCurrentLiquidationBordereau()">
+                <i class="bi bi-printer me-1"></i>Imprimer le bordereau
+              </button>
+              <button class="btn btn-success" onclick="saveFinancialCompletion()">
+                <i class="bi bi-lightning-charge-fill me-1"></i>Activer la mission
+              </button>
               <button class="btn btn-outline-secondary" onclick="closeFinancialCompletion()">Annuler</button>
             </div>
           </div>
@@ -588,14 +651,19 @@
           <p class="text-muted small mb-3">Retrouvez, consultez et gérez vos rapports enregistrés.</p>
           <div class="table-responsive">
             <table class="table table-hover table-sm summary-table mb-0">
-              <thead><tr><th>N° Seq.</th><th>Date</th><th>Période</th><th>Missions</th><th>Montant total</th><th>Statut</th><th>Action</th></tr></thead>
-              <tbody id="archive-tbody"><tr><td colspan="7" class="text-center text-muted py-4">Chargement…</td></tr></tbody>
+              <thead>
+                <tr><th>N° Seq.</th><th>Date</th><th>Période</th><th>Missions</th><th>Montant total</th><th>Statut</th><th>Action</th></tr>
+              </thead>
+              <tbody id="archive-tbody">
+                <tr><td colspan="7" class="text-center text-muted py-4">Chargement…</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
       </div>
-    </div>
-  </div>
+
+    </div><!-- /.py-4 -->
+  </div><!-- /.container -->
 </main>
 
 <!-- ══════════════ FOOTER ══════════════ -->
@@ -609,29 +677,7 @@
   <div id="toast" class="toast align-items-center text-bg-dark border-0" role="alert">
     <div class="d-flex">
       <div class="toast-body fw-semibold" id="toast-body">—</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-    </div>
-  </div>
-</div>
-
-<!-- ░░ MODALE DE SÉLECTION DES PARTICIPANTS ░░ -->
-<div class="modal fade" id="participantSelectModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content border-0 shadow">
-      <div class="modal-header" style="background: linear-gradient(135deg, var(--pnda-green) 0%, var(--pnda-green-md) 100%); color: #fff;">
-        <h6 class="modal-title"><i class="bi bi-people-fill me-2"></i>Sélectionner le participant pour le bordereau</h6>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p class="small text-muted mb-3">
-          <i class="bi bi-info-circle me-1"></i>
-          Cette mission comprend plusieurs participants. Sélectionnez celui pour lequel vous souhaitez imprimer un bordereau.
-        </p>
-        <div id="participant-select-list" class="list-group"></div>
-      </div>
-      <div class="modal-footer border-0 pt-0">
-        <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Annuler</button>
-      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" title="Fermer la notification" aria-label="Fermer la notification"></button>
     </div>
   </div>
 </div>
@@ -640,6 +686,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.103.0/dist/umd/supabase.js"></script>
 <script src="supabase_config.js"></script>
+
 <script>
 // ─── CLIENT SUPABASE ──────────────────────────────────────────────────────────
 const { createClient } = supabase;
@@ -651,26 +698,33 @@ const _toastEl   = document.getElementById('toast');
 const _bsToast   = new bootstrap.Toast(_toastEl, { delay: 3500 });
 
 // ─── UTILITIES ────────────────────────────────────────────────────────────────
-function esc(v) { return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-function escapeHtml(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-function showToast(msg) { document.getElementById('toast-body').textContent = msg; _bsToast.show(); }
-function formatCurrencyDisplay(v) { return new Intl.NumberFormat('fr-FR', { minimumFractionDigits:2, maximumFractionDigits:2 }).format(Number(v||0)); }
-
-function askConfirm(message, onOk) {
-  if (!window.confirm(message)) return;
-  if (typeof onOk === 'function') onOk();
+function esc(v) {
+  return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
+
+function showToast(msg) {
+  document.getElementById('toast-body').textContent = msg;
+  _bsToast.show();
+}
+
+function askConfirm(message, onOk, title = 'Confirmer', okLabel = 'Confirmer', okClass = 'btn-danger') {
+  if (!window.confirm(message)) return;
+  if (typeof onOk === 'function') {
+    onOk();
+  }
+}
+
 window.askConfirm = askConfirm;
 
 // ─── DONNÉES DE RÉFÉRENCE ─────────────────────────────────────────────────────
 let REFERENCE = { provinces: [] };
-let TERRITOIRES = [];
-let SECTEURS = [];
+let TERRITOIRES = [];   // { id, province_name, name, label }
+let SECTEURS    = [];   // { id, territoire_id, name, label }
 let DATA_READY = false;
 
 const SECTIONS_PNDA = [
   { val: "1", label: "1 — Coordination" },
-  { val: "2", label: "2 — Province" },
+  { val: "2", label: "2 — Pronvince" },
   { val: "3", label: "3 — Suivi-évaluation" },
   { val: "4", label: "4 — Communication" },
   { val: "5", label: "5 — Formation & Renforcement" },
@@ -679,14 +733,16 @@ const SECTIONS_PNDA = [
 
 const NATURE_CATEGORIES = [
   { val: 'implementation', label: "Mission d'implémentation" },
-  { val: 'activite', label: "Mission d'activité" },
-  { val: 'atelier', label: 'Atelier' }
+  { val: 'activite',       label: "Mission d'activité" },
+  { val: 'atelier',        label: 'Atelier' },
+  // { val: 'autre',          label: 'Autre (à préciser)' }
 ];
 
 // ─── AUTH STATE ───────────────────────────────────────────────────────────────
 let USERS = {};
+let USER_SESSION = null;
 let USER_MISSIONS_CACHE = [];
-let CURRENT_USER_ROLE = 'province';
+let CURRENT_USER_ROLE = 'province'; // 'province' | 'comptable'
 let CURRENT_COMPLETION_REPORT_ID = null;
 let PENDING_REPORTS_CACHE = [];
 let CURRENT_EDIT_REPORT_ID = null;
@@ -702,25 +758,7 @@ const WORKFLOW_STATUS = {
   REALISEE: 'realisee'
 };
 
-let _participantSelectModal = null;
-let missionCount = 0;
-
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
-  await loadReferenceData();
-  if (DATA_READY) hydrateSession();
-});
-
-function getSession() {
-  try { return JSON.parse(localStorage.getItem('PNDA_SESSION') || 'null'); } catch { return null; }
-}
-
-function clearSession() { localStorage.removeItem('PNDA_SESSION'); }
-
-function isManualLoginRequested() { return new URLSearchParams(window.location.search).get('manual-login') === '1'; }
-
 function encodePassword(pw) { try { return window.btoa(pw); } catch { return pw; } }
-
 function isPasswordMatch(account, pw) {
   if (!account) return false;
   const enc = encodePassword(pw);
@@ -732,7 +770,9 @@ function normalizeReportStatus(status, fallback = WORKFLOW_STATUS.ACTIVEE) {
   return Object.values(WORKFLOW_STATUS).includes(normalized) ? normalized : fallback;
 }
 
-function getWorkflowComment(report) { return report?.meta?.workflow_comment || ''; }
+function getWorkflowComment(report) {
+  return report?.meta?.workflow_comment || '';
+}
 
 function notifyReportDataChanged() {
   try { localStorage.setItem(REPORT_SYNC_KEY, new Date().toISOString()); } catch {}
@@ -755,13 +795,20 @@ function updateFeedbackAlert(comment, title = 'Mission renvoyée par le comptabl
   const body = document.getElementById('mission-feedback-body');
   const heading = document.getElementById('mission-feedback-title');
   if (!alert || !body || !heading) return;
-  if (!comment) { alert.classList.add('d-none'); body.textContent = ''; return; }
+  if (!comment) {
+    alert.classList.add('d-none');
+    body.textContent = '';
+    return;
+  }
   heading.textContent = title;
   body.textContent = comment;
   alert.classList.remove('d-none');
 }
 
-function clearCurrentEditContext() { CURRENT_EDIT_REPORT_ID = null; updateFeedbackAlert(''); }
+function clearCurrentEditContext() {
+  CURRENT_EDIT_REPORT_ID = null;
+  updateFeedbackAlert('');
+}
 
 function getMissionnaireNotificationCount(reports = USER_MISSIONS_CACHE) {
   return (reports || []).filter((report) => {
@@ -777,21 +824,31 @@ function getComptableNotificationCount() {
 function renderWorkflowAlerts() {
   const container = document.getElementById('workflow-alerts');
   if (!container) return;
+
   if (CURRENT_USER_ROLE === 'comptable') {
     const pendingCount = PENDING_REPORTS_CACHE?.length || 0;
     const activeCount = ACTIVE_REPORTS_CACHE?.length || 0;
     const totalLitige = ACTIVE_REPORTS_CACHE.reduce((sum, report) => sum + calculateReportLitige(report), 0);
     const alerts = [];
-    if (pendingCount > 0) alerts.push(`<div class="alert alert-warning small mb-2"><i class="bi bi-hourglass-split me-1"></i><strong>${pendingCount}</strong> mission(s) attendent une complétion financière.</div>`);
-    if (activeCount > 0) alerts.push(`<div class="alert alert-info small mb-2"><i class="bi bi-lightning-charge-fill me-1"></i><strong>${activeCount}</strong> mission(s) sont en cours avec un litige cumulé de <strong>${escapeHtml(formatCurrencyDisplay(totalLitige))} USD</strong>.</div>`);
+    if (pendingCount > 0) {
+      alerts.push(`<div class="alert alert-warning small mb-2"><i class="bi bi-hourglass-split me-1"></i><strong>${pendingCount}</strong> mission(s) attendent une complétion financière.</div>`);
+    }
+    if (activeCount > 0) {
+      alerts.push(`<div class="alert alert-info small mb-2"><i class="bi bi-lightning-charge-fill me-1"></i><strong>${activeCount}</strong> mission(s) sont en cours avec un litige cumulé de <strong>${escapeHtml(formatCurrencyDisplay(totalLitige))} USD</strong>.</div>`);
+    }
     container.innerHTML = alerts.join('');
     return;
   }
+
   const returnedCount = USER_MISSIONS_CACHE.filter((report) => normalizeReportStatus(report.statut) === WORKFLOW_STATUS.RETOURNEE).length;
   const activeCount = USER_MISSIONS_CACHE.filter((report) => normalizeReportStatus(report.statut) === WORKFLOW_STATUS.ACTIVEE).length;
   const alerts = [];
-  if (returnedCount > 0) alerts.push(`<div class="alert alert-warning small mb-2"><i class="bi bi-arrow-return-left me-1"></i><strong>${returnedCount}</strong> mission(s) ont été retournées par le comptable pour correction.</div>`);
-  if (activeCount > 0) alerts.push(`<div class="alert alert-success small mb-2"><i class="bi bi-lightning-charge-fill me-1"></i><strong>${activeCount}</strong> mission(s) sont activées et en cours d'exécution.</div>`);
+  if (returnedCount > 0) {
+    alerts.push(`<div class="alert alert-warning small mb-2"><i class="bi bi-arrow-return-left me-1"></i><strong>${returnedCount}</strong> mission(s) ont été retournées par le comptable pour correction.</div>`);
+  }
+  if (activeCount > 0) {
+    alerts.push(`<div class="alert alert-success small mb-2"><i class="bi bi-lightning-charge-fill me-1"></i><strong>${activeCount}</strong> mission(s) sont activées et en cours d'exécution.</div>`);
+  }
   container.innerHTML = alerts.join('');
 }
 
@@ -818,23 +875,47 @@ function setCompletionActionsDisabled(disabled) {
   });
 }
 
-function updateNotifBadge() {
-  const count = CURRENT_USER_ROLE === 'comptable' ? getComptableNotificationCount() : getMissionnaireNotificationCount();
-  const badge = document.getElementById('notif-badge');
-  if (!badge) return;
-  if (count > 0) { badge.style.display = ''; badge.textContent = count; }
-  else { badge.style.display = 'none'; }
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadReferenceData();
+  if (DATA_READY) hydrateSession();
+});
+
+function getSession() {
+  try { return JSON.parse(localStorage.getItem('PNDA_SESSION') || 'null'); } catch { return null; }
+}
+function clearSession() { localStorage.removeItem('PNDA_SESSION'); }
+function isManualLoginRequested() { return new URLSearchParams(window.location.search).get('manual-login') === '1'; }
+
+function applyDefaultDesktopSession() {
+  const d = window.PNDA_DESKTOP?.defaultSession;
+  if (!d || isManualLoginRequested()) return false;
+  const a = USERS[d.user];
+  if (!a || a.role !== d.role || !a.provinces.includes(d.province)) return false;
+  localStorage.setItem('PNDA_SESSION', JSON.stringify({ user: d.user, role: d.role, province: d.province, authenticatedAt: new Date().toISOString() }));
+  return true;
 }
 
-// ─── CHARGEMENT DES RÉFÉRENCES ────────────────────────────────────────────────
+function hydrateSession() {
+  let session = getSession();
+  if (!session && applyDefaultDesktopSession()) session = getSession();
+  if (!session?.user) { _authModal.show(); return; }
+  const account = USERS[session.user];
+  if (!account) { clearSession(); _authModal.show(); return; }
+  if (account.role === 'super_admin') { window.location.href = 'superadmin.html'; return; }
+  if (account.role === 'admin')       { window.location.href = 'admin.html'; return; }
+  if (!session.province || (account.provinces !== '*' && !account.provinces.includes(session.province))) { clearSession(); _authModal.show(); return; }
+  openProvinceSession(session.user, session.province);
+}
+
 async function loadReferenceData() {
   try {
     const [
       { data: provinces, error: e1 },
-      { data: missions, error: e2 },
-      { data: users, error: e3 },
+      { data: missions,  error: e2 },
+      { data: users,     error: e3 },
       { data: territoires, error: e4 },
-      { data: secteurs, error: e5 }
+      { data: secteurs,    error: e5 }
     ] = await Promise.all([
       db.from('provinces').select('*').order('code'),
       db.from('missions_ref').select('*').order('ordre'),
@@ -843,8 +924,10 @@ async function loadReferenceData() {
       db.from('secteurs').select('*').order('name')
     ]);
     if (e1) throw e1; if (e2) throw e2; if (e3) throw e3;
+
     TERRITOIRES = territoires || [];
-    SECTEURS = secteurs || [];
+    SECTEURS    = secteurs    || [];
+
     REFERENCE = {
       provinces: (provinces || []).map((prov) => ({
         name: prov.name, label: prov.label, code: prov.code,
@@ -910,39 +993,71 @@ function calcNuitees(dateDebut, dateFin) {
   if (!dateDebut || !dateFin) return 0;
   const d1 = new Date(dateDebut), d2 = new Date(dateFin);
   if (isNaN(d1) || isNaN(d2) || d2 <= d1) return 0;
-  return Math.round((d2 - d1) / 86400000);
+  return Math.round((d2 - d1) / 86400000); // nombre de nuits
 }
 
+/**
+ * Taux per diem selon le trajet :
+ * - UN (Kinshasa) → Kwilu         : 120 $/nuit
+ * - UN (Kinshasa) → Kasaï / Kasaï Central : 90 $/nuit
+ * - Province → Province (intérieur) : 50 $/nuit
+ * - Province → UN (Kinshasa)       : 200 $/nuit
+ */
 function getTauxByDestination(provinceOrigine, provinceDest) {
   const orig = (provinceOrigine || '').trim();
   const dest = (provinceDest || '').trim();
   if (!dest) return { taux: 0, info: 'Sélectionnez la province de destination' };
+
+  // Kinshasa (UN) → provinces
   if (orig === 'UN') {
     if (dest === 'Kwilu') return { taux: 120, info: 'Kinshasa → Kwilu : 120 $/nuit' };
     if (dest === 'Kasaï' || dest === 'Kasaï Central') return { taux: 90, info: 'Kinshasa → Kasaï : 90 $/nuit' };
     if (dest === 'UN') return { taux: 0, info: 'Même province (Kinshasa)' };
     return { taux: 50, info: `Kinshasa → ${dest} : 50 $/nuit` };
   }
+  // Province → Kinshasa
   if (dest === 'UN') return { taux: 200, info: `${orig} → Kinshasa : 200 $/nuit` };
+  // Province → Province (intérieur ou autre)
   return { taux: 50, info: `${orig} → ${dest} : 50 $/nuit` };
 }
 
-// ─── LOGIN ────────────────────────────────────────────────────────────────────
+function recalcMissionFinancials(row) {
+  const dateDebut  = row.querySelector('.inp-date-debut')?.value || '';
+  const dateFin    = row.querySelector('.inp-date-fin')?.value || '';
+  const origProv   = document.getElementById('f-province').value;
+  const destProv   = row.querySelector('.sel-dest-province')?.value || '';
+  const nuitees    = calcNuitees(dateDebut, dateFin);
+
+  row.querySelector('.inp-nuitees').value = nuitees;
+
+  const { taux, info } = getTauxByDestination(origProv, destProv);
+  row.querySelector('.inp-taux').value = taux;
+  row.querySelector('.inp-taux-info').textContent = info;
+
+  const montantMission = nuitees * taux;
+  row.querySelector('.inp-montant').value = montantMission;
+
+  const autresFrais = parseFloat(row.querySelector('.inp-autres-frais')?.value) || 0;
+  row.querySelector('.inp-total').value = (montantMission + autresFrais).toFixed(2);
+}
+
 function doLogin() {
   if (!DATA_READY) return;
   const province = document.getElementById('auth-province').value;
-  const user = document.getElementById('auth-user').value.trim().toLowerCase();
-  const pass = document.getElementById('auth-pass').value;
-  const errEl = document.getElementById('auth-error');
-  const account = USERS[user];
+  const user     = document.getElementById('auth-user').value.trim().toLowerCase();
+  const pass     = document.getElementById('auth-pass').value;
+  const errEl    = document.getElementById('auth-error');
+  const account  = USERS[user];
+
   if (!isPasswordMatch(account, pass)) { errEl.textContent = "Identifiants incorrects."; errEl.style.display = ''; return; }
   const isAdmin = ['admin','super_admin'].includes(account.role);
   if (!isAdmin && !province) { errEl.textContent = "Veuillez sélectionner une province."; errEl.style.display = ''; return; }
   if (account.provinces !== '*' && !account.provinces.includes(province)) { errEl.textContent = "Compte non autorisé pour cette province."; errEl.style.display = ''; return; }
+
   localStorage.setItem('PNDA_SESSION', JSON.stringify({ user, role: account.role, province, authenticatedAt: new Date().toISOString() }));
   if (isManualLoginRequested()) window.history.replaceState({}, '', window.location.pathname);
   if (account.role === 'super_admin') { window.location.href = 'superadmin.html'; return; }
-  if (account.role === 'admin') { window.location.href = 'admin.html'; return; }
+  if (account.role === 'admin')       { window.location.href = 'admin.html'; return; }
   document.activeElement?.blur();
   _authModal.hide();
   openProvinceSession(user, province);
@@ -951,11 +1066,14 @@ function doLogin() {
 function openProvinceSession(user, province) {
   const account = USERS[user];
   CURRENT_USER_ROLE = account?.role || 'province';
-  document.getElementById('display-user').textContent = user.toUpperCase();
-  document.getElementById('display-province').textContent = (getProvinceData(province)?.label || province).toUpperCase();
+
+  document.getElementById('display-user').textContent     = user.toUpperCase();
+  document.getElementById('display-province').textContent  = (getProvinceData(province)?.label || province).toUpperCase();
   document.getElementById('header-province-label').textContent = getProvinceData(province)?.label || province;
   document.getElementById('admin-shortcut').hidden = !['admin','super_admin','comptable'].includes(account?.role);
+
   if (CURRENT_USER_ROLE === 'comptable') {
+    // ── Mode comptable ──
     document.body.classList.remove('mode-missionnaire');
     document.getElementById('main-form-section').style.display = 'none';
     document.getElementById('selected-missions-section').style.display = 'none';
@@ -967,10 +1085,11 @@ function openProvinceSession(user, province) {
     loadActiveMissions(province);
     loadUserArchive(user, province);
   } else {
+    // ── Mode missionnaire ──
     document.body.classList.add('mode-missionnaire');
     clearCurrentEditContext();
     document.getElementById('f-rapporteur').value = user;
-    document.getElementById('f-province').value = province;
+    document.getElementById('f-province').value   = province;
     document.getElementById('f-province').disabled = true;
     initPage();
     loadUserArchive(user, province);
@@ -998,7 +1117,7 @@ function updateProvinceLabel() {
   document.querySelectorAll('.mission-row').forEach((row) => {
     const catSel = row.querySelector('.sel-nature-cat');
     fillMissionOptions(row.querySelector('.sel-mission'), p, catSel?.value);
-    recalcAllParticipantsFinancials(row);
+    recalcMissionFinancials(row);
     syncMissionRow(row);
   });
   renderSelectedMissionsTable();
@@ -1008,28 +1127,38 @@ function fillMissionOptions(sel, province, category) {
   if (!sel) return;
   const cur = sel.value;
   sel.innerHTML = '<option value="">— Sélectionner —</option>';
+  
   let opts = getProvinceData(province)?.missions || [];
-  if (category && category !== 'autre') opts = opts.filter((m) => (m.category || 'implementation') === category);
+  if (category && category !== 'autre') {
+    opts = opts.filter((m) => (m.category || 'implementation') === category);
+  }
+  
+  // Ajouter les missions de référence trouvées
   opts.forEach((m) => {
     const o = new Option(m.objectif || m.id, m.id);
     if (m.id === cur) o.selected = true;
     sel.appendChild(o);
   });
+  
+  // Toujours ajouter l'option "Autre (à préciser)" à la fin
   const autreOption = new Option('Autre (à préciser)', 'autre');
   if (cur === 'autre') autreOption.selected = true;
   sel.appendChild(autreOption);
 }
 
 function syncMissionRow(row) {
-  const province = document.getElementById('f-province').value;
+  const province  = document.getElementById('f-province').value;
   const catSelect = row.querySelector('.sel-nature-cat');
   const catAutreWrap = row.querySelector('.inp-nature-cat-autre-wrap');
+  const catAutreInput = row.querySelector('.inp-nature-cat-autre');
   const misSelect = row.querySelector('.sel-mission');
-  const misWrap = row.querySelector('.sel-mission-wrap');
+  const misWrap   = row.querySelector('.sel-mission-wrap');
   const autreWrap = row.querySelector('.inp-nature-autre-wrap');
-  const objInput = row.querySelector('.inp-objectif-txt');
-  const info = row.querySelector('.mission-meta');
-  const category = catSelect?.value || '';
+  const objInput  = row.querySelector('.inp-objectif-txt');
+  const info      = row.querySelector('.mission-meta');
+  const category  = catSelect?.value || '';
+
+  // Gérer l'affichage du champ de catégorie personnalisée
   if (category === 'autre_cat') {
     if (catAutreWrap) catAutreWrap.style.display = '';
     if (misWrap) misWrap.style.display = 'none';
@@ -1039,17 +1168,29 @@ function syncMissionRow(row) {
     renderSelectedMissionsTable();
     return;
   }
+  
+  // Masquer le champ de catégorie personnalisée
   if (catAutreWrap) catAutreWrap.style.display = 'none';
+  
   if (!category) {
     if (misWrap) misWrap.style.display = 'none';
     if (autreWrap) autreWrap.style.display = 'none';
     info.textContent = 'Sélectionnez d\'abord la catégorie de nature.';
     return;
   }
+  
+  // Afficher le select des missions
   if (misWrap) misWrap.style.display = '';
+  
+  // Charger les missions de référence pour cette catégorie
   fillMissionOptions(misSelect, province, category);
-  const hasMissions = misSelect.options.length > 2;
+  
+  // Vérifier si des missions existent pour cette catégorie
+  const hasMissions = misSelect.options.length > 2; // >2 car il y a l'option vide et "Autre"
+  
+  // Mettre à jour le message d'information
   const selectedMission = misSelect.value;
+  
   if (selectedMission === 'autre') {
     if (autreWrap) autreWrap.style.display = '';
     objInput.placeholder = 'Décrivez l\'objectif de cette mission…';
@@ -1065,12 +1206,19 @@ function syncMissionRow(row) {
     }
   } else {
     if (autreWrap) autreWrap.style.display = 'none';
-    info.textContent = !hasMissions ? 'Aucune mission de référence. Utilisez "Autre (à préciser)".' : 'Sélectionnez la mission ou "Autre (à préciser)".';
+    if (!hasMissions) {
+      info.textContent = `Aucune mission de référence pour cette catégorie. Utilisez "Autre (à préciser)" pour saisir une mission personnalisée.`;
+    } else {
+      info.textContent = 'Sélectionnez la mission de référence correspondante ou "Autre (à préciser)".';
+    }
   }
+  
   renderSelectedMissionsTable();
 }
 
-// ─── GESTION DES MISSIONS ─────────────────────────────────────────────────────
+// ─── MISSIONS ─────────────────────────────────────────────────────────────────
+let missionCount = 0;
+
 function addMission() {
   missionCount++;
   const prov = document.getElementById('f-province').value;
@@ -1086,7 +1234,9 @@ function addMission() {
       <strong class="mission-num-label small text-uppercase" style="color:var(--pnda-green);flex:1">Mission n° ${missionCount}</strong>
       <button class="btn btn-outline-danger btn-sm" onclick="removeMission('${id}')"><i class="bi bi-x-lg"></i> Retirer</button>
     </div>
+    
     <div class="row g-2">
+      <!-- Catégorie de nature avec option "Autre" -->
       <div class="col-12">
         <label class="form-label form-label-sm">Catégorie de nature <span class="req">*</span></label>
         <select class="form-select form-select-sm sel-nature-cat">
@@ -1095,25 +1245,37 @@ function addMission() {
           <option value="autre_cat">Autre (à préciser)</option>
         </select>
       </div>
+      
+      <!-- Champ pour saisir une catégorie personnalisée -->
       <div class="col-12 inp-nature-cat-autre-wrap" style="display:none">
         <label class="form-label form-label-sm">Précisez la catégorie <span class="req">*</span></label>
         <input type="text" class="form-control form-control-sm inp-nature-cat-autre" placeholder="Décrivez la catégorie…">
       </div>
+      
+      <!-- Mission de référence -->
       <div class="col-12 sel-mission-wrap" style="display:none">
         <label class="form-label form-label-sm">Mission de référence</label>
         <select class="form-select form-select-sm sel-mission">
           <option value="">— Choisir la catégorie d'abord —</option>
         </select>
       </div>
+      
+      <!-- Nature précisée -->
       <div class="col-12 inp-nature-autre-wrap" style="display:none">
         <label class="form-label form-label-sm">Nature précisée <span class="req">*</span></label>
         <input type="text" class="form-control form-control-sm inp-nature-autre" placeholder="Décrivez la nature…">
       </div>
+      
+      <!-- Objectif -->
       <div class="col-12">
         <label class="form-label form-label-sm">Objectif <span class="req">*</span></label>
         <input type="text" class="form-control form-control-sm inp-objectif-txt" placeholder="Objectif de la mission…">
       </div>
-      <div class="col-12"><label class="form-label form-label-sm">Lieu de la mission <span class="req">*</span></label></div>
+      
+      <!-- Lieu de la mission -->
+      <div class="col-12">
+        <label class="form-label form-label-sm">Lieu de la mission <span class="req">*</span></label>
+      </div>
       <div class="col-md-4">
         <label class="form-label form-label-sm">Province de destination</label>
         <select class="form-select form-select-sm sel-dest-province">
@@ -1123,12 +1285,18 @@ function addMission() {
       </div>
       <div class="col-md-4">
         <label class="form-label form-label-sm">Territoire</label>
-        <select class="form-select form-select-sm sel-territoire"><option value="">— Territoire —</option></select>
+        <select class="form-select form-select-sm sel-territoire">
+          <option value="">— Territoire —</option>
+        </select>
       </div>
       <div class="col-md-4">
         <label class="form-label form-label-sm">Secteur</label>
-        <select class="form-select form-select-sm sel-secteur"><option value="">— Secteur —</option></select>
+        <select class="form-select form-select-sm sel-secteur">
+          <option value="">— Secteur —</option>
+        </select>
       </div>
+      
+      <!-- Dates -->
       <div class="col-md-4">
         <label class="form-label form-label-sm">Début de mission <span class="req">*</span></label>
         <input type="date" class="form-control form-control-sm inp-date-debut">
@@ -1144,10 +1312,14 @@ function addMission() {
           ${SECTIONS_PNDA.map((s) => `<option value="${s.val}">${s.label}</option>`).join('')}
         </select>
       </div>
+      
+      <!-- Observation générale -->
       <div class="col-12">
         <label class="form-label form-label-sm">Observation</label>
         <textarea class="form-control form-control-sm inp-observation" rows="2" placeholder="Observations éventuelles…"></textarea>
       </div>
+      
+      <!-- ─── SECTION PARTICIPANTS ─── -->
       <div class="col-12 mt-3">
         <div class="d-flex align-items-center justify-content-between mb-2">
           <label class="form-label form-label-sm mb-0">Participants à la mission <span class="req">*</span></label>
@@ -1164,23 +1336,30 @@ function addMission() {
 
   container.appendChild(div);
   
-  const catSel = div.querySelector('.sel-nature-cat');
-  const misSel = div.querySelector('.sel-mission');
+  // Récupérer les éléments
+  const catSel  = div.querySelector('.sel-nature-cat');
+  const misSel  = div.querySelector('.sel-mission');
   const destProvSel = div.querySelector('.sel-dest-province');
   const terrSel = div.querySelector('.sel-territoire');
   const sectSel = div.querySelector('.sel-secteur');
   const catAutreInput = div.querySelector('.inp-nature-cat-autre');
   const natureAutreInput = div.querySelector('.inp-nature-autre');
   
-  misSel.appendChild(new Option('Autre (à préciser)', 'autre'));
+  // Ajouter l'option "Autre" dans le select des missions
+  const autreOption = new Option('Autre (à préciser)', 'autre');
+  misSel.appendChild(autreOption);
   
+  // Écouteurs d'événements
   catSel.addEventListener('change', () => syncMissionRow(div));
+  
   misSel.addEventListener('change', () => {
     const obj = div.querySelector('.inp-objectif-txt');
     const autreWrap = div.querySelector('.inp-nature-autre-wrap');
     const selectedValue = misSel.value;
-    if (selectedValue === 'autre') { if (autreWrap) autreWrap.style.display = ''; }
-    else {
+    
+    if (selectedValue === 'autre') {
+      if (autreWrap) autreWrap.style.display = '';
+    } else {
       if (autreWrap) autreWrap.style.display = 'none';
       const m = getMissionById(document.getElementById('f-province').value, selectedValue);
       if (m && obj && !obj.value) obj.value = m.objectif || '';
@@ -1188,44 +1367,81 @@ function addMission() {
     renderSelectedMissionsTable();
   });
   
-  if (catAutreInput) { catAutreInput.addEventListener('input', renderSelectedMissionsTable); catAutreInput.addEventListener('input', scheduleAutoSave); }
-  if (natureAutreInput) { natureAutreInput.addEventListener('input', renderSelectedMissionsTable); natureAutreInput.addEventListener('input', scheduleAutoSave); }
+  if (catAutreInput) {
+    catAutreInput.addEventListener('input', renderSelectedMissionsTable);
+    catAutreInput.addEventListener('input', scheduleAutoSave);
+  }
+  
+  if (natureAutreInput) {
+    natureAutreInput.addEventListener('input', renderSelectedMissionsTable);
+    natureAutreInput.addEventListener('input', scheduleAutoSave);
+  }
   
   destProvSel.addEventListener('change', () => {
-    fillTerritoireOptions(terrSel, destProvSel.value);
+    const destProv = destProvSel.value;
+    fillTerritoireOptions(terrSel, destProv);
     sectSel.innerHTML = '<option value="">— Secteur —</option>';
     recalcAllParticipantsFinancials(div);
     renderSelectedMissionsTable();
   });
-  terrSel.addEventListener('change', () => { fillSecteurOptions(sectSel, terrSel.value); renderSelectedMissionsTable(); });
-  sectSel.addEventListener('change', renderSelectedMissionsTable);
-  div.querySelector('.inp-date-debut').addEventListener('change', () => { recalcAllParticipantsFinancials(div); renderSelectedMissionsTable(); });
-  div.querySelector('.inp-date-fin').addEventListener('change', () => { recalcAllParticipantsFinancials(div); renderSelectedMissionsTable(); });
   
+  terrSel.addEventListener('change', () => {
+    fillSecteurOptions(sectSel, terrSel.value);
+    renderSelectedMissionsTable();
+  });
+  
+  sectSel.addEventListener('change', renderSelectedMissionsTable);
+  
+  div.querySelector('.inp-date-debut').addEventListener('change', () => { 
+    recalcAllParticipantsFinancials(div); 
+    renderSelectedMissionsTable(); 
+  });
+  
+  div.querySelector('.inp-date-fin').addEventListener('change', () => { 
+    recalcAllParticipantsFinancials(div); 
+    renderSelectedMissionsTable(); 
+  });
+  
+  // Destination par défaut = province de l'utilisateur
   destProvSel.value = prov;
   fillTerritoireOptions(terrSel, prov);
   
+  // Ajouter le premier participant (chef de mission par défaut)
   addParticipantToMission(id, true);
+  
   bindMissionRowListeners(div);
   syncMissionRow(div);
   
+  // Verrouiller les champs comptables pour le missionnaire
   if (CURRENT_USER_ROLE !== 'comptable') {
-    div.querySelectorAll('.comptable-field input, .comptable-field select').forEach((el) => { el.disabled = true; el.tabIndex = -1; });
+    div.querySelectorAll('.comptable-field input, .comptable-field select').forEach((el) => {
+      el.disabled = true;
+      el.tabIndex = -1;
+    });
   }
+  
   renumberMissions();
   renderSelectedMissionsTable();
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// AJOUTER LA FONCTION addParticipantToMission ICI
+// ═══════════════════════════════════════════════════════════════════════════
+
 function addParticipantToMission(missionId, isChef = false) {
   const container = document.getElementById(`participants-${missionId}`);
   if (!container) return;
+  
   const existingParticipants = container.querySelectorAll('.participant-card');
   const participantIndex = existingParticipants.length;
   const participantId = `participant-${missionId}-${Date.now()}-${participantIndex}`;
+  
   const participantCard = document.createElement('div');
   participantCard.className = 'participant-card border rounded p-3 mb-3';
   participantCard.id = participantId;
   participantCard.dataset.participantIndex = participantIndex;
+  
+  // Déterminer si c'est le chef de mission (premier participant)
   const isFirstParticipant = participantIndex === 0 || isChef;
   
   participantCard.innerHTML = `
@@ -1239,6 +1455,7 @@ function addParticipantToMission(missionId, isChef = false) {
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
+    
     <div class="row g-2">
       <div class="col-md-6">
         <label class="form-label form-label-sm">Nom complet <span class="req">*</span></label>
@@ -1254,6 +1471,8 @@ function addParticipantToMission(missionId, isChef = false) {
           <option value="autre">Autre</option>
         </select>
       </div>
+      
+      <!-- Champs financiers -->
       <div class="col-md-3">
         <label class="form-label form-label-sm">Nuitées</label>
         <input type="number" class="form-control form-control-sm participant-nuitees" value="0" min="0" readonly style="background:#f0ede0;">
@@ -1277,7 +1496,6 @@ function addParticipantToMission(missionId, isChef = false) {
       <div class="col-md-3">
         <label class="form-label form-label-sm">Avance USD</label>
         <input type="number" class="form-control form-control-sm participant-avance" value="0" min="0" step="0.01" readonly style="background:#f5f0e0;font-weight:500;">
-        <small class="text-muted avance-info d-block mt-1"><i class="bi bi-info-circle me-1"></i>Avance = 80% per diem + 100% autres frais</small>
       </div>
       <div class="col-md-3">
         <label class="form-label form-label-sm">Solde USD</label>
@@ -1300,40 +1518,77 @@ function addParticipantToMission(missionId, isChef = false) {
   
   container.appendChild(participantCard);
   
+  // Ajouter les écouteurs pour le recalcul
   const autresFraisInput = participantCard.querySelector('.participant-autres-frais');
+  const avanceInput = participantCard.querySelector('.participant-avance');
+  
   if (autresFraisInput) {
     autresFraisInput.addEventListener('input', () => {
       recalcParticipantFinancials(participantCard, missionId);
       renderSelectedMissionsTable();
     });
   }
+  
+  // if (avanceInput) {
+  //   avanceInput.addEventListener('input', () => {
+  //     recalcParticipantFinancials(participantCard, missionId);
+  //     renderSelectedMissionsTable();
+  //   });
+  // }
+  
+  // Calculer les valeurs initiales
   setTimeout(() => recalcParticipantFinancials(participantCard, missionId), 50);
 }
 
+// Ajouter aussi les fonctions de calcul
 function recalcParticipantFinancials(participantCard, missionId) {
   const missionRow = document.getElementById(missionId);
   if (!missionRow) return;
+  
   const dateDebut = missionRow.querySelector('.inp-date-debut')?.value || '';
   const dateFin = missionRow.querySelector('.inp-date-fin')?.value || '';
   const origProv = document.getElementById('f-province').value;
   const destProv = missionRow.querySelector('.sel-dest-province')?.value || '';
+  
   const nuitees = calcNuitees(dateDebut, dateFin);
   const { taux } = getTauxByDestination(origProv, destProv);
+  
   const montant = nuitees * taux;
   const autresFrais = parseFloat(participantCard.querySelector('.participant-autres-frais')?.value) || 0;
   const total = montant + autresFrais;
-  const avance = montant * 0.8 + autresFrais;
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // AVANCE AUTOMATIQUE : 80% du per diem + 100% des autres frais
+  // ═══════════════════════════════════════════════════════════════════
+  const avancePerDiem = montant * 0.8;
+  const avanceAutresFrais = autresFrais * 1.0; // 100%
+  const avance = avancePerDiem + avanceAutresFrais;
+  
   const solde = total - avance;
   
-  participantCard.querySelector('.participant-nuitees').value = nuitees;
-  participantCard.querySelector('.participant-taux').value = taux;
-  participantCard.querySelector('.participant-montant').value = montant.toFixed(2);
-  participantCard.querySelector('.participant-total').value = total.toFixed(2);
-  participantCard.querySelector('.participant-avance').value = avance.toFixed(2);
-  participantCard.querySelector('.participant-solde').value = solde.toFixed(2);
+  // Mettre à jour les champs
+  const nuiteesInput = participantCard.querySelector('.participant-nuitees');
+  const tauxInput = participantCard.querySelector('.participant-taux');
+  const montantInput = participantCard.querySelector('.participant-montant');
+  const totalInput = participantCard.querySelector('.participant-total');
+  const avanceInput = participantCard.querySelector('.participant-avance');
+  const soldeInput = participantCard.querySelector('.participant-solde');
   
+  if (nuiteesInput) nuiteesInput.value = nuitees;
+  if (tauxInput) tauxInput.value = taux;
+  if (montantInput) montantInput.value = montant.toFixed(2);
+  if (totalInput) totalInput.value = total.toFixed(2);
+  if (avanceInput) avanceInput.value = avance.toFixed(2);
+  if (soldeInput) soldeInput.value = solde.toFixed(2);
+  
+  // Afficher une indication du calcul
   const avanceInfo = participantCard.querySelector('.avance-info');
-  if (avanceInfo) {
+  if (!avanceInfo) {
+    const infoSpan = document.createElement('small');
+    infoSpan.className = 'text-muted avance-info d-block mt-1';
+    infoSpan.innerHTML = `<i class="bi bi-info-circle me-1"></i>Avance = 80% per diem (${formatCurrencyDisplay(montant * 0.8)}) + 100% autres frais (${formatCurrencyDisplay(autresFrais)})`;
+    avanceInput?.parentNode.appendChild(infoSpan);
+  } else {
     avanceInfo.innerHTML = `<i class="bi bi-info-circle me-1"></i>Avance = 80% per diem (${formatCurrencyDisplay(montant * 0.8)}) + 100% autres frais (${formatCurrencyDisplay(autresFrais)})`;
   }
 }
@@ -1343,6 +1598,7 @@ function recalcAllParticipantsFinancials(missionRow) {
   const participants = missionRow.querySelectorAll('.participant-card');
   participants.forEach(card => recalcParticipantFinancials(card, missionId));
 }
+
 
 function removeMission(id) { const el = document.getElementById(id); if (el) el.remove(); renumberMissions(); renderSelectedMissionsTable(); }
 
@@ -1361,21 +1617,9 @@ function bindMissionRowListeners(row) {
   });
 }
 
-function getMissionNum(prov, idx) { const sec = getProvinceData(prov)?.code || "1"; return `${sec}.${idx + 1}`; }
-
-// ─── AUTO-SAVE ────────────────────────────────────────────────────────────────
-let _autoSaveTimer = null;
-function scheduleAutoSave() {
-  clearTimeout(_autoSaveTimer);
-  _autoSaveTimer = setTimeout(() => { try { sessionStorage.setItem('PNDA_DRAFT', JSON.stringify(buildData())); } catch {} }, 1500);
-}
-function bindAutoSave() {
-  document.getElementById('missions-container').addEventListener('input', scheduleAutoSave);
-  document.getElementById('missions-container').addEventListener('change', scheduleAutoSave);
-  ['f-trimestre','f-annee','f-role','f-date','f-rapporteur'].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) { el.addEventListener('change', scheduleAutoSave); el.addEventListener('input', scheduleAutoSave); }
-  });
+function getMissionNum(prov, idx) {
+  const sec = getProvinceData(prov)?.code || "1";
+  return `${sec}.${idx + 1}`;
 }
 
 // ─── BUILD DATA ────────────────────────────────────────────────────────────────
@@ -1390,16 +1634,32 @@ function buildData() {
     const category = row.querySelector('.sel-nature-cat')?.value || '';
     const isCatAutre = category === 'autre_cat';
     const catAutreValue = isCatAutre ? (row.querySelector('.inp-nature-cat-autre')?.value.trim() || 'Autre') : '';
+    
     const selId = isCatAutre ? '' : (row.querySelector('.sel-mission')?.value || '');
     const isMissionAutre = selId === 'autre';
     
-    let nature, categoryToStore;
-    if (isCatAutre) { nature = catAutreValue; categoryToStore = 'autre'; }
-    else if (isMissionAutre) { nature = row.querySelector('.inp-nature-autre')?.value.trim() || 'Autre'; categoryToStore = category; }
-    else { const missionRef = !isCatAutre && selId ? getMissionById(province, selId) : null; nature = missionRef?.nature || CAT_LABELS[category] || ''; categoryToStore = category; }
+    // Déterminer la nature
+    let nature;
+    let categoryToStore;
     
+    if (isCatAutre) {
+      nature = catAutreValue;
+      categoryToStore = 'autre';
+    } else if (isMissionAutre) {
+      nature = row.querySelector('.inp-nature-autre')?.value.trim() || 'Autre';
+      categoryToStore = category;
+    } else {
+      const missionRef = !isCatAutre && selId ? getMissionById(province, selId) : null;
+      nature = missionRef?.nature || CAT_LABELS[category] || '';
+      categoryToStore = category;
+    }
+    
+    // Déterminer l'objectif
     let objectif = row.querySelector('.inp-objectif-txt')?.value.trim() || '';
-    if (!objectif && !isCatAutre && !isMissionAutre && selId) { const missionRef = getMissionById(province, selId); objectif = missionRef?.objectif || ''; }
+    if (!objectif && !isCatAutre && !isMissionAutre && selId) {
+      const missionRef = getMissionById(province, selId);
+      objectif = missionRef?.objectif || '';
+    }
     
     const destProv = row.querySelector('.sel-dest-province')?.value || '';
     const destProvData = getProvinceData(destProv);
@@ -1408,16 +1668,25 @@ function buildData() {
     const terrObj = TERRITOIRES.find((t) => t.id === terrId);
     const sectObj = SECTEURS.find((s) => s.id === sectId);
     
+    // Récupérer les participants
     const participantCards = row.querySelectorAll('.participant-card');
     const participants = [];
     let chefMission = '';
-    let totalMontant = 0, totalAutresFrais = 0, totalGeneral = 0, totalAvance = 0, totalSolde = 0;
+    let totalParticipantsCount = 0;
+    let totalMontant = 0;
+    let totalAutresFrais = 0;
+    let totalGeneral = 0;
+    let totalAvance = 0;
+    let totalSolde = 0;
     
     participantCards.forEach((card, idx) => {
       const nom = card.querySelector('.participant-nom')?.value.trim() || '';
       const role = card.querySelector('.participant-role')?.value || '';
       const estChef = role === 'chef_mission' || idx === 0;
-      if (estChef && !chefMission) chefMission = nom;
+      
+      if (estChef && !chefMission) {
+        chefMission = nom;
+      }
       
       const nuitees = parseInt(card.querySelector('.participant-nuitees')?.value) || 0;
       const taux = parseFloat(card.querySelector('.participant-taux')?.value) || 0;
@@ -1430,49 +1699,128 @@ function buildData() {
       const projet = parseInt(card.querySelector('.participant-projet')?.value) || 0;
       const observationParticipant = card.querySelector('.participant-observation')?.value.trim() || '';
       
-      participants.push({ nom, role, est_chef: estChef, nuitees, taux_per_diem: taux, montant_usd: montant, autres_frais_usd: autresFrais, total_usd: total, avance_usd: avance, solde_usd: solde, hors_projet: horsProjet, projet, observation: observationParticipant });
-      totalMontant += montant; totalAutresFrais += autresFrais; totalGeneral += total; totalAvance += avance; totalSolde += solde;
+      participants.push({
+        nom,
+        role,
+        est_chef: estChef,
+        nuitees,
+        taux_per_diem: taux,
+        montant_usd: montant,
+        autres_frais_usd: autresFrais,
+        total_usd: total,
+        avance_usd: avance,
+        solde_usd: solde,
+        hors_projet: horsProjet,
+        projet,
+        observation: observationParticipant
+      });
+      
+      totalParticipantsCount++;
+      totalMontant += montant;
+      totalAutresFrais += autresFrais;
+      totalGeneral += total;
+      totalAvance += avance;
+      totalSolde += solde;
     });
     
+    // Si pas de participants (fallback pour rétrocompatibilité)
     if (participants.length === 0) {
       const rapporteur = document.getElementById('f-rapporteur')?.value.trim() || '';
+      const participantsCount = Math.max(1, parseInt(row.querySelector('.inp-participants')?.value) || 1);
+      const montant = parseFloat(row.querySelector('.inp-montant')?.value) || 0;
+      const avance = parseFloat(row.querySelector('.inp-avance')?.value) || 0;
       const nuitees = parseInt(row.querySelector('.inp-nuitees')?.value) || 0;
       const taux = parseFloat(row.querySelector('.inp-taux')?.value) || 0;
-      const montant = parseFloat(row.querySelector('.inp-montant')?.value) || 0;
       const autresFrais = parseFloat(row.querySelector('.inp-autres-frais')?.value) || 0;
       const total = montant + autresFrais;
-      const avance = parseFloat(row.querySelector('.inp-avance')?.value) || 0;
-      participants.push({ nom: rapporteur, role: 'chef_mission', est_chef: true, nuitees, taux_per_diem: taux, montant_usd: montant, autres_frais_usd: autresFrais, total_usd: total, avance_usd: avance, solde_usd: total - avance, hors_projet: 0, projet: 1, observation: '' });
+      const horsProjet = parseInt(row.querySelector('.inp-hors-projet')?.value) || 0;
+      const projet = parseInt(row.querySelector('.inp-projet')?.value) || 0;
+      
+      participants.push({
+        nom: rapporteur,
+        role: 'chef_mission',
+        est_chef: true,
+        nuitees,
+        taux_per_diem: taux,
+        montant_usd: montant,
+        autres_frais_usd: autresFrais,
+        total_usd: total,
+        avance_usd: avance,
+        solde_usd: total - avance,
+        hors_projet: horsProjet,
+        projet,
+        observation: ''
+      });
+      
       chefMission = rapporteur;
-      totalMontant = montant; totalAutresFrais = autresFrais; totalGeneral = total; totalAvance = avance; totalSolde = total - avance;
+      totalParticipantsCount = participantsCount;
+      totalMontant = montant;
+      totalAutresFrais = autresFrais;
+      totalGeneral = total;
+      totalAvance = avance;
+      totalSolde = total - avance;
     }
     
     missions.push({
-      numero: getMissionNum(province, i), mission_reference_id: isCatAutre ? null : (isMissionAutre ? null : selId), category: categoryToStore,
-      section: row.querySelector('.sel-section')?.value || '', nature, objectif,
-      date_debut: row.querySelector('.inp-date-debut')?.value || '', date_fin: row.querySelector('.inp-date-fin')?.value || '',
-      destination_province: destProv, destination_province_label: destProvData?.label || destProv,
-      territoire_id: terrId, territoire_label: terrObj?.label || '', secteur_id: sectId, secteur_label: sectObj?.label || '',
+      numero: getMissionNum(province, i),
+      mission_reference_id: isCatAutre ? null : (isMissionAutre ? null : selId),
+      category: categoryToStore,
+      section: row.querySelector('.sel-section')?.value || '',
+      nature,
+      objectif,
+      date_debut: row.querySelector('.inp-date-debut')?.value || '',
+      date_fin: row.querySelector('.inp-date-fin')?.value || '',
+      destination_province: destProv,
+      destination_province_label: destProvData?.label || destProv,
+      territoire_id: terrId,
+      territoire_label: terrObj?.label || '',
+      secteur_id: sectId,
+      secteur_label: sectObj?.label || '',
       observation: row.querySelector('.inp-observation')?.value.trim() || '',
-      participants, chef_mission: chefMission, participants_count: participants.length,
-      rapporteur: chefMission, participants_total: participants.length,
-      nuitees: participants[0]?.nuitees || 0, taux_per_diem: participants[0]?.taux_per_diem || 0,
-      montant_usd: totalMontant, autres_frais_usd: totalAutresFrais, total_usd: totalGeneral, avance_usd: totalAvance, solde_usd: totalSolde,
-      hors_projet: participants[0]?.hors_projet || 0, projet: participants[0]?.projet || 0,
-      is_cat_autre: isCatAutre, cat_autre_value: isCatAutre ? catAutreValue : null,
-      is_mission_autre: isMissionAutre, mission_autre_value: isMissionAutre ? nature : null
+      
+      // NOUVEAU : Participants
+      participants,
+      chef_mission: chefMission,
+      participants_count: participants.length,
+      
+      // Anciens champs pour rétrocompatibilité (valeurs du chef de mission ou totaux)
+      rapporteur: chefMission,
+      participants_total: totalParticipantsCount,
+      nuitees: participants[0]?.nuitees || 0,
+      taux_per_diem: participants[0]?.taux_per_diem || 0,
+      montant_usd: totalMontant,
+      autres_frais_usd: totalAutresFrais,
+      total_usd: totalGeneral,
+      avance_usd: totalAvance,
+      solde_usd: totalSolde,
+      hors_projet: participants[0]?.hors_projet || 0,
+      projet: participants[0]?.projet || 0,
+      
+      // Métadonnées pour la restauration
+      is_cat_autre: isCatAutre,
+      cat_autre_value: isCatAutre ? catAutreValue : null,
+      is_mission_autre: isMissionAutre,
+      mission_autre_value: isMissionAutre ? nature : null
     });
   });
 
+  // Calculer les totaux globaux
   const allParticipants = missions.flatMap(m => m.participants || []);
+  
   return {
     meta: {
-      systeme: "PNDA-SE", titre: `Suivi des Missions ${document.getElementById('f-trimestre').value} ${document.getElementById('f-annee').value}`,
-      province, province_label: provinceData?.label || province, province_code: provinceData?.code || '',
-      trimestre: document.getElementById('f-trimestre').value, annee: parseInt(document.getElementById('f-annee').value),
-      rapporteur: document.getElementById('f-rapporteur').value.trim(), role: document.getElementById('f-role').value.trim(),
+      systeme: "PNDA-SE",
+      titre: `Suivi des Missions ${document.getElementById('f-trimestre').value} ${document.getElementById('f-annee').value}`,
+      province,
+      province_label: provinceData?.label || province,
+      province_code: provinceData?.code || '',
+      trimestre: document.getElementById('f-trimestre').value,
+      annee: parseInt(document.getElementById('f-annee').value),
+      rapporteur: document.getElementById('f-rapporteur').value.trim(),
+      role: document.getElementById('f-role').value.trim(),
       date_generation: document.getElementById('f-date').value,
-      total_missions: missions.length, total_participants: allParticipants.length,
+      total_missions: missions.length,
+      total_participants: allParticipants.length,
       total_montant_usd: allParticipants.reduce((s, p) => s + (p.montant_usd || 0), 0).toFixed(2),
       total_autres_frais_usd: allParticipants.reduce((s, p) => s + (p.autres_frais_usd || 0), 0).toFixed(2),
       total_general_usd: allParticipants.reduce((s, p) => s + (p.total_usd || 0), 0).toFixed(2),
@@ -1484,547 +1832,14 @@ function buildData() {
 }
 
 // ─── RENDER TABLE ──────────────────────────────────────────────────────────────
-function renderSelectedMissionsTable() {
-  const data = buildData();
-  const body = document.getElementById('selected-missions-body');
-  const metrics = document.getElementById('selected-missions-metrics');
-  const pLabel = getProvinceData(data.meta.province)?.label || data.meta.province || '—';
-  const totM = data.missions.reduce((s, m) => s + (m.montant_usd || 0), 0);
-  const totAF = data.missions.reduce((s, m) => s + (m.autres_frais_usd || 0), 0);
-  const totT = data.missions.reduce((s, m) => s + (m.total_usd || 0), 0);
-  const totA = data.missions.reduce((s, m) => s + (m.avance_usd || 0), 0);
-  const totS = data.missions.reduce((s, m) => s + (m.solde_usd || 0), 0);
+function formatCurrencyDisplay(v) { return new Intl.NumberFormat('fr-FR', { minimumFractionDigits:2, maximumFractionDigits:2 }).format(Number(v||0)); }
+function escapeHtml(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
-  metrics.innerHTML = [
-    { label: 'Province', value: pLabel }, { label: 'Missions', value: String(data.missions.length) },
-    { label: 'Participants', value: String(data.meta.total_participants || 0) },
-    { label: 'Total général USD', value: formatCurrencyDisplay(totT) }, { label: 'Solde total USD', value: formatCurrencyDisplay(totS) }
-  ].map((item) => `
-    <div class="col-6 col-md"><div class="card border-0 shadow-sm h-100"><div class="card-body py-2 px-3">
-      <div class="text-muted small fw-semibold text-uppercase" style="font-size:.68rem">${escapeHtml(item.label)}</div>
-      <span class="stat-value">${escapeHtml(item.value)}</span>
-    </div></div></div>
-  `).join('');
-
-  if (!data.missions.length) { body.innerHTML = '<tr><td colspan="19" class="text-center text-muted py-4">Aucune mission sélectionnée.</td></tr>'; return; }
-  
-  body.innerHTML = data.missions.map((m) => {
-    const participantsList = (m.participants || []).map(p => `${p.nom} (${p.role})`).join(', ');
-    return `
-    <tr>
-      <td>${escapeHtml(m.numero||'—')}</td><td>${escapeHtml(pLabel)}</td><td>${escapeHtml(m.nature||'—')}</td><td>${escapeHtml(m.objectif||'—')}</td>
-      <td>${escapeHtml(m.destination_province_label||'—')}</td><td>${escapeHtml(m.territoire_label||'—')}</td><td>${escapeHtml(m.secteur_label||'—')}</td>
-      <td>${escapeHtml(m.date_debut||'—')}</td><td>${escapeHtml(m.date_fin||'—')}</td>
-      <td class="small">${escapeHtml(participantsList || m.rapporteur || '—')}</td>
-      <td class="text-end">${m.nuitees||0}</td><td class="text-end">${escapeHtml(formatCurrencyDisplay(m.taux_per_diem))}</td>
-      <td>${escapeHtml(m.section||'—')}</td>
-      <td class="text-end">${escapeHtml(formatCurrencyDisplay(m.montant_usd))}</td>
-      <td class="text-end">${escapeHtml(formatCurrencyDisplay(m.autres_frais_usd))}</td>
-      <td class="text-end fw-bold">${escapeHtml(formatCurrencyDisplay(m.total_usd))}</td>
-      <td class="text-end">${escapeHtml(formatCurrencyDisplay(m.avance_usd))}</td>
-      <td class="text-end">${escapeHtml(formatCurrencyDisplay(m.solde_usd))}</td>
-      <td class="small">${escapeHtml(m.observation||'')}</td>
-    </tr>
-  `}).join('');
-}
-
-// ─── PERSISTENCE ──────────────────────────────────────────────────────────────
-async function persistReport(data) {
-  const fpKey = 'PNDA_LAST_REPORT_FINGERPRINT';
-  const fp = JSON.stringify(data);
-  if (sessionStorage.getItem(fpKey) === fp) return;
-  try {
-    const now = new Date().toISOString();
-    const existing = CURRENT_EDIT_REPORT_ID ? USER_MISSIONS_CACHE.find((report) => report.id === CURRENT_EDIT_REPORT_ID) : null;
-    const seq = existing?.seq_number || await getNextSeqNumber(data.meta.province, data.meta.trimestre, data.meta.annee);
-    const payload = {
-      saved_at: now, source: 'formulaire-html',
-      province: data.meta.province, province_label: data.meta.province_label, province_code: data.meta.province_code,
-      trimestre: data.meta.trimestre, annee: data.meta.annee,
-      rapporteur: data.meta.rapporteur, rapporteur_role: data.meta.role,
-      date_generation: data.meta.date_generation || null,
-      missions: data.missions,
-      meta: { ...(existing?.meta || {}), ...data.meta, seq_number: seq, workflow_comment: null, last_resubmitted_at: existing ? now : null, last_resubmitted_by: existing ? data.meta.rapporteur : null },
-      seq_number: seq, statut: WORKFLOW_STATUS.EN_ATTENTE,
-      returned_by: null, returned_at: null, activated_by: null, activated_at: null, completed_by: null, completed_at: null
-    };
-    if (existing) {
-      const { error } = await db.from('reports').update(payload).eq('id', CURRENT_EDIT_REPORT_ID);
-      if (error) throw error;
-    } else {
-      const rid = `${Date.now()}-${Math.random().toString(16).slice(2,8)}`;
-      const { error } = await db.from('reports').insert({ id: rid, ...payload });
-      if (error) throw error;
-    }
-    sessionStorage.setItem(fpKey, fp);
-    window.dispatchEvent(new Event('PNDA_DATA_UPDATED'));
-    return true;
-  } catch (e) { console.error(e); showToast('Erreur de sauvegarde.'); return false; }
-}
-
-async function enregistrerMissions() {
-  const data = buildData();
-  if (!data.missions.length) { showToast('Ajoutez au moins une mission.'); return; }
-  const btn = document.getElementById('btn-enregistrer');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enregistrement…';
-  try {
-    const ok = await persistReport(data);
-    if (ok) {
-      showToast(CURRENT_EDIT_REPORT_ID ? '✓ Mission corrigée et renvoyée au comptable.' : '✓ Mission soumise en attente de validation financière !');
-      const user = document.getElementById('f-rapporteur').value;
-      await loadUserArchive(user, data.meta.province);
-      updateNotifBadge();
-      clearCurrentEditContext();
-      sessionStorage.removeItem('PNDA_LAST_REPORT_FINGERPRINT');
-    }
-  } finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> Enregistrer'; }
-}
-
-async function getNextSeqNumber(province, trimestre, annee) {
-  try {
-    const { data, error } = await db.from('reports').select('seq_number').eq('province', province).eq('trimestre', trimestre).eq('annee', annee).order('seq_number', { ascending: false }).limit(1);
-    if (error) return 1;
-    return ((data?.[0]?.seq_number) || 0) + 1;
-  } catch { return 1; }
-}
-
-// ─── ARCHIVE ──────────────────────────────────────────────────────────────────
-async function loadUserArchive(rapporteur, province) {
-  const section = document.getElementById('archive-section');
-  const tbody = document.getElementById('archive-tbody');
-  if (!section || !tbody) return;
-  const prov = province || document.getElementById('f-province')?.value;
-  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Chargement…</td></tr>';
-  section.style.display = '';
-  try {
-    let query = db.from('reports').select('id, saved_at, trimestre, annee, seq_number, meta, missions, statut, rapporteur').eq('province', prov).order('saved_at', { ascending: false }).limit(50);
-    if (CURRENT_USER_ROLE !== 'comptable') query = query.eq('rapporteur', rapporteur);
-    let { data, error } = await query;
-    if (error) throw error;
-    if (CURRENT_USER_ROLE === 'comptable') data = (data || []).filter((report) => (report.statut || WORKFLOW_STATUS.ACTIVEE) !== WORKFLOW_STATUS.EN_ATTENTE);
-    if (!data?.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Aucune mission enregistrée.</td></tr>'; USER_MISSIONS_CACHE = []; return; }
-    const STATUT_BADGE = {
-      en_attente: '<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>En attente</span>',
-      retournee: '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-arrow-return-left me-1"></i>Retournée</span>',
-      activee: '<span class="badge bg-success"><i class="bi bi-lightning-charge-fill me-1"></i>Activée</span>',
-      realisee: '<span class="badge bg-secondary"><i class="bi bi-check2-all me-1"></i>Réalisée</span>'
-    };
-    tbody.innerHTML = data.map((r) => {
-      const nb = r.missions?.length || r.meta?.total_missions || 0;
-      const tot = r.meta?.total_general_usd || r.meta?.total_montant_usd || '0.00';
-      const st = r.statut || WORKFLOW_STATUS.ACTIVEE;
-      const badge = STATUT_BADGE[st] || STATUT_BADGE.activee;
-      const rid = escapeHtml(r.id);
-      const workflowComment = escapeHtml(r.meta?.workflow_comment || '');
-      const litige = calculateReportLitige(r);
-      const periode = escapeHtml(`${r.trimestre || r.meta?.trimestre || ''} ${r.annee || r.meta?.annee || ''}`.trim());
-      let actions = '';
-      if (CURRENT_USER_ROLE !== 'comptable') {
-        if (st === WORKFLOW_STATUS.RETOURNEE) actions = `<button class="btn btn-warning btn-sm me-1" onclick="restoreReport('${rid}')"><i class="bi bi-pencil-fill me-1"></i>Corriger</button>${workflowComment ? `<div class="small text-muted mt-1"><i class="bi bi-chat-left-text me-1"></i>${workflowComment}</div>` : ''}`;
-        else if (st === WORKFLOW_STATUS.EN_ATTENTE) actions = '<span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>En attente de validation</span>';
-        else if (st === WORKFLOW_STATUS.ACTIVEE) actions = `<span class="text-success small"><i class="bi bi-lightning-charge-fill me-1"></i>Mission en cours · Litige ${escapeHtml(formatCurrencyDisplay(litige))} USD</span>`;
-        else if (st === WORKFLOW_STATUS.REALISEE) actions = '<span class="text-muted small"><i class="bi bi-check2-all me-1"></i>Mission terminée</span>';
-      } else {
-        if (st === WORKFLOW_STATUS.ACTIVEE) actions = `<button class="btn btn-outline-primary btn-sm me-1" onclick="printLiquidationBordereau('${rid}')"><i class="bi bi-printer me-1"></i>Bordereau</button><button class="btn btn-outline-success btn-sm" onclick="signalerMissionRealisee('${rid}')"><i class="bi bi-check2-circle me-1"></i>Clôturer</button>`;
-        else if (st === WORKFLOW_STATUS.REALISEE) actions = `<button class="btn btn-outline-primary btn-sm me-1" onclick="printLiquidationBordereau('${rid}')"><i class="bi bi-printer me-1"></i>Bordereau</button><span class="text-success small"><i class="bi bi-check2-all me-1"></i>Clôturée</span>`;
-      }
-      return `<tr><td>${escapeHtml(r.seq_number ? '#'+r.seq_number : '—')}</td><td>${new Date(r.saved_at).toLocaleDateString('fr-FR')}</td><td>${periode}</td><td><span class="badge bg-secondary">${nb}</span></td><td class="text-end">${escapeHtml(formatCurrencyDisplay(Number(tot)))} USD</td><td>${badge}</td><td>${actions}</td></tr>`;
-    }).join('');
-    USER_MISSIONS_CACHE = data;
-    renderWorkflowAlerts(); updateNotifBadge();
-  } catch (e) { console.error(e); tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Erreur de chargement.</td></tr>'; }
-}
-
-// ─── COMPTABLE ────────────────────────────────────────────────────────────────
-async function loadPendingMissions(province) {
-  const tbody = document.getElementById('pending-tbody');
-  const prov = province || getSession()?.province;
-  tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Chargement…</td></tr>';
-  try {
-    const { data, error } = await db.from('reports').select('id, saved_at, trimestre, annee, meta, missions, rapporteur, statut').eq('province', prov).eq('statut', 'en_attente').order('saved_at', { ascending: true }).limit(100);
-    if (error) throw error;
-    PENDING_REPORTS_CACHE = data || [];
-    if (!PENDING_REPORTS_CACHE.length) { tbody.innerHTML = ''; updatePendingSectionVisibility(); renderWorkflowAlerts(); updateNotifBadge(); return; }
-    updatePendingSectionVisibility();
-    tbody.innerHTML = PENDING_REPORTS_CACHE.map((r) => `<tr><td>${new Date(r.saved_at).toLocaleDateString('fr-FR')}</td><td>${escapeHtml(r.rapporteur || '—')}</td><td>${escapeHtml(`${r.trimestre||''} ${r.annee||''}`.trim())}</td><td><span class="badge bg-secondary">${r.missions?.length || 0}</span></td><td><button class="btn btn-gold btn-sm" onclick="openFinancialCompletion('${r.id}')"><i class="bi bi-cash-coin me-1"></i>Compléter</button></td></tr>`).join('');
-    renderWorkflowAlerts(); updateNotifBadge();
-  } catch (e) { console.error(e); tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Erreur de chargement.</td></tr>'; }
-}
-
-async function loadActiveMissions(province) {
-  const tbody = document.getElementById('active-tbody');
-  const activeSection = document.getElementById('comptable-active-section');
-  const prov = province || getSession()?.province;
-  tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Chargement…</td></tr>';
-  try {
-    const { data, error } = await db.from('reports').select('id, saved_at, trimestre, annee, meta, missions, rapporteur, statut').eq('province', prov).eq('statut', WORKFLOW_STATUS.ACTIVEE).order('saved_at', { ascending: false }).limit(100);
-    if (error) throw error;
-    ACTIVE_REPORTS_CACHE = data || [];
-    if (!ACTIVE_REPORTS_CACHE.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Aucune mission activée en cours.</td></tr>'; if (activeSection) activeSection.style.display = 'none'; }
-    else {
-      if (activeSection) activeSection.style.display = '';
-      tbody.innerHTML = ACTIVE_REPORTS_CACHE.map((r) => {
-        const litige = calculateReportLitige(r);
-        return `<tr><td>${new Date(r.saved_at).toLocaleDateString('fr-FR')}</td><td>${escapeHtml(r.rapporteur || '—')}</td><td>${escapeHtml(`${r.trimestre||''} ${r.annee||''}`.trim())}</td><td><span class="badge bg-secondary">${r.missions?.length || 0}</span></td><td><span class="badge ${litige > 0 ? 'bg-warning text-dark' : 'bg-success'}">${formatCurrencyDisplay(litige)}</span></td><td><button class="btn btn-outline-primary btn-sm me-1" onclick="printLiquidationBordereau('${r.id}')"><i class="bi bi-printer"></i></button><button class="btn btn-outline-success btn-sm" onclick="signalerMissionRealisee('${r.id}')"><i class="bi bi-check2-circle"></i></button></td></tr>`;
-      }).join('');
-    }
-    renderWorkflowAlerts(); updateNotifBadge();
-  } catch (e) { console.error(e); tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Erreur de chargement.</td></tr>'; }
-}
-
-async function signalerMissionRealisee(reportId) {
-  if (!confirm('Confirmer que cette mission est effectuée ?')) return;
-  try {
-    const session = getSession();
-    const report = ACTIVE_REPORTS_CACHE.find(r => r.id === reportId);
-    if (!report) { showToast('Mission introuvable.'); return; }
-    const missions = (report.missions || []).map(m => ({ ...m, solde_usd: 0, avance_usd: m.total_usd || m.montant_usd || 0 }));
-    const updatedMeta = { ...(report.meta || {}), total_solde_usd: '0.00', litige_usd: '0.00', total_avance_usd: missions.reduce((s, m) => s + Number(m.avance_usd || 0), 0).toFixed(2) };
-    const { error } = await db.from('reports').update({ missions, meta: updatedMeta, statut: WORKFLOW_STATUS.REALISEE, completed_by: session?.user || null, completed_at: new Date().toISOString() }).eq('id', reportId);
-    if (error) throw error;
-    showToast('✓ Mission clôturée.');
-    notifyReportDataChanged();
-    await loadActiveMissions(session?.province);
-    await loadUserArchive(session?.user, session?.province);
-    renderWorkflowAlerts(); updateNotifBadge();
-  } catch (e) { console.error(e); showToast('Erreur: ' + e.message); }
-}
-
-// ─── IMPRESSION BORDEREAU ─────────────────────────────────────────────────────
-let _participantSelectModalInstance = null;
-
-async function printLiquidationBordereau(reportId) {
-  let report = ACTIVE_REPORTS_CACHE.find(r => r.id === reportId) || PENDING_REPORTS_CACHE.find(r => r.id === reportId) || USER_MISSIONS_CACHE.find(r => r.id === reportId);
-  if (!report) { showToast('Rapport introuvable.'); return; }
-  
-  const participants = report.participants || [];
-  if (participants.length <= 1) {
-    const snapshot = buildLiquidationSnapshot(report, null, participants[0] || null, 0);
-    openLiquidationPrintWindow(snapshot);
-    return;
-  }
-  
-  if (!_participantSelectModalInstance) _participantSelectModalInstance = new bootstrap.Modal(document.getElementById('participantSelectModal'));
-  const listContainer = document.getElementById('participant-select-list');
-  const missionInfo = report.meta || {};
-  
-  listContainer.innerHTML = `
-    <div class="alert alert-light border small mb-3">
-      <strong>${escapeHtml(missionInfo.province_label || report.province || '—')}</strong><br>
-      ${escapeHtml(report.trimestre || missionInfo.trimestre || '')} ${escapeHtml(String(report.annee || missionInfo.annee || ''))}<br>
-      Chef de mission : <strong>${escapeHtml(report.chef_mission || participants.find(p => p.est_chef)?.nom || '—')}</strong>
-    </div>
-    ${participants.map((p, idx) => {
-      const isChef = p.est_chef || p.role === 'chef_mission' || idx === 0;
-      return `
-        <a href="#" class="list-group-item list-group-item-action" onclick="printBordereauForParticipant('${reportId}', ${idx}); return false;">
-          <div class="d-flex w-100 justify-content-between align-items-center">
-            <div>
-              <i class="bi ${isChef ? 'bi-star-fill text-warning' : 'bi-person'} me-2"></i>
-              <strong>${escapeHtml(p.nom || '—')}</strong>
-              ${isChef ? '<span class="badge bg-warning text-dark ms-2">Chef</span>' : ''}
-            </div>
-            <div class="text-end"><strong>${formatCurrencyDisplay(p.total_usd || 0)} USD</strong></div>
-          </div>
-        </a>
-      `;
-    }).join('')}
-    <a href="#" class="list-group-item list-group-item-action list-group-item-success mt-2" onclick="printAllBordereaux('${reportId}'); return false;">
-      <i class="bi bi-files me-2"></i><strong>Imprimer tous les bordereaux (${participants.length})</strong>
-    </a>
-  `;
-  _participantSelectModalInstance.show();
-}
-
-async function printBordereauForParticipant(reportId, participantIndex) {
-  _participantSelectModalInstance?.hide();
-  let report = ACTIVE_REPORTS_CACHE.find(r => r.id === reportId) || PENDING_REPORTS_CACHE.find(r => r.id === reportId) || USER_MISSIONS_CACHE.find(r => r.id === reportId);
-  if (!report) return;
-  const participant = (report.participants || [])[participantIndex];
-  if (!participant) return;
-  openLiquidationPrintWindow(buildLiquidationSnapshot(report, null, participant, participantIndex));
-}
-
-async function printAllBordereaux(reportId) {
-  _participantSelectModalInstance?.hide();
-  let report = ACTIVE_REPORTS_CACHE.find(r => r.id === reportId) || PENDING_REPORTS_CACHE.find(r => r.id === reportId) || USER_MISSIONS_CACHE.find(r => r.id === reportId);
-  if (!report) return;
-  const participants = report.participants || [];
-  const snapshots = participants.map((p, idx) => buildLiquidationSnapshot(report, null, p, idx));
-  openMultiLiquidationPrintWindow(snapshots, report);
-}
-
-function buildLiquidationSnapshot(report, missionsOverride, participant = null, participantIndex = 0) {
-  if (participant) {
-    const totalPerDiem = participant.montant_usd || 0;
-    const totalJustificatifs = participant.autres_frais_usd || 0;
-    const totalMission = participant.total_usd || 0;
-    const totalTravelDays = getMissionTravelDays({ date_debut: report.date_debut || report.meta?.date_debut, date_fin: report.date_fin || report.meta?.date_fin });
-    const totalNights = participant.nuitees || 0;
-    const aPayer = +(totalPerDiem * 0.8 + totalJustificatifs).toFixed(2);
-    const soldeRetour = +(totalPerDiem * 0.2).toFixed(2);
-    const participantMission = { ...report, participant, participant_index: participantIndex, missions: [{ nature: report.nature, objectif: report.objectif, date_debut: report.date_debut || report.meta?.date_debut, date_fin: report.date_fin || report.meta?.date_fin, destination_province_label: report.destination_province_label || report.meta?.destination_province_label, nuitees: participant.nuitees, taux_per_diem: participant.taux_per_diem, montant_usd: participant.montant_usd, autres_frais_usd: participant.autres_frais_usd, total_usd: participant.total_usd, avance_usd: participant.avance_usd, solde_usd: participant.solde_usd, participants: 1 }] };
-    return { report: participantMission, missions: participantMission.missions, totalPerDiem, totalJustificatifs, totalMission, totalTravelDays, totalNights, totalParticipants: 1, aPayer, soldeRetour, participant, participantIndex };
-  }
-  const missions = missionsOverride || report?.missions || [];
-  const totalPerDiem = missions.reduce((s, m) => s + Number(m.montant_usd || 0), 0);
-  const totalJustificatifs = missions.reduce((s, m) => s + Number(m.autres_frais_usd || 0), 0);
-  const totalMission = missions.reduce((s, m) => s + Number(m.total_usd || 0), 0);
-  const totalTravelDays = missions.reduce((s, m) => s + getMissionTravelDays(m), 0);
-  const totalNights = missions.reduce((s, m) => s + Number(m.nuitees || 0), 0);
-  const totalParticipants = missions.reduce((s, m) => s + Number(m.participants || 0), 0);
-  const aPayer = +(totalPerDiem * 0.8 + totalJustificatifs).toFixed(2);
-  const soldeRetour = +(totalPerDiem * 0.2).toFixed(2);
-  return { report: { ...report, missions }, missions, totalPerDiem, totalJustificatifs, totalMission, totalTravelDays, totalNights, totalParticipants, aPayer, soldeRetour };
-}
-
-function getMissionTravelDays(mission) {
-  const start = mission?.date_debut ? new Date(mission.date_debut) : null;
-  const end = mission?.date_fin ? new Date(mission.date_fin) : null;
-  if (!start || isNaN(start)) return 0;
-  if (!end || isNaN(end)) return 1;
-  return Math.max(1, Math.round((end - start) / 86400000) + 1);
-}
-
-function openLiquidationPrintWindow(snapshot) {
-  const printWindow = window.open('', '_blank', 'width=900,height=1200');
-  if (!printWindow) { showToast('Autorisez les pop-up.'); return; }
-  printWindow.document.write(buildLiquidationPrintHtml(snapshot));
-  printWindow.document.close();
-}
-
-function openMultiLiquidationPrintWindow(snapshots, report) {
-  const printWindow = window.open('', '_blank', 'width=900,height=1200');
-  if (!printWindow) { showToast('Autorisez les pop-up.'); return; }
-  const allHtml = snapshots.map((s, i) => (i > 0 ? '<div style="page-break-before: always;"></div>' : '') + buildLiquidationPrintHtml(s)).join('');
-  printWindow.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bordereaux - ${escapeHtml(report.chef_mission || 'Mission')}</title><style>@page{size:A4 portrait;margin:11mm 10mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;font-size:11px;background:#fff}.sheet{width:100%;min-height:271mm}</style></head><body>${allHtml}<script>window.onload=function(){window.print()};<\/script></body></html>`);
-  printWindow.document.close();
-}
-
-function buildLiquidationPrintHtml(snapshot) {
-  const report = snapshot.report;
-  const meta = report.meta || {};
-  const participant = snapshot.participant || {};
-  const isMultiParticipant = !!participant.nom;
-  const participantDisplayName = isMultiParticipant ? participant.nom : (report.rapporteur || meta.rapporteur || '—');
-  const participantRole = isMultiParticipant ? (participant.role === 'chef_mission' ? 'Chef de mission' : participant.role) : (meta.role || '—');
-  const chefMission = report.chef_mission || (report.participants || []).find(p => p.est_chef)?.nom || '—';
-  const provinceLabel = meta.province_label || report.province || '—';
-  const liquidationNumber = `BLM-${meta.province_code || 'PNDA'}-${meta.annee || new Date().getFullYear()}-${String(report.seq_number || meta.seq_number || 0).padStart(3, '0')}`;
-  
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bordereau ${participantDisplayName}</title>
-  <style>@page{size:A4 portrait;margin:11mm 10mm}*{box-sizing:border-box}body{font-family:Arial;color:#14251b;margin:0;font-size:11px}.sheet{width:100%;min-height:271mm;display:flex;flex-direction:column}.header{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #123524;padding-bottom:6px;margin-bottom:8px}.brand{display:flex;align-items:center;gap:10px}.brand h1{margin:0;font-size:15px;text-transform:uppercase}.cartouche{border:1.5px solid #123524;padding:7px 9px;background:#f8faf8}.cartouche-value{font-size:13px;font-weight:700;color:#123524}.title{text-align:center;border:1.5px solid #123524;background:#eef4ef;padding:8px;font-weight:700;font-size:13px;text-transform:uppercase;margin-bottom:6px}.section{border:1px solid #b5c3ba;margin-bottom:8px}.section-title{background:#eef3ef;color:#123524;padding:5px 8px;font-weight:700;text-transform:uppercase;font-size:10px}.section-body{padding:8px 9px}.grid-3{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px 12px}.field strong{display:block;font-size:9px;text-transform:uppercase;color:#5a6f62}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cad4cd;padding:5px 6px;font-size:9.5px}th{background:#f1f4f1;text-transform:uppercase}.num{text-align:right}.totals{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:9px}.pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pay-card{border:1.2px solid #123524;padding:10px;background:#fcfdfc}.pay-card .amount{font-size:18px;font-weight:700}.sign-grid{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:10px;margin-top:auto;padding-top:8px}.signature-box{border:1px solid #b8c5bd;min-height:126px;padding:10px;background:#fcfdfc}</style></head><body><div class="sheet">
-    <div class="header"><div class="brand"><div><h1>PNDA-SE</h1><p>Programme National de Développement Agricole</p></div></div><div class="doc-meta"><div class="cartouche"><span class="cartouche-label">Bordereau N°</span><span class="cartouche-value">${escapeHtml(liquidationNumber)}</span><div>Émis le ${new Date().toLocaleDateString('fr-FR')}</div></div></div></div>
-    <div class="title">Bordereau de liquidation de mission</div>
-    <div class="section"><div class="section-title">1. Identité</div><div class="section-body grid-3">
-      <div class="field"><strong>Participant</strong><span>${escapeHtml(participantDisplayName)}</span></div>
-      <div class="field"><strong>Rôle</strong><span>${escapeHtml(participantRole)}</span></div>
-      ${isMultiParticipant && chefMission !== participantDisplayName ? `<div class="field"><strong>Chef de mission</strong><span>${escapeHtml(chefMission)}</span></div>` : '<div></div>'}
-      <div class="field"><strong>Province</strong><span>${escapeHtml(provinceLabel)}</span></div>
-      <div class="field"><strong>Période</strong><span>${escapeHtml(`${report.trimestre||meta.trimestre||''} ${report.annee||meta.annee||''}`.trim())}</span></div>
-      <div class="field"><strong>Référence</strong><span>#${report.seq_number || meta.seq_number || '—'}</span></div>
-    </div></div>
-    <div class="section"><div class="section-title">2. Détail financier</div><div class="section-body">
-      <table><tr><th>Nature</th><th>Objectif</th><th>Destination</th><th>Nuitées</th><th>Taux</th><th>Montant</th><th>Autres frais</th><th>Total</th></tr>
-      <tr><td>${escapeHtml(report.nature || '—')}</td><td>${escapeHtml(report.objectif || '—')}</td><td>${escapeHtml(report.destination_province_label || '—')}</td><td class="num">${snapshot.totalNights}</td><td class="num">${formatCurrencyDisplay(participant.taux_per_diem || snapshot.totalPerDiem / (snapshot.totalNights || 1))}</td><td class="num">${formatCurrencyDisplay(snapshot.totalPerDiem)}</td><td class="num">${formatCurrencyDisplay(snapshot.totalJustificatifs)}</td><td class="num">${formatCurrencyDisplay(snapshot.totalMission)}</td></tr>
-      </table>
-      <div class="pay-grid" style="margin-top:10px">
-        <div class="pay-card"><h3>À payer (80% per diem + 100% frais)</h3><div class="amount">${formatCurrencyDisplay(snapshot.aPayer)} USD</div></div>
-        <div class="pay-card"><h3>Solde au retour (20% per diem)</h3><div class="amount">${formatCurrencyDisplay(snapshot.soldeRetour)} USD</div></div>
-      </div>
-    </div></div>
-    <div class="sign-grid">
-      <div class="signature-box"><h4>Missionnaire</h4><div class="signature-line">${escapeHtml(participantDisplayName)}</div></div>
-      <div class="signature-box"><h4>Comptable</h4><div class="signature-line">Visa</div></div>
-      <div class="signature-box"><h4>RAF / Coordination</h4><div class="signature-line">Visa</div></div>
-    </div>
-  </div><script>window.onload=function(){window.print()};<\/script></body></html>`;
-}
-
-// ─── EXPORT EXCEL ─────────────────────────────────────────────────────────────
-async function exportSelectedMissionsExcel() {
-  const data = buildData();
-  const content = buildSelectedMissionsWorkbookXml(data);
-  const fname = `PNDA_budget_${data.meta.trimestre}_${data.meta.annee}.xls`;
-  const blob = new Blob([content], { type: 'application/vnd.ms-excel' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; a.click();
-  showToast('✓ Export Excel téléchargé.');
-}
-
-function buildSelectedMissionsWorkbookXml(data) {
-  const pLabel = getProvinceData(data.meta.province)?.label || data.meta.province;
-  let xml = `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Styles><Style ss:ID="header"><Font ss:Bold="1"/></Style></Styles><Worksheet ss:Name="Missions"><Table>`;
-  xml += `<Row><Cell ss:StyleID="header"><Data ss:Type="String">Province</Data></Cell><Cell><Data ss:Type="String">${pLabel}</Data></Cell></Row>`;
-  xml += `<Row><Cell ss:StyleID="header"><Data ss:Type="String">Trimestre</Data></Cell><Cell><Data ss:Type="String">${data.meta.trimestre} ${data.meta.annee}</Data></Cell></Row>`;
-  xml += `<Row><Cell ss:StyleID="header"><Data ss:Type="String">Rapporteur</Data></Cell><Cell><Data ss:Type="String">${data.meta.rapporteur}</Data></Cell></Row>`;
-  xml += `<Row>${['N°','Mission','Objectif','Destination','Début','Fin','Participants','Nuitées','Taux','Montant','Autres','Total','Avance','Solde'].map(h => `<Cell ss:StyleID="header"><Data ss:Type="String">${h}</Data></Cell>`).join('')}</Row>`;
-  data.missions.forEach(m => {
-    const participants = (m.participants || []).map(p => `${p.nom} (${p.role})`).join('; ');
-    xml += `<Row>
-      <Cell><Data ss:Type="String">${m.numero||''}</Data></Cell><Cell><Data ss:Type="String">${m.nature||''}</Data></Cell><Cell><Data ss:Type="String">${m.objectif||''}</Data></Cell>
-      <Cell><Data ss:Type="String">${m.destination_province_label||''}</Data></Cell><Cell><Data ss:Type="String">${m.date_debut||''}</Data></Cell><Cell><Data ss:Type="String">${m.date_fin||''}</Data></Cell>
-      <Cell><Data ss:Type="String">${participants}</Data></Cell><Cell><Data ss:Type="Number">${m.nuitees||0}</Data></Cell><Cell><Data ss:Type="Number">${m.taux_per_diem||0}</Data></Cell>
-      <Cell><Data ss:Type="Number">${m.montant_usd||0}</Data></Cell><Cell><Data ss:Type="Number">${m.autres_frais_usd||0}</Data></Cell><Cell><Data ss:Type="Number">${m.total_usd||0}</Data></Cell>
-      <Cell><Data ss:Type="Number">${m.avance_usd||0}</Data></Cell><Cell><Data ss:Type="Number">${m.solde_usd||0}</Data></Cell>
-    </Row>`;
-  });
-  xml += `</Table></Worksheet></Workbook>`;
-  return xml;
-}
-
-function printSelectedMissions() { window.print(); }
-
-// ─── RESTORE REPORT ───────────────────────────────────────────────────────────
-async function restoreReport(reportId) {
-  const report = USER_MISSIONS_CACHE.find(r => r.id === reportId);
-  if (!report?.missions?.length) { showToast('Rapport introuvable.'); return; }
-  CURRENT_EDIT_REPORT_ID = reportId;
-  document.getElementById('missions-container').innerHTML = '';
-  missionCount = 0;
-  // Restauration simplifiée - à compléter selon besoins
-  showToast('✓ Rapport restauré.');
-}
-
-// ─── COMPLETION FINANCIÈRE ────────────────────────────────────────────────────
-function openFinancialCompletion(reportId) {
-  const report = PENDING_REPORTS_CACHE.find(r => r.id === reportId);
-  if (!report) { showToast('Rapport introuvable.'); return; }
-  CURRENT_COMPLETION_REPORT_ID = reportId;
-  document.getElementById('completion-report-info').textContent = `${report.meta?.province_label || ''} · ${report.trimestre||''} ${report.annee||''}`;
-  document.getElementById('comptable-completion-section').style.display = '';
-}
-
-function closeFinancialCompletion() {
-  CURRENT_COMPLETION_REPORT_ID = null;
-  document.getElementById('comptable-completion-section').style.display = 'none';
-}
-
-async function saveFinancialCompletion() {
-  if (!CURRENT_COMPLETION_REPORT_ID) return;
-  const report = PENDING_REPORTS_CACHE.find(r => r.id === CURRENT_COMPLETION_REPORT_ID);
-  if (!report) return;
-  try {
-    const session = getSession();
-    const { error } = await db.from('reports').update({ statut: WORKFLOW_STATUS.ACTIVEE, activated_by: session?.user, activated_at: new Date().toISOString() }).eq('id', CURRENT_COMPLETION_REPORT_ID);
-    if (error) throw error;
-    showToast('✓ Mission activée.');
-    closeFinancialCompletion();
-    loadPendingMissions(session?.province);
-    loadActiveMissions(session?.province);
-    loadUserArchive(session?.user, session?.province);
-  } catch (e) { showToast('Erreur: ' + e.message); }
-}
-
-async function returnMissionToMissionnaire() {
-  if (!CURRENT_COMPLETION_REPORT_ID) return;
-  const comment = document.getElementById('completion-comment')?.value.trim() || '';
-  if (!comment) { showToast('Ajoutez un commentaire.'); return; }
-  try {
-    const session = getSession();
-    const { error } = await db.from('reports').update({ statut: WORKFLOW_STATUS.RETOURNEE, returned_by: session?.user, returned_at: new Date().toISOString(), meta: { workflow_comment: comment } }).eq('id', CURRENT_COMPLETION_REPORT_ID);
-    if (error) throw error;
-    showToast('✓ Mission retournée.');
-    closeFinancialCompletion();
-    loadPendingMissions(session?.province);
-    loadUserArchive(session?.user, session?.province);
-  } catch (e) { showToast('Erreur: ' + e.message); }
-}
-
-async function printCurrentLiquidationBordereau() {
-  if (!CURRENT_COMPLETION_REPORT_ID) { showToast('Aucun rapport sélectionné.'); return; }
-  await printLiquidationBordereau(CURRENT_COMPLETION_REPORT_ID);
-}
-
-renderSelectedMissionsTable();
-
-// ─── COMPLETION FINANCIÈRE (suite) ────────────────────────────────────────────
-function collectCompletionMissions(report) {
-  const cards = document.querySelectorAll('#completion-missions-list .completion-mission-card');
-  return (report.missions || []).map((mission, index) => {
-    const card = cards[index];
-    if (!card) return mission;
-    const taux = parseFloat(card.querySelector('.cf-taux')?.value) || 0;
-    const montant = parseFloat(card.querySelector('.cf-montant')?.value) || 0;
-    const autres = parseFloat(card.querySelector('.cf-autres-frais')?.value) || 0;
-    const total = +(montant + autres).toFixed(2);
-    const avance = parseFloat(card.querySelector('.cf-avance')?.value) || 0;
-    const solde = +(total - avance).toFixed(2);
-    const section = card.querySelector('.cf-section')?.value || '';
-    const horsProjet = parseInt(card.querySelector('.cf-hors-projet')?.value, 10) || 0;
-    const projet = parseInt(card.querySelector('.cf-projet')?.value, 10) || 0;
-    return {
-      ...mission,
-      taux_per_diem: taux,
-      montant_usd: montant,
-      autres_frais_usd: autres,
-      total_usd: total,
-      avance_usd: avance,
-      solde_usd: solde,
-      section,
-      hors_projet: horsProjet,
-      projet
-    };
-  });
-}
-
-function getLiquidationNumber(report) {
-  const meta = report?.meta || {};
-  if (report?.liquidation_number || meta.liquidation_number) {
-    return report?.liquidation_number || meta.liquidation_number;
-  }
-  const provinceCode = String(meta.province_code || report?.province_code || report?.meta?.province || report?.province || 'PNDA').replace(/\s+/g, '').toUpperCase();
-  const year = String(report?.annee || meta.annee || new Date().getFullYear());
-  const sequence = String(report?.liquidation_seq_number || meta.liquidation_seq_number || report?.seq_number || meta.seq_number || 0).padStart(3, '0');
-  return `BLM-${provinceCode}-${year}-${sequence}`;
-}
-
-async function ensureLiquidationIdentity(report) {
-  if (!report) return null;
-  if (report.liquidation_number || report?.meta?.liquidation_number) return report;
-
-  const meta = report.meta || {};
-  const year = Number(report.annee || meta.annee || new Date().getFullYear());
-  const province = report.province || meta.province;
-  const provinceCode = String(meta.province_code || report.province_code || province || 'PNDA').replace(/\s+/g, '').toUpperCase();
-  const session = getSession();
-
-  try {
-    const { data, error } = await db.rpc('next_liquidation_seq', {
-      p_province: province,
-      p_year: year
-    });
-    if (error) throw error;
-
-    const seq = Number(data || 1);
-    const liquidationNumber = `BLM-${provinceCode}-${year}-${String(seq).padStart(3, '0')}`;
-    const printedAt = new Date().toISOString();
-    const payload = {
-      liquidation_seq_number: seq,
-      liquidation_number: liquidationNumber,
-      liquidation_printed_at: printedAt,
-      liquidation_printed_by: session?.user || null,
-      meta: {
-        ...meta,
-        liquidation_seq_number: seq,
-        liquidation_number: liquidationNumber,
-        liquidation_printed_at: printedAt,
-        liquidation_printed_by: session?.user || null
-      }
-    };
-
-    const { error: updateError } = await db.from('reports').update(payload).eq('id', report.id);
-    if (updateError) throw updateError;
-
-    report.liquidation_seq_number = seq;
-    report.liquidation_number = liquidationNumber;
-    report.liquidation_printed_at = printedAt;
-    report.liquidation_printed_by = session?.user || null;
-    report.meta = payload.meta;
-    return report;
-  } catch (error) {
-    console.warn('Numérotation dédiée indisponible, fallback:', error?.message || error);
-    return report;
-  }
+function formatDateDisplay(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleDateString('fr-FR');
 }
 
 function numberToFrenchWords(value) {
@@ -2095,23 +1910,1240 @@ function formatAmountInWords(value) {
   return `${wholeWords} dollars americains et ${numberToFrenchWords(cents)} cents`;
 }
 
-function formatDateDisplay(value) {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleDateString('fr-FR');
+function getMissionTravelDays(mission) {
+  const start = mission?.date_debut ? new Date(mission.date_debut) : null;
+  const end = mission?.date_fin ? new Date(mission.date_fin) : null;
+  if (!start || Number.isNaN(start.getTime())) return 0;
+  if (!end || Number.isNaN(end.getTime())) return 1;
+  const diff = Math.round((end - start) / 86400000);
+  return Math.max(1, diff + 1);
 }
 
-// ─── INITIALISATION FINALE ────────────────────────────────────────────────────
-function applyDefaultDesktopSession() {
-  const d = window.PNDA_DESKTOP?.defaultSession;
-  if (!d || isManualLoginRequested()) return false;
-  const a = USERS[d.user];
-  if (!a || a.role !== d.role || !a.provinces.includes(d.province)) return false;
-  localStorage.setItem('PNDA_SESSION', JSON.stringify({ user: d.user, role: d.role, province: d.province, authenticatedAt: new Date().toISOString() }));
-  return true;
+function getLiquidationNumber(report) {
+  const meta = report?.meta || {};
+  if (report?.liquidation_number || meta.liquidation_number) {
+    return report?.liquidation_number || meta.liquidation_number;
+  }
+  const provinceCode = String(meta.province_code || report?.province_code || report?.meta?.province || report?.province || 'PNDA').replace(/\s+/g, '').toUpperCase();
+  const year = String(report?.annee || meta.annee || new Date().getFullYear());
+  const sequence = String(report?.liquidation_seq_number || meta.liquidation_seq_number || report?.seq_number || meta.seq_number || 0).padStart(3, '0');
+  return `BLM-${provinceCode}-${year}-${sequence}`;
 }
 
+async function ensureLiquidationIdentity(report) {
+  if (!report) return null;
+  if (report.liquidation_number || report?.meta?.liquidation_number) return report;
+
+  const meta = report.meta || {};
+  const year = Number(report.annee || meta.annee || new Date().getFullYear());
+  const province = report.province || meta.province;
+  const provinceCode = String(meta.province_code || report.province_code || province || 'PNDA').replace(/\s+/g, '').toUpperCase();
+  const session = getSession();
+
+  try {
+    const { data, error } = await db.rpc('next_liquidation_seq', {
+      p_province: province,
+      p_year: year
+    });
+    if (error) throw error;
+
+    const seq = Number(data || 1);
+    const liquidationNumber = `BLM-${provinceCode}-${year}-${String(seq).padStart(3, '0')}`;
+    const printedAt = new Date().toISOString();
+    const payload = {
+      liquidation_seq_number: seq,
+      liquidation_number: liquidationNumber,
+      liquidation_printed_at: printedAt,
+      liquidation_printed_by: session?.user || null,
+      meta: {
+        ...meta,
+        liquidation_seq_number: seq,
+        liquidation_number: liquidationNumber,
+        liquidation_printed_at: printedAt,
+        liquidation_printed_by: session?.user || null
+      }
+    };
+
+    const { error: updateError } = await db.from('reports').update(payload).eq('id', report.id);
+    if (updateError) throw updateError;
+
+    report.liquidation_seq_number = seq;
+    report.liquidation_number = liquidationNumber;
+    report.liquidation_printed_at = printedAt;
+    report.liquidation_printed_by = session?.user || null;
+    report.meta = payload.meta;
+    return report;
+  } catch (error) {
+    console.warn('Numérotation dédiée indisponible, fallback sur le numéro de rapport:', error?.message || error);
+    return report;
+  }
+}
+
+function collectCompletionMissions(report) {
+  const cards = document.querySelectorAll('#completion-missions-list .completion-mission-card');
+  return (report.missions || []).map((mission, index) => {
+    const card = cards[index];
+    if (!card) return mission;
+    const taux = parseFloat(card.querySelector('.cf-taux')?.value) || 0;
+    const montant = parseFloat(card.querySelector('.cf-montant')?.value) || 0;
+    const autres = parseFloat(card.querySelector('.cf-autres-frais')?.value) || 0;
+    const total = +(montant + autres).toFixed(2);
+    const avance = parseFloat(card.querySelector('.cf-avance')?.value) || 0;
+    const solde = +(total - avance).toFixed(2);
+    const section = card.querySelector('.cf-section')?.value || '';
+    const horsProjet = parseInt(card.querySelector('.cf-hors-projet')?.value, 10) || 0;
+    const projet = parseInt(card.querySelector('.cf-projet')?.value, 10) || 0;
+    return {
+      ...mission,
+      taux_per_diem: taux,
+      montant_usd: montant,
+      autres_frais_usd: autres,
+      total_usd: total,
+      avance_usd: avance,
+      solde_usd: solde,
+      section,
+      hors_projet: horsProjet,
+      projet
+    };
+  });
+}
+
+function buildLiquidationSnapshot(report, missionsOverride) {
+  const missions = missionsOverride || report?.missions || [];
+  const totalPerDiem = missions.reduce((sum, mission) => sum + Number(mission.montant_usd || 0), 0);
+  const totalJustificatifs = missions.reduce((sum, mission) => sum + Number(mission.autres_frais_usd || 0), 0);
+  const totalMission = missions.reduce((sum, mission) => sum + Number(mission.total_usd || 0), 0);
+  const totalTravelDays = missions.reduce((sum, mission) => sum + getMissionTravelDays(mission), 0);
+  const totalNights = missions.reduce((sum, mission) => sum + Number(mission.nuitees || 0), 0);
+  const totalParticipants = missions.reduce((sum, mission) => sum + Number(mission.participants || 0), 0);
+  const aPayer = +(totalPerDiem * 0.8 + totalJustificatifs).toFixed(2);
+  const soldeRetour = +(totalPerDiem * 0.2).toFixed(2);
+  return {
+    report: { ...report, missions },
+    missions,
+    totalPerDiem,
+    totalJustificatifs,
+    totalMission,
+    totalTravelDays,
+    totalNights,
+    totalParticipants,
+    aPayer,
+    soldeRetour
+  };
+}
+
+function buildLiquidationPrintHtml(snapshot) {
+  const session = getSession();
+  const report = snapshot.report;
+  const meta = report.meta || {};
+  const provinceLabel = meta.province_label || report.province || '—';
+  const liquidationNumber = getLiquidationNumber(report);
+  const printedAt = new Date();
+  const missionRows = snapshot.missions.map((mission, index) => `
+    <tr>
+      <td>${index + 1}</td>
+      <td>${escapeHtml(mission.nature || '—')}</td>
+      <td>${escapeHtml(mission.objectif || '—')}</td>
+      <td>${escapeHtml(formatDateDisplay(mission.date_debut))} - ${escapeHtml(formatDateDisplay(mission.date_fin))}</td>
+      <td class="num">${getMissionTravelDays(mission)}</td>
+      <td class="num">${Number(mission.nuitees || 0)}</td>
+      <td class="num">${escapeHtml(formatCurrencyDisplay(mission.taux_per_diem || 0))}</td>
+      <td class="num">${escapeHtml(formatCurrencyDisplay(mission.montant_usd || 0))}</td>
+      <td class="num">${escapeHtml(formatCurrencyDisplay(mission.autres_frais_usd || 0))}</td>
+    </tr>
+  `).join('');
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Bordereau de liquidation de mission</title>
+  <style>
+    @page { size: A4 portrait; margin: 11mm 10mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; color: #14251b; margin: 0; font-size: 11px; line-height: 1.25; }
+    .sheet { width: 100%; min-height: 271mm; display: flex; flex-direction: column; }
+    .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #123524; padding-bottom: 6px; margin-bottom: 8px; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand img { width: 42px; height: 42px; object-fit: contain; }
+    .brand h1 { margin: 0; font-size: 15px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .brand p { margin: 1px 0 0; font-size: 9px; color: #43584b; }
+    .doc-meta { text-align: right; font-size: 9.5px; min-width: 180px; }
+    .doc-meta strong { display: block; font-size: 12px; color: #123524; }
+    .cartouche { border: 1.5px solid #123524; padding: 7px 9px; background: linear-gradient(180deg, #f8faf8 0%, #edf3ee 100%); }
+    .cartouche-label { display: block; text-transform: uppercase; font-size: 8px; letter-spacing: 0.8px; color: #5a6f62; margin-bottom: 2px; }
+    .cartouche-value { display: block; font-size: 13px; font-weight: 700; color: #123524; margin-bottom: 4px; }
+    .title { text-align: center; border: 1.5px solid #123524; background: #eef4ef; padding: 8px 10px; font-weight: 700; font-size: 13px; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.4px; }
+    .copy-strip { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .copy-badge { flex: 1; border: 1px dashed #aebbb3; padding: 4px 8px; text-transform: uppercase; font-size: 8.3px; letter-spacing: 0.7px; color: #4c6054; background: #fafcfb; }
+    .section { border: 1px solid #b5c3ba; margin-bottom: 8px; }
+    .section-title { background: #eef3ef; color: #123524; padding: 5px 8px; font-weight: 700; text-transform: uppercase; font-size: 10px; border-bottom: 1px solid #c8d4cc; letter-spacing: 0.3px; }
+    .section-body { padding: 8px 9px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+    .grid-3 { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 8px 12px; }
+    .field strong { display: block; font-size: 9px; text-transform: uppercase; color: #5a6f62; margin-bottom: 2px; }
+    .field span { display: block; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #cad4cd; padding: 5px 6px; vertical-align: top; font-size: 9.5px; }
+    th { background: #f1f4f1; text-transform: uppercase; font-size: 8.8px; letter-spacing: 0.2px; }
+    td.num, th.num { text-align: right; white-space: nowrap; }
+    .totals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 9px; }
+    .totals table td { font-size: 10px; }
+    .totals .highlight td { font-weight: 700; background: #f7f0d8; }
+    .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .pay-card { border: 1.2px solid #123524; padding: 10px; min-height: 80px; background: #fcfdfc; }
+    .pay-card h3 { margin: 0 0 6px; font-size: 10px; text-transform: uppercase; color: #123524; }
+    .pay-card .amount { font-size: 18px; font-weight: 700; color: #123524; }
+    .pay-card small { display: block; color: #566b5f; margin-top: 4px; }
+    .amount-in-words { margin-top: 8px; border: 1px dashed #bcc8c0; padding: 7px 8px; background: #fbfcfb; font-size: 9.5px; }
+    .amount-in-words strong { display: block; text-transform: uppercase; font-size: 8.8px; color: #5a6f62; margin-bottom: 3px; }
+    .stamp-placeholder { margin-top: 8px; width: 78px; height: 78px; border: 1px dashed #8ea293; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 8px; color: #627568; align-self: flex-end; }
+    .sign-grid { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 10px; margin-top: auto; padding-top: 8px; }
+    .signature-box { border: 1px solid #b8c5bd; min-height: 126px; padding: 10px; display: flex; flex-direction: column; background: #fcfdfc; }
+    .signature-box.engagement-box { min-height: 146px; }
+    .signature-box.approval-box { min-height: 126px; }
+    .signature-box.visa-box { min-height: 126px; }
+    .signature-box h4 { margin: 0 0 6px; font-size: 10px; text-transform: uppercase; color: #123524; }
+    .signature-line { margin-top: auto; border-top: 1px solid #8ea293; padding-top: 6px; font-size: 9.5px; color: #5b6e61; }
+    .note { font-size: 9px; color: #495b50; }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="header">
+      <div class="brand">
+        <img src="logo_pnda.png" alt="PNDA">
+        <div>
+          <h1>PNDA-SE</h1>
+          <p>Programme National de Développement Agricole</p>
+        </div>
+      </div>
+      <div class="doc-meta">
+        <div class="cartouche">
+          <span class="cartouche-label">Numero officiel du bordereau</span>
+          <span class="cartouche-value">${escapeHtml(liquidationNumber)}</span>
+          <div>Émis le ${escapeHtml(printedAt.toLocaleDateString('fr-FR'))}</div>
+          <div>Par ${escapeHtml(session?.user || '—')}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="title">Bordereau de liquidation de mission</div>
+    <div class="copy-strip">
+      <div class="copy-badge">Exemplaire original</div>
+      <div class="copy-badge" style="text-align:right;">Copie comptabilite</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">1. Identité</div>
+      <div class="section-body grid-3">
+        <div class="field"><strong>Missionnaire</strong><span>${escapeHtml(report.rapporteur || meta.rapporteur || '—')}</span></div>
+        <div class="field"><strong>Province / Entité</strong><span>${escapeHtml(provinceLabel)}</span></div>
+        <div class="field"><strong>Période</strong><span>${escapeHtml(`${report.trimestre || meta.trimestre || ''} ${report.annee || meta.annee || ''}`.trim() || '—')}</span></div>
+        <div class="field"><strong>Rôle</strong><span>${escapeHtml(meta.role || report.rapporteur_role || '—')}</span></div>
+        <div class="field"><strong>Participants</strong><span>${snapshot.totalParticipants}</span></div>
+        <div class="field"><strong>Référence rapport</strong><span>${escapeHtml((report.seq_number || meta.seq_number) ? `#${report.seq_number || meta.seq_number}` : '—')}</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">2. Objet de la mission</div>
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr><th style="width:28px">#</th><th>Nature</th><th>Objet / objectif</th><th style="width:110px">Destination</th></tr>
+          </thead>
+          <tbody>
+            ${snapshot.missions.map((mission, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${escapeHtml(mission.nature || '—')}</td>
+                <td>${escapeHtml(mission.objectif || '—')}</td>
+                <td>${escapeHtml(mission.destination_province_label || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">3. Déroulement de la mission</div>
+      <div class="section-body">
+        <div class="grid-2" style="margin-bottom:6px;">
+          <div class="field"><strong>Nombre total de jours de déplacement</strong><span>${snapshot.totalTravelDays}</span></div>
+          <div class="field"><strong>Total nuitées</strong><span>${snapshot.totalNights}</span></div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:24px">#</th>
+              <th>Nature</th>
+              <th>Objet</th>
+              <th style="width:100px">Période</th>
+              <th class="num" style="width:38px">Jrs</th>
+              <th class="num" style="width:40px">Nuitées</th>
+              <th class="num" style="width:62px">Taux</th>
+              <th class="num" style="width:70px">Frais mission</th>
+              <th class="num" style="width:76px">Frais à justifier</th>
+            </tr>
+          </thead>
+          <tbody>${missionRows}</tbody>
+        </table>
+        <div class="totals">
+          <table>
+            <tr><td>Total frais de mission</td><td class="num">${escapeHtml(formatCurrencyDisplay(snapshot.totalPerDiem))} USD</td></tr>
+            <tr><td>Total frais à justifier</td><td class="num">${escapeHtml(formatCurrencyDisplay(snapshot.totalJustificatifs))} USD</td></tr>
+            <tr class="highlight"><td>Total général</td><td class="num">${escapeHtml(formatCurrencyDisplay(snapshot.totalMission))} USD</td></tr>
+          </table>
+          <div class="note">
+            Les frais de mission correspondent au per diem calculé sur base des nuitées et du taux validé. Les frais à justifier sont payés à 100 % et doivent être couverts par les pièces justificatives au retour.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">4. Paiement à effectuer</div>
+      <div class="section-body pay-grid">
+        <div class="pay-card">
+          <h3>À payer avant mission</h3>
+          <div class="amount">${escapeHtml(formatCurrencyDisplay(snapshot.aPayer))} USD</div>
+          <small>80 % per diem + 100 % frais à justifier</small>
+        </div>
+        <div class="pay-card">
+          <h3>5. Solde au retour</h3>
+          <div class="amount">${escapeHtml(formatCurrencyDisplay(snapshot.soldeRetour))} USD</div>
+          <small>20 % du per diem après dépôt du rapport et des pièces</small>
+        </div>
+      </div>
+      <div class="amount-in-words">
+        <strong>Montant en lettres</strong>
+        ${escapeHtml(formatAmountInWords(snapshot.aPayer))}
+      </div>
+    </div>
+
+    <div class="sign-grid">
+      <div class="signature-box engagement-box">
+        <h4>6. Engagement du missionnaire</h4>
+        <div class="note">Je m'engage à soumettre le rapport de mission et les pièces justificatives endéans 7 jours après le retour.</div>
+        <div class="signature-line">Nom et signature du missionnaire</div>
+      </div>
+      <div class="signature-box approval-box">
+        <h4>7. Approbation</h4>
+        <div class="note">Visa et approbation du comptable / autorité habilitée.</div>
+        <div class="signature-line">Nom, qualité et signature</div>
+      </div>
+      <div class="signature-box visa-box">
+        <h4>8. Visa RAF / Coordination</h4>
+        <div class="note">Espace réservé au visa administratif final, selon le circuit interne de validation.</div>
+        <div class="stamp-placeholder">Cachet officiel</div>
+        <div class="signature-line">Nom, fonction et cachet</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    window.onload = function () { window.print(); };
+  <\/script>
+</body>
+</html>`;
+}
+
+function openLiquidationPrintWindow(snapshot) {
+  const printWindow = window.open('', '_blank', 'width=900,height=1200');
+  if (!printWindow) {
+    showToast('Autorisez les fenêtres pop-up pour imprimer le bordereau.');
+    return;
+  }
+  printWindow.document.open();
+  printWindow.document.write(buildLiquidationPrintHtml(snapshot));
+  printWindow.document.close();
+}
+
+async function printCurrentLiquidationBordereau() {
+  if (!CURRENT_COMPLETION_REPORT_ID) { showToast('Ouvrez d\'abord une mission à compléter.'); return; }
+  let report = PENDING_REPORTS_CACHE.find((entry) => entry.id === CURRENT_COMPLETION_REPORT_ID);
+  if (!report) { showToast('Rapport introuvable.'); return; }
+  report = await ensureLiquidationIdentity(report);
+  const updatedMissions = collectCompletionMissions(report);
+  openLiquidationPrintWindow(buildLiquidationSnapshot(report, updatedMissions));
+}
+
+async function printLiquidationBordereau(reportId) {
+  let report = ACTIVE_REPORTS_CACHE.find((entry) => entry.id === reportId)
+    || PENDING_REPORTS_CACHE.find((entry) => entry.id === reportId)
+    || USER_MISSIONS_CACHE.find((entry) => entry.id === reportId);
+  if (!report) { showToast('Bordereau introuvable pour ce rapport.'); return; }
+  report = await ensureLiquidationIdentity(report);
+  openLiquidationPrintWindow(buildLiquidationSnapshot(report));
+}
+
+function renderSelectedMissionsTable() {
+  const data = buildData();
+  const body = document.getElementById('selected-missions-body');
+  const metrics = document.getElementById('selected-missions-metrics');
+  const pLabel = getProvinceData(data.meta.province)?.label || data.meta.province || '—';
+  const totM = data.missions.reduce((s, m) => s + Number(m.montant_usd||0), 0);
+  const totAF = data.missions.reduce((s, m) => s + Number(m.autres_frais_usd||0), 0);
+  const totT = data.missions.reduce((s, m) => s + Number(m.total_usd||0), 0);
+  const totA = data.missions.reduce((s, m) => s + Number(m.avance_usd||0), 0);
+  const totS = data.missions.reduce((s, m) => s + Number(m.solde_usd||0), 0);
+
+  metrics.innerHTML = [
+    { label: 'Province', value: pLabel, icon: 'bi-geo-alt' },
+    { label: 'Missions', value: String(data.missions.length), icon: 'bi-list-check' },
+    { label: 'Participants', value: String(data.meta.total_participants || 0), icon: 'bi-people' },
+    { label: 'Total général USD', value: formatCurrencyDisplay(totT), icon: 'bi-cash-stack' },
+    { label: 'Solde total USD', value: formatCurrencyDisplay(totS), icon: 'bi-wallet2' },
+    { label: 'Avance totale (80%)', value: formatCurrencyDisplay(totA), icon: 'bi-cash-coin' },
+  ].map((item) => `
+    <div class="col-6 col-md">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body py-2 px-3">
+          <div class="text-muted small fw-semibold text-uppercase" style="font-size:.68rem;letter-spacing:.8px">${escapeHtml(item.label)}</div>
+          <span class="stat-value">${escapeHtml(item.value)}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  if (!data.missions.length) {
+    body.innerHTML = '<tr><td colspan="21" class="text-center text-muted py-4">Aucune mission sélectionnée.</td></tr>';
+    return;
+  }
+  body.innerHTML = data.missions.map((m) => `
+    <tr>
+      <td>${escapeHtml(m.numero||'—')}</td><td>${escapeHtml(pLabel)}</td>
+      <td>${escapeHtml(m.nature||'—')}</td><td>${escapeHtml(m.objectif||'—')}</td>
+      <td>${escapeHtml(m.destination_province_label||'—')}</td><td>${escapeHtml(m.territoire_label||'—')}</td><td>${escapeHtml(m.secteur_label||'—')}</td>
+      <td>${escapeHtml(m.date_debut||'—')}</td><td>${escapeHtml(m.date_fin||'—')}</td>
+      <td class="text-end">${Number(m.participants||0)}</td>
+      <td class="text-end">${m.nuitees||0}</td>
+      <td class="text-end">${escapeHtml(formatCurrencyDisplay(m.taux_per_diem))}</td>
+      <td>${escapeHtml(m.section||'—')}</td>
+      <td class="text-end">${m.hors_projet||0}</td><td class="text-end">${m.projet||0}</td>
+      <td class="text-end">${escapeHtml(formatCurrencyDisplay(m.montant_usd))}</td>
+      <td class="text-end">${escapeHtml(formatCurrencyDisplay(m.autres_frais_usd))}</td>
+      <td class="text-end fw-bold">${escapeHtml(formatCurrencyDisplay(m.total_usd))}</td>
+      <td class="text-end">${escapeHtml(formatCurrencyDisplay(m.avance_usd))}</td>
+      <td class="text-end">${escapeHtml(formatCurrencyDisplay(m.solde_usd))}</td>
+      <td class="small">${escapeHtml(m.observation||'')}</td>
+    </tr>
+  `).join('');
+}
+
+// ─── EXCEL EXPORT ──────────────────────────────────────────────────────────────
+function buildWorkbookCellXml(cell) {
+  if (!cell) return '<Cell><Data ss:Type="String"></Data></Cell>';
+  const type = cell.type || (typeof cell.value === 'number' ? 'Number' : 'String');
+  const style = cell.style ? ` ss:StyleID="${cell.style}"` : '';
+  const merge = Number.isInteger(cell.mergeAcross) && cell.mergeAcross > 0 ? ` ss:MergeAcross="${cell.mergeAcross}"` : '';
+  return `<Cell${style}${merge}><Data ss:Type="${type}">${escapeHtml(cell.value)}</Data></Cell>`;
+}
+
+function buildSelectedMissionsWorkbookXml(data) {
+  const pLabel = getProvinceData(data.meta.province)?.label || data.meta.province || '—';
+  const rows = [
+    [{ value: 'PNDA-SE - Budget des missions', style: 'title', mergeAcross: 20 }],
+    [{ value: 'Province', style: 'header' }, { value: pLabel, style: 'text' }],
+    [{ value: 'Trimestre', style: 'header' }, { value: `${data.meta.trimestre||''} ${data.meta.annee||''}`.trim(), style: 'text' }],
+    [{ value: 'Rapporteur', style: 'header' }, { value: data.meta.rapporteur||'—', style: 'text' }],
+    [{ value: 'Date', style: 'header' }, { value: data.meta.date_generation||'—', style: 'text' }],
+    [],
+    [{ value:'N°',style:'header' },{ value:'Province',style:'header' },{ value:'Mission',style:'header' },{ value:'Objectif',style:'header' },
+     { value:'Prov. dest.',style:'header' },{ value:'Territoire',style:'header' },{ value:'Secteur',style:'header' },
+     { value:'Début',style:'header' },{ value:'Fin prévue',style:'header' },{ value:'Participants',style:'header' },{ value:'Nuitées',style:'header' },
+     { value:'Taux/nuit',style:'header' },
+     { value:'Section',style:'header' },{ value:'Hors projet',style:'header' },{ value:'Projet',style:'header' },
+     { value:'Montant USD',style:'header' },{ value:'Autres frais',style:'header' },{ value:'Total USD',style:'header' },
+     { value:'Avance USD',style:'header' },{ value:'Solde USD',style:'header' },
+     { value:'Observation',style:'header' }],
+    ...data.missions.map((m) => [
+      { value:m.numero||'—',style:'text' },{ value:pLabel,style:'text' },{ value:m.nature||'—',style:'text' },
+      { value:m.objectif||'—',style:'text' },
+      { value:m.destination_province_label||'—',style:'text' },{ value:m.territoire_label||'—',style:'text' },{ value:m.secteur_label||'—',style:'text' },
+      { value:m.date_debut||'—',style:'text' },{ value:m.date_fin||'—',style:'text' },
+      { value:Number(m.participants||0),type:'Number',style:'integer' },
+      { value:Number(m.nuitees||0),type:'Number',style:'integer' },
+      { value:Number(m.taux_per_diem||0),type:'Number',style:'currency' },
+      { value:m.section||'—',style:'text' },
+      { value:Number(m.hors_projet||0),type:'Number',style:'integer' },{ value:Number(m.projet||0),type:'Number',style:'integer' },
+      { value:Number(m.montant_usd||0),type:'Number',style:'currency' },
+      { value:Number(m.autres_frais_usd||0),type:'Number',style:'currency' },
+      { value:Number(m.total_usd||0),type:'Number',style:'currency' },
+      { value:Number(m.avance_usd||0),type:'Number',style:'currency' },
+      { value:Number(m.solde_usd||0),type:'Number',style:'currency' },
+      { value:m.observation||'',style:'text' }
+    ])
+  ];
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>','<?mso-application progid="Excel.Sheet"?>',
+    '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"',
+    ' xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:html="http://www.w3.org/TR/REC-html40">',
+    '<Styles>',
+    '<Style ss:ID="Default"><Font ss:FontName="Calibri" ss:Size="11"/></Style>',
+    '<Style ss:ID="title"><Font ss:Bold="1" ss:Size="14" ss:Color="#123524"/><Interior ss:Color="#DCEEE2" ss:Pattern="Solid"/></Style>',
+    '<Style ss:ID="header"><Alignment ss:Horizontal="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Color="#123524"/><Interior ss:Color="#B8D7C1" ss:Pattern="Solid"/></Style>',
+    '<Style ss:ID="text"><Alignment ss:WrapText="1"/></Style>',
+    '<Style ss:ID="integer"><Alignment ss:Horizontal="Right"/><NumberFormat ss:Format="0"/></Style>',
+    '<Style ss:ID="currency"><Alignment ss:Horizontal="Right"/><NumberFormat ss:Format="# ##0,00"/></Style>',
+    '</Styles>',
+    '<Worksheet ss:Name="Budget_Missions"><Table>',
+    rows.map((r) => `<Row>${r.map((c) => buildWorkbookCellXml(c)).join('')}</Row>`).join(''),
+    '</Table></Worksheet></Workbook>'
+  ].join('');
+}
+
+async function exportSelectedMissionsExcel() {
+  const data = buildData();
+  const pk = (data.meta.province||'province').replace(/\s/g,'_');
+  const content = buildSelectedMissionsWorkbookXml(data);
+  const fname = `PNDA_budget_missions_${data.meta.trimestre}_${data.meta.annee}_${pk}.xls`;
+  if (window.PNDA_DESKTOP?.saveFile) {
+    const r = await window.PNDA_DESKTOP.saveFile({ title:'Enregistrer Excel', defaultPath:fname, filters:[{name:'Excel',extensions:['xls']}], content });
+    if (!r.canceled) showToast(`✓ Excel enregistré : ${r.filePath}`);
+    return;
+  }
+  const blob = new Blob([content], { type:'application/vnd.ms-excel;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = fname; a.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ Tableau Excel téléchargé.');
+}
+
+function printSelectedMissions() { renderSelectedMissionsTable(); window.print(); }
+
+// ─── JSON OPERATIONS ──────────────────────────────────────────────────────────
+function stableStringify(v) {
+  if (Array.isArray(v)) return `[${v.map(stableStringify).join(',')}]`;
+  if (v && typeof v === 'object') return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${stableStringify(v[k])}`).join(',')}}`;
+  return JSON.stringify(v);
+}
+
+async function persistReport(data) {
+  const fpKey = 'PNDA_LAST_REPORT_FINGERPRINT';
+  const fp = stableStringify(data);
+  if (sessionStorage.getItem(fpKey) === fp) return;
+  try {
+    const now = new Date().toISOString();
+    const existing = CURRENT_EDIT_REPORT_ID ? USER_MISSIONS_CACHE.find((report) => report.id === CURRENT_EDIT_REPORT_ID) : null;
+    const seq = existing?.seq_number || await getNextSeqNumber(data.meta.province, data.meta.trimestre, data.meta.annee);
+    const payload = {
+      saved_at: now,
+      source: 'formulaire-html',
+      province: data.meta.province,
+      province_label: data.meta.province_label,
+      province_code: data.meta.province_code,
+      trimestre: data.meta.trimestre,
+      annee: data.meta.annee,
+      rapporteur: data.meta.rapporteur,
+      rapporteur_role: data.meta.role,
+      date_generation: data.meta.date_generation || null,
+      missions: data.missions,
+      meta: {
+        ...(existing?.meta || {}),
+        ...data.meta,
+        seq_number: seq,
+        workflow_comment: null,
+        last_resubmitted_at: existing ? now : null,
+        last_resubmitted_by: existing ? data.meta.rapporteur : null
+      },
+      seq_number: seq,
+      statut: WORKFLOW_STATUS.EN_ATTENTE,
+      returned_by: null,
+      returned_at: null,
+      activated_by: null,
+      activated_at: null,
+      completed_by: null,
+      completed_at: null
+    };
+
+    if (existing) {
+      const { error } = await db.from('reports').update(payload).eq('id', CURRENT_EDIT_REPORT_ID);
+      if (error) throw error;
+    } else {
+      const rid = `${Date.now()}-${Math.random().toString(16).slice(2,8)}`;
+      const { error } = await db.from('reports').insert({ id: rid, ...payload });
+      if (error) {
+        if (error.code === 'PGRST204' || (error.message && error.message.includes('statut'))) {
+          const fallbackPayload = { id: rid, ...payload };
+          delete fallbackPayload.statut;
+          delete fallbackPayload.returned_by;
+          delete fallbackPayload.returned_at;
+          delete fallbackPayload.activated_by;
+          delete fallbackPayload.activated_at;
+          delete fallbackPayload.completed_by;
+          delete fallbackPayload.completed_at;
+          const { error: e2 } = await db.from('reports').insert(fallbackPayload);
+          if (e2) throw e2;
+        } else {
+          throw error;
+        }
+      }
+    }
+    sessionStorage.setItem(fpKey, fp);
+    window.dispatchEvent(new Event('PNDA_DATA_UPDATED'));
+    return true;
+  } catch (e) { console.error(e); showToast('Erreur de sauvegarde.'); return false; }
+}
+
+async function enregistrerMissions() {
+  const data = buildData();
+  if (!data.missions.length) { showToast('Ajoutez au moins une mission.'); return; }
+  const btn = document.getElementById('btn-enregistrer');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enregistrement…';
+  try {
+    const ok = await persistReport(data);
+    if (ok) {
+      showToast(CURRENT_EDIT_REPORT_ID ? '✓ Mission corrigée et renvoyée au comptable.' : '✓ Mission soumise en attente de validation financière !');
+      const user = document.getElementById('f-rapporteur').value;
+      await loadUserArchive(user, data.meta.province);
+      updateNotifBadge();
+      clearCurrentEditContext();
+      // Reset form for next mission entry
+      sessionStorage.removeItem('PNDA_LAST_REPORT_FINGERPRINT');
+    }
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> Enregistrer';
+  }
+}
+
+function updateNotifBadge() {
+  const count = CURRENT_USER_ROLE === 'comptable' ? getComptableNotificationCount() : getMissionnaireNotificationCount();
+  const badge = document.getElementById('notif-badge');
+  if (!badge) return;
+  if (count > 0) { badge.style.display = ''; badge.textContent = count; }
+  else { badge.style.display = 'none'; }
+}
+
+// ─── SEQ NUMBER ────────────────────────────────────────────────────────────────
+async function getNextSeqNumber(province, trimestre, annee) {
+  try {
+    const { data, error } = await db.from('reports').select('seq_number')
+      .eq('province', province).eq('trimestre', trimestre).eq('annee', annee)
+      .order('seq_number', { ascending: false }).limit(1);
+    if (error) return 1;
+    return ((data?.[0]?.seq_number) || 0) + 1;
+  } catch { return 1; }
+}
+
+// ─── ARCHIVE ──────────────────────────────────────────────────────────────────
+async function loadUserArchive(rapporteur, province) {
+  const section = document.getElementById('archive-section');
+  const tbody   = document.getElementById('archive-tbody');
+  if (!section || !tbody) return;
+  
+  const prov = province || document.getElementById('f-province')?.value;
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Chargement…</td></tr>';
+  section.style.display = '';
+  
+  // Fonction d'échappement locale
+  const escapeHtml = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  
+  try {
+    let query = db.from('reports')
+      .select('id, saved_at, trimestre, annee, seq_number, liquidation_seq_number, liquidation_number, liquidation_printed_at, liquidation_printed_by, meta, missions, statut, rapporteur')
+      .eq('province', prov)
+      .order('saved_at', { ascending: false })
+      .limit(50);
+    
+    if (CURRENT_USER_ROLE !== 'comptable') {
+      query = query.eq('rapporteur', rapporteur);
+    }
+    
+    let { data, error } = await query;
+    
+    if (error && error.message && error.message.includes('statut')) {
+      console.warn('Colonne statut manquante, utilisation du fallback');
+      const fallbackQuery = db.from('reports')
+        .select('id, saved_at, trimestre, annee, seq_number, meta, missions, rapporteur')
+        .eq('province', prov)
+        .order('saved_at', { ascending: false })
+        .limit(50);
+      
+      if (CURRENT_USER_ROLE !== 'comptable') {
+        fallbackQuery.eq('rapporteur', rapporteur);
+      }
+      
+      const fallback = await fallbackQuery;
+      if (fallback.error) throw fallback.error;
+      data = fallback.data;
+    } else if (error) {
+      throw error;
+    }
+    
+    if (CURRENT_USER_ROLE === 'comptable') {
+      data = (data || []).filter((report) => {
+        const statut = report.statut || WORKFLOW_STATUS.ACTIVEE;
+        return statut !== WORKFLOW_STATUS.EN_ATTENTE;
+      });
+    }
+    
+    if (!data?.length) { 
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Aucune mission enregistrée.</td></tr>'; 
+      USER_MISSIONS_CACHE = [];
+      return; 
+    }
+
+    const STATUT_BADGE = {
+      en_attente: '<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>En attente</span>',
+      retournee:  '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-arrow-return-left me-1"></i>Retournée</span>',
+      activee:    '<span class="badge bg-success"><i class="bi bi-lightning-charge-fill me-1"></i>Activée</span>',
+      realisee:   '<span class="badge bg-secondary"><i class="bi bi-check2-all me-1"></i>Réalisée</span>'
+    };
+
+    tbody.innerHTML = data.map((r) => {
+      const nb = r.missions?.length || r.meta?.total_missions || 0;
+      const tot = r.meta?.total_general_usd || r.meta?.total_montant_usd || '0.00';
+      const st = r.statut || WORKFLOW_STATUS.ACTIVEE;
+      const badge = STATUT_BADGE[st] || STATUT_BADGE.activee;
+      const rid = escapeHtml(r.id);
+      const workflowComment = escapeHtml(r.meta?.workflow_comment || '');
+      const litige = calculateReportLitige(r);
+      const periode = escapeHtml(`${r.trimestre || r.meta?.trimestre || ''} ${r.annee || r.meta?.annee || ''}`.trim());
+      
+      let actions = '';
+      if (CURRENT_USER_ROLE !== 'comptable') {
+        if (st === WORKFLOW_STATUS.RETOURNEE) {
+          actions = `<button class="btn btn-warning btn-sm me-1" onclick="restoreReport('${rid}')"><i class="bi bi-pencil-fill me-1"></i>Corriger</button>
+                     ${workflowComment ? `<div class="small text-muted mt-1 feedback-comment"><i class="bi bi-chat-left-text me-1"></i>${workflowComment}</div>` : ''}`;
+        } else if (st === WORKFLOW_STATUS.EN_ATTENTE) {
+          actions = '<span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>En attente de validation</span>';
+        } else if (st === WORKFLOW_STATUS.ACTIVEE) {
+          actions = `<span class="text-success small"><i class="bi bi-lightning-charge-fill me-1"></i>Mission en cours · Litige ${escapeHtml(formatCurrencyDisplay(litige))} USD</span>`;
+        } else if (st === WORKFLOW_STATUS.REALISEE) {
+          actions = '<span class="text-muted small"><i class="bi bi-check2-all me-1"></i>Mission terminée</span>';
+        } else {
+          actions = `<span class="text-muted small">Statut inconnu</span>`;
+        }
+      } else {
+        if (st === WORKFLOW_STATUS.EN_ATTENTE) {
+          actions = '<span class="text-muted small">À analyser</span>';
+        } else if (st === WORKFLOW_STATUS.RETOURNEE) {
+          actions = '<span class="text-warning small">En attente de correction</span>';
+        } else if (st === WORKFLOW_STATUS.ACTIVEE) {
+          actions = `
+            <button class="btn btn-outline-primary btn-sm me-1" onclick="printLiquidationBordereau('${rid}')"><i class="bi bi-printer me-1"></i>Bordereau</button>
+            <button class="btn btn-outline-success btn-sm" onclick="signalerMissionRealisee('${rid}')"><i class="bi bi-check2-circle me-1"></i>Clôturer</button>
+            <div class="small text-muted mt-1">Litige ${escapeHtml(formatCurrencyDisplay(litige))} USD</div>`;
+        } else if (st === WORKFLOW_STATUS.REALISEE) {
+          actions = `
+            <button class="btn btn-outline-primary btn-sm me-1" onclick="printLiquidationBordereau('${rid}')"><i class="bi bi-printer me-1"></i>Bordereau</button>
+            <span class="text-success small"><i class="bi bi-check2-all me-1"></i>Clôturée</span>`;
+        }
+      }
+      
+      return `<tr>
+        <td>${escapeHtml(r.seq_number ? '#'+r.seq_number : '—')}</td>
+        <td>${new Date(r.saved_at).toLocaleDateString('fr-FR')}</td>
+        <td>${periode || '—'}</td>
+        <td><span class="badge bg-secondary">${nb}</span></td>
+        <td class="text-end">${escapeHtml(formatCurrencyDisplay(Number(tot)))} USD</td>
+        <td>${badge}</td>
+        <td>${actions}</td>
+      </tr>`;
+    }).join('');
+    
+    USER_MISSIONS_CACHE = data;
+    renderWorkflowAlerts();
+    updateNotifBadge();
+    
+  } catch (e) { 
+    console.error('Erreur loadUserArchive:', e); 
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Erreur de chargement.</td></tr>'; 
+  }
+}
+
+async function restoreReport(reportId) {
+  const report = USER_MISSIONS_CACHE.find((r) => r.id === reportId);
+  if (!report?.missions?.length) { showToast('Rapport introuvable ou vide.'); return; }
+  CURRENT_EDIT_REPORT_ID = reportId;
+  document.getElementById('missions-container').innerHTML = '';
+  missionCount = 0;
+
+  for (const m of report.missions) {
+    addMission();
+    await new Promise((r) => setTimeout(r, 0));
+    const row = document.querySelector('#missions-container .mission-row:last-child');
+    if (!row) continue;
+    const catSel = row.querySelector('.sel-nature-cat');
+    if (catSel) { catSel.value = m.category || 'implementation'; catSel.dispatchEvent(new Event('change')); }
+    await new Promise((r) => setTimeout(r, 0));
+    if ((m.category || 'implementation') !== 'autre') {
+      const misSel = row.querySelector('.sel-mission');
+      if (misSel && m.mission_reference_id) { misSel.value = m.mission_reference_id; misSel.dispatchEvent(new Event('change')); }
+    } else {
+      const inp = row.querySelector('.inp-nature-autre'); if (inp) inp.value = m.nature || '';
+    }
+    const set = (cls, val) => { const el = row.querySelector(cls); if (el) el.value = val ?? ''; };
+    set('.inp-objectif-txt', m.objectif); set('.sel-section', m.section);
+    set('.inp-date-debut', m.date_debut || m.date || '');
+    set('.inp-date-fin',   m.date_fin || '');
+    set('.inp-participants', m.participants ?? 1);
+    set('.inp-hors-projet', m.hors_projet ?? 0); set('.inp-projet', m.projet ?? 1);
+    set('.inp-montant', m.montant_usd ?? 0); set('.inp-avance',  m.avance_usd ?? 0);
+    set('.inp-autres-frais', m.autres_frais_usd ?? 0);
+    set('.inp-nuitees', m.nuitees ?? 0); set('.inp-taux', m.taux_per_diem ?? 0);
+    set('.inp-total', m.total_usd ?? m.montant_usd ?? 0);
+    set('.inp-observation', m.observation || '');
+    // Restore destination province → territoire → secteur
+    if (m.destination_province) {
+      const dpSel = row.querySelector('.sel-dest-province');
+      if (dpSel) { dpSel.value = m.destination_province; dpSel.dispatchEvent(new Event('change')); }
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    if (m.territoire_id) {
+      const tSel = row.querySelector('.sel-territoire');
+      if (tSel) { tSel.value = m.territoire_id; tSel.dispatchEvent(new Event('change')); }
+      await new Promise((r) => setTimeout(r, 0));
+      if (m.secteur_id) { const sSel = row.querySelector('.sel-secteur'); if (sSel) sSel.value = m.secteur_id; }
+    }
+    recalcMissionFinancials(row);
+  }
+  const meta = report.meta || {};
+  const sId = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+  sId('f-trimestre', meta.trimestre || report.trimestre);
+  sId('f-annee', meta.annee || report.annee);
+  sId('f-role', meta.role);
+  sId('f-date', meta.date_generation);
+  renderSelectedMissionsTable();
+  updateFeedbackAlert(getWorkflowComment(report), 'Commentaires du comptable');
+  showToast('✓ Rapport restauré.');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── CLÔTURE COMPTABLE ──────────────────────────────────────────────────────
+async function signalerMissionRealisee(reportId) {
+  if (!confirm('Confirmer que cette mission est effectuée ? Le litige sera remis à 0 USD et la mission passera en statut "Réalisée".')) {
+    return;
+  }
+  
+  try {
+    const session = getSession();
+    const report = USER_MISSIONS_CACHE.find((entry) => entry.id === reportId) 
+                || ACTIVE_REPORTS_CACHE.find((entry) => entry.id === reportId);
+    
+    if (!report) { 
+      showToast('Mission introuvable.'); 
+      return; 
+    }
+    
+    // Mettre le solde à 0 pour toutes les missions
+    const missions = (report.missions || []).map((mission) => ({ 
+      ...mission, 
+      solde_usd: 0,
+      avance_usd: mission.total_usd || mission.montant_usd || 0
+    }));
+    
+    const updatedMeta = {
+      ...(report.meta || {}),
+      total_solde_usd: '0.00',
+      litige_usd: '0.00',
+      total_avance_usd: missions.reduce((s, m) => s + Number(m.avance_usd || 0), 0).toFixed(2)
+    };
+    
+    const { error } = await db.from('reports').update({
+      missions,
+      meta: updatedMeta,
+      statut: WORKFLOW_STATUS.REALISEE,
+      completed_by: session?.user || null,
+      completed_at: new Date().toISOString()
+    }).eq('id', reportId);
+    
+    if (error) throw error;
+    
+    showToast('✓ Mission clôturée. Litige remis à 0 USD.');
+    
+    // Forcer la mise à jour des caches
+    notifyReportDataChanged();
+    
+    // Recharger les listes
+    await loadActiveMissions(session?.province);
+    await loadUserArchive(session?.user, session?.province);
+    
+    // Mettre à jour l'interface
+    renderWorkflowAlerts();
+    updateNotifBadge();
+    
+  } catch (e) { 
+    console.error('Erreur dans signalerMissionRealisee:', e); 
+    showToast('Erreur lors de la mise à jour : ' + (e.message || ''));
+  }
+}
+
+
+// ─── COMPTABLE — MISSIONS EN ATTENTE ─────────────────────────────────────────
+async function loadPendingMissions(province) {
+  const tbody = document.getElementById('pending-tbody');
+  const pendingSection = document.getElementById('comptable-pending-section');
+  if (!tbody) return;
+  const prov = province || getSession()?.province;
+  if (pendingSection) pendingSection.style.display = '';
+  tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Chargement…</td></tr>';
+  try {
+    const { data, error } = await db.from('reports')
+      .select('id, saved_at, trimestre, annee, seq_number, liquidation_seq_number, liquidation_number, liquidation_printed_at, liquidation_printed_by, meta, missions, rapporteur, statut')
+      .eq('province', prov)
+      .eq('statut', 'en_attente')
+      .order('saved_at', { ascending: true })
+      .limit(100);
+    if (error) {
+      // Migration not yet applied — statut column missing
+      console.warn('statut column not found (migration pending):', error.message);
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-warning py-4"><i class="bi bi-exclamation-triangle me-1"></i>Migration V5 non appliquée. Exécutez migration_v5_statut_roles.sql dans Supabase.</td></tr>';
+      updatePendingSectionVisibility();
+      return;
+    }
+    PENDING_REPORTS_CACHE = data || [];
+    if (!PENDING_REPORTS_CACHE.length) {
+      tbody.innerHTML = '';
+      updatePendingSectionVisibility();
+      renderWorkflowAlerts();
+      updateNotifBadge();
+      return;
+    }
+    updatePendingSectionVisibility();
+    tbody.innerHTML = PENDING_REPORTS_CACHE.map((r) => {
+      const nb = r.missions?.length || 0;
+      const rid = escapeHtml(r.id);
+      return `<tr>
+        <td>${escapeHtml(new Date(r.saved_at).toLocaleDateString('fr-FR'))}</td>
+        <td>${escapeHtml(r.rapporteur || r.meta?.rapporteur || '—')}</td>
+        <td>${escapeHtml(`${r.trimestre||r.meta?.trimestre||''} ${r.annee||r.meta?.annee||''}`.trim())}</td>
+        <td><span class="badge bg-secondary">${nb}</span></td>
+        <td>
+          <button class="btn btn-gold btn-sm" onclick="openFinancialCompletion('${rid}')">
+            <i class="bi bi-cash-coin me-1"></i>Compléter
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+    renderWorkflowAlerts();
+    updateNotifBadge();
+  } catch (e) { console.error(e); tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Erreur de chargement.</td></tr>'; }
+}
+
+async function loadActiveMissions(province) {
+  const tbody = document.getElementById('active-tbody');
+  const activeSection = document.getElementById('comptable-active-section');
+  
+  if (!tbody) return;
+  const prov = province || getSession()?.province;
+  
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Chargement…</td></tr>';
+  
+  try {
+    const { data, error } = await db.from('reports')
+      .select('id, saved_at, trimestre, annee, seq_number, liquidation_seq_number, liquidation_number, liquidation_printed_at, liquidation_printed_by, meta, missions, rapporteur, statut')
+      .eq('province', prov)
+      .eq('statut', WORKFLOW_STATUS.ACTIVEE)
+      .order('saved_at', { ascending: false })
+      .limit(100);
+    
+    if (error) {
+      if (error.message && error.message.includes('statut')) {
+        console.warn('Colonne statut manquante, utilisation du fallback');
+        const { data: fallbackData } = await db.from('reports')
+          .select('id, saved_at, trimestre, annee, seq_number, meta, missions, rapporteur')
+          .eq('province', prov)
+          .order('saved_at', { ascending: false })
+          .limit(100);
+        
+        ACTIVE_REPORTS_CACHE = (fallbackData || []).filter(r => 
+          (r.statut || WORKFLOW_STATUS.ACTIVEE) === WORKFLOW_STATUS.ACTIVEE
+        );
+      } else {
+        throw error;
+      }
+    } else {
+      ACTIVE_REPORTS_CACHE = data || [];
+    }
+    
+    if (!ACTIVE_REPORTS_CACHE.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-check2-circle me-1 text-success"></i>Aucune mission activée en cours.</td></tr>';
+      if (activeSection) activeSection.style.display = 'none';
+    } else {
+      if (activeSection) activeSection.style.display = '';
+      
+      tbody.innerHTML = ACTIVE_REPORTS_CACHE.map((report) => {
+        const rid = escapeHtml(report.id);
+        const litige = calculateReportLitige(report);
+        const rapporteur = escapeHtml(report.rapporteur || report.meta?.rapporteur || '—');
+        const periode = escapeHtml(`${report.trimestre||report.meta?.trimestre||''} ${report.annee||report.meta?.annee||''}`.trim());
+        const nbMissions = String(report.missions?.length || 0);
+        const litigeFormatted = formatCurrencyDisplay(litige);
+        
+        return `<tr>
+          <td>${new Date(report.saved_at).toLocaleDateString('fr-FR')}</td>
+          <td>${rapporteur}</td>
+          <td>${periode}</td>
+          <td><span class="badge bg-secondary">${nbMissions}</span></td>
+          <td><span class="badge ${litige > 0 ? 'bg-warning text-dark' : 'bg-success'}">${litigeFormatted}</span></td>
+          <td class="text-nowrap">
+            <button class="btn btn-outline-primary btn-sm me-1" onclick="printLiquidationBordereau('${rid}')"><i class="bi bi-printer me-1"></i>Bordereau</button>
+            <button class="btn btn-outline-success btn-sm" onclick="signalerMissionRealisee('${rid}')"><i class="bi bi-check2-circle me-1"></i>Clôturer</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+    
+    renderWorkflowAlerts();
+    updateNotifBadge();
+    
+  } catch (e) {
+    console.error('Erreur loadActiveMissions:', e);
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Erreur de chargement.</td></tr>';
+  }
+}
+
+// ─── COMPTABLE — COMPLÉTION FINANCIÈRE ───────────────────────────────────────
+function openFinancialCompletion(reportId) {
+  const report = PENDING_REPORTS_CACHE.find((r) => r.id === reportId);
+  if (!report) { showToast('Rapport introuvable.'); return; }
+  CURRENT_COMPLETION_REPORT_ID = reportId;
+
+  const infoEl = document.getElementById('completion-report-info');
+  if (infoEl) {
+    const prov = report.meta?.province_label || report.province || '—';
+    const per  = `${report.trimestre||report.meta?.trimestre||''} ${report.annee||report.meta?.annee||''}`.trim();
+    const rap  = report.rapporteur || report.meta?.rapporteur || '—';
+    infoEl.textContent = `Province : ${prov} · Période : ${per} · Missionnaire : ${rap}`;
+  }
+
+  const listEl = document.getElementById('completion-missions-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  const commentEl = document.getElementById('completion-comment');
+  if (commentEl) commentEl.value = getWorkflowComment(report);
+
+  (report.missions || []).forEach((m, i) => {
+    const div = document.createElement('div');
+    div.className = 'completion-mission-card';
+    div.dataset.missionIdx = i;
+    const tauxVal  = Number(m.taux_per_diem || 0).toFixed(2);
+    const montant  = Number(m.montant_usd || 0).toFixed(2);
+    const section  = escapeHtml(m.section || '');
+    const horsProj = Number(m.hors_projet || 0);
+    const projet   = Number(m.projet ?? 1);
+    const avance   = Number(m.avance_usd || 0).toFixed(2);
+    const autres   = Number(m.autres_frais_usd || 0).toFixed(2);
+    div.innerHTML = `
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="step-num" style="width:24px;height:24px;font-size:.7rem">${i+1}</span>
+        <strong class="text-uppercase" style="color:var(--pnda-green);font-size:.88rem">Mission n° ${i+1}</strong>
+      </div>
+      <div class="readonly-section mb-2">
+        <strong>${escapeHtml(m.nature || '—')}</strong>
+        <div class="row g-2 mt-1">
+          <div class="col-md-6"><span class="form-label-sm">Objectif :</span> ${escapeHtml(m.objectif || '—')}</div>
+          <div class="col-md-6"><span class="form-label-sm">Destination :</span> ${escapeHtml(m.destination_province_label || '—')} ${m.territoire_label ? '/ '+escapeHtml(m.territoire_label) : ''}</div>
+          <div class="col-md-3"><span class="form-label-sm">Début :</span> ${escapeHtml(m.date_debut || '—')}</div>
+          <div class="col-md-3"><span class="form-label-sm">Fin prévue :</span> ${escapeHtml(m.date_fin || '—')}</div>
+          <div class="col-md-3"><span class="form-label-sm">Participants :</span> <strong>${Number(m.participants || 0)}</strong></div>
+          <div class="col-md-3"><span class="form-label-sm">Nuitées :</span> <strong>${m.nuitees || 0}</strong></div>
+          <div class="col-md-3"><span class="form-label-sm">Taux/nuit estimé :</span> <strong>${escapeHtml(formatCurrencyDisplay(Number(tauxVal)))}</strong> USD</div>
+        </div>
+      </div>
+      <div class="completion-financial-section">
+        <p class="form-label-sm mb-2"><i class="bi bi-cash-coin me-1" style="color:var(--pnda-gold)"></i>Données financières à renseigner par le comptable</p>
+        <div class="row g-2">
+          <div class="col-md-3">
+            <label class="form-label form-label-sm">Taux/nuit USD <span style="color:var(--pnda-gold)">*</span></label>
+            <input type="number" class="form-control form-control-sm cf-taux" value="${tauxVal}" min="0" step="0.01" data-auto-montant="${m.nuitees||0}">
+            <small class="text-muted">Valeur calculée : modifiable si besoin</small>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label form-label-sm">Montant mission USD</label>
+            <input type="number" class="form-control form-control-sm cf-montant" value="${montant}" min="0" step="0.01" readonly style="background:#f0ede0;font-weight:600">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label form-label-sm">Autres frais USD</label>
+            <input type="number" class="form-control form-control-sm cf-autres-frais" value="${autres}" min="0" step="0.01">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label form-label-sm">Total USD</label>
+            <input type="number" class="form-control form-control-sm cf-total" value="${(Number(montant)+Number(autres)).toFixed(2)}" readonly style="background:#e8f5e9;font-weight:700">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label form-label-sm">Avance USD <span style="color:var(--pnda-gold)">*</span></label>
+            <input type="number" class="form-control form-control-sm cf-avance" value="${avance}" min="0" step="0.01">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label form-label-sm">Solde USD</label>
+            <input type="number" class="form-control form-control-sm cf-solde" value="${(Number(montant)+Number(autres)-Number(avance)).toFixed(2)}" readonly style="background:#fff3cd;font-weight:600">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label form-label-sm">Section PNDA <span style="color:var(--pnda-gold)">*</span></label>
+            <select class="form-select form-select-sm cf-section">
+              <option value="">—</option>
+              ${SECTIONS_PNDA.map((s) => `<option value="${s.val}" ${section===s.val?'selected':''}>${s.label}</option>`).join('')}
+            </select>
+          </div>
+          <div class="col-md-1">
+            <label class="form-label form-label-sm">Hors proj.</label>
+            <input type="number" class="form-control form-control-sm cf-hors-projet" value="${horsProj}" min="0">
+          </div>
+          <div class="col-md-1">
+            <label class="form-label form-label-sm">Projet</label>
+            <input type="number" class="form-control form-control-sm cf-projet" value="${projet}" min="0">
+          </div>
+        </div>
+      </div>
+    `;
+    // Auto-recalc when taux changes
+    const tauxInp   = div.querySelector('.cf-taux');
+    const montantInp = div.querySelector('.cf-montant');
+    const autresInp  = div.querySelector('.cf-autres-frais');
+    const totalInp   = div.querySelector('.cf-total');
+    const avanceInp  = div.querySelector('.cf-avance');
+    const soldeInp   = div.querySelector('.cf-solde');
+    const recalc = () => {
+      const nuits  = Number(tauxInp.dataset.autoMontant || 0);
+      const taux   = parseFloat(tauxInp.value) || 0;
+      const mont   = +(nuits * taux).toFixed(2);
+      montantInp.value = mont;
+      const autres = parseFloat(autresInp.value) || 0;
+      const total  = +(mont + autres).toFixed(2);
+      totalInp.value = total;
+      const av  = parseFloat(avanceInp.value) || 0;
+      soldeInp.value = +(total - av).toFixed(2);
+    };
+    tauxInp.addEventListener('input', recalc);
+    autresInp.addEventListener('input', recalc);
+    avanceInp.addEventListener('input', () => {
+      const total = parseFloat(totalInp.value) || 0;
+      const av    = parseFloat(avanceInp.value) || 0;
+      soldeInp.value = +(total - av).toFixed(2);
+    });
+    listEl.appendChild(div);
+  });
+
+  // Show completion section, scroll to it
+  const sect = document.getElementById('comptable-completion-section');
+  if (sect) { sect.style.display = ''; sect.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+}
+
+function closeFinancialCompletion() {
+  CURRENT_COMPLETION_REPORT_ID = null;
+  IS_SAVING_COMPLETION = false;
+  const sect = document.getElementById('comptable-completion-section');
+  if (sect) sect.style.display = 'none';
+  const commentEl = document.getElementById('completion-comment');
+  if (commentEl) commentEl.value = '';
+  setCompletionActionsDisabled(false);
+}
+
+async function returnMissionToMissionnaire() {
+  if (!CURRENT_COMPLETION_REPORT_ID) { showToast('Aucun rapport sélectionné.'); return; }
+  const comment = document.getElementById('completion-comment')?.value.trim() || '';
+  if (!comment) { showToast('Ajoutez un commentaire avant de retourner la mission.'); return; }
+  const session = getSession();
+  const report = PENDING_REPORTS_CACHE.find((entry) => entry.id === CURRENT_COMPLETION_REPORT_ID);
+  if (!report) { showToast('Rapport introuvable.'); return; }
+  try {
+    const returnedAt = new Date().toISOString();
+    const { error } = await db.from('reports').update({
+      statut: WORKFLOW_STATUS.RETOURNEE,
+      returned_by: session?.user || null,
+      returned_at: returnedAt,
+      meta: {
+        ...(report.meta || {}),
+        workflow_comment: comment,
+        returned_by: session?.user || null,
+        returned_at: returnedAt
+      }
+    }).eq('id', CURRENT_COMPLETION_REPORT_ID);
+    if (error) throw error;
+    showToast('✓ Mission retournée au missionnaire avec commentaire.');
+    notifyReportDataChanged();
+    closeFinancialCompletion();
+    await loadPendingMissions(session?.province);
+    await loadUserArchive(session?.user, session?.province);
+  } catch (e) {
+    console.error(e);
+    showToast('Erreur lors du retour de mission.');
+  }
+}
+
+async function saveFinancialCompletion() {
+  if (!CURRENT_COMPLETION_REPORT_ID) { showToast('Aucun rapport sélectionné.'); return; }
+  if (IS_SAVING_COMPLETION) { showToast('Activation déjà en cours.'); return; }
+  const reportId = CURRENT_COMPLETION_REPORT_ID;
+  const report = PENDING_REPORTS_CACHE.find((r) => r.id === reportId);
+  if (!report) { showToast('Rapport introuvable.'); return; }
+  IS_SAVING_COMPLETION = true;
+  setCompletionActionsDisabled(true);
+
+  const updatedMissions = collectCompletionMissions(report);
+  const session = getSession();
+  
+  const totalMontant = updatedMissions.reduce((s, m) => s + Number(m.montant_usd || 0), 0);
+  const totalGeneral = updatedMissions.reduce((s, m) => s + Number(m.total_usd || 0), 0);
+  const totalSolde   = updatedMissions.reduce((s, m) => s + Number(m.solde_usd || 0), 0);
+  
+  const updatedMeta = {
+    ...(report.meta || {}),
+    total_montant_usd: totalMontant.toFixed(2),
+    total_general_usd: totalGeneral.toFixed(2),
+    total_autres_frais_usd: updatedMissions.reduce((s, m) => s + Number(m.autres_frais_usd || 0), 0).toFixed(2),
+    total_avance_usd: updatedMissions.reduce((s, m) => s + Number(m.avance_usd || 0), 0).toFixed(2),
+    total_solde_usd: totalSolde.toFixed(2),
+    litige_usd: totalSolde.toFixed(2),
+    workflow_comment: null
+  };
+
+  try {
+    // 1. Mise à jour du rapport
+    const { error } = await db.from('reports').update({
+      missions: updatedMissions,
+      meta: updatedMeta,
+      statut: WORKFLOW_STATUS.ACTIVEE,
+      returned_by: null,
+      returned_at: null,
+      activated_by: session?.user || null,
+      activated_at: new Date().toISOString()
+    }).eq('id', reportId);
+    
+    if (error) throw error;
+
+    // 2. Fermer la section de complétion immédiatement
+    closeFinancialCompletion();
+    showToast('✓ Mission activée ! Le budget a été validé.');
+    
+    // 3. Notification de changement
+    notifyReportDataChanged();
+    
+    // 4. Rechargement des listes en arrière-plan (ne pas attendre pour l'UI)
+    loadPendingMissions(session?.province);
+    loadActiveMissions(session?.province);
+    loadUserArchive(session?.user, session?.province);
+    
+    // 5. Mise à jour locale immédiate pour éviter l'incohérence d'affichage
+    PENDING_REPORTS_CACHE = PENDING_REPORTS_CACHE.filter((entry) => entry.id !== reportId);
+    updatePendingSectionVisibility();
+    
+  } catch (e) {
+    console.error(e);
+    showToast('Erreur lors de l\'activation : ' + (e.message || 'Erreur inconnue'));
+    IS_SAVING_COMPLETION = false;
+    setCompletionActionsDisabled(false);
+  }
+}
+// ─── AUTO-SAVE ────────────────────────────────────────────────────────────────
+let _autoSaveTimer = null;
+function scheduleAutoSave() {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => { try { sessionStorage.setItem('PNDA_DRAFT', JSON.stringify(buildData())); } catch {} }, 1500);
+}
+function bindAutoSave() {
+  document.getElementById('missions-container').addEventListener('input', scheduleAutoSave);
+  document.getElementById('missions-container').addEventListener('change', scheduleAutoSave);
+  ['f-trimestre','f-annee','f-role','f-date','f-rapporteur'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) { el.addEventListener('change', scheduleAutoSave); el.addEventListener('input', scheduleAutoSave); }
+  });
+}
+
+// Ajouter cette fonction si elle n'existe pas déjà
 function refreshComptableView() {
   const session = getSession();
   if (session?.province) {
@@ -2120,43 +3152,7 @@ function refreshComptableView() {
     loadUserArchive(session.user, session.province);
   }
 }
-
-// Écouteur pour la synchronisation entre onglets
-window.addEventListener('storage', (event) => {
-  if (event.key === REPORT_SYNC_KEY || event.key === 'PNDA_SESSION') {
-    if (event.key === 'PNDA_SESSION' && !getSession()) {
-      window.location.href = 'index.html?manual-login=1';
-      return;
-    }
-    const session = getSession();
-    if (session?.province) {
-      if (CURRENT_USER_ROLE === 'comptable') {
-        loadPendingMissions(session.province);
-        loadActiveMissions(session.province);
-      }
-      loadUserArchive(session.user, session.province);
-    }
-  }
-});
-
-// BroadcastChannel pour synchronisation multi-onglets
-if ('BroadcastChannel' in window) {
-  const channel = new BroadcastChannel(REPORT_SYNC_CHANNEL);
-  channel.addEventListener('message', (event) => {
-    if (event?.data?.type === 'reports-updated') {
-      const session = getSession();
-      if (session?.province) {
-        if (CURRENT_USER_ROLE === 'comptable') {
-          loadPendingMissions(session.province);
-          loadActiveMissions(session.province);
-        }
-        loadUserArchive(session.user, session.province);
-      }
-    }
-  });
-}
-
-// Rendu initial
 renderSelectedMissionsTable();
 </script>
+</body>
 </html>
