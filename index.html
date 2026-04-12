@@ -1541,7 +1541,7 @@ function addParticipantToMission(missionId, isChef = false) {
 }
 
 // Ajouter aussi les fonctions de calcul
-function recalcParticipantFinancials(participantCard, missionId) {
+function recalcParticipantFinancials(participantCard, missionId, forceRecalc = true) {
   const missionRow = document.getElementById(missionId);
   if (!missionRow) return;
   
@@ -1557,42 +1557,40 @@ function recalcParticipantFinancials(participantCard, missionId) {
   const autresFrais = parseFloat(participantCard.querySelector('.participant-autres-frais')?.value) || 0;
   const total = montant + autresFrais;
   
-  // ═══════════════════════════════════════════════════════════════════
-  // AVANCE AUTOMATIQUE : 80% du per diem + 100% des autres frais
-  // ═══════════════════════════════════════════════════════════════════
-  const avancePerDiem = montant * 0.8;
-  const avanceAutresFrais = autresFrais * 1.0; // 100%
-  const avance = avancePerDiem + avanceAutresFrais;
-  
-  const solde = total - avance;
-  
-  // Mettre à jour les champs
+  // Mise à jour des champs automatiques
   const nuiteesInput = participantCard.querySelector('.participant-nuitees');
   const tauxInput = participantCard.querySelector('.participant-taux');
   const montantInput = participantCard.querySelector('.participant-montant');
   const totalInput = participantCard.querySelector('.participant-total');
   const avanceInput = participantCard.querySelector('.participant-avance');
   const soldeInput = participantCard.querySelector('.participant-solde');
+  const overrideCheckbox = participantCard.querySelector('.override-avance');
   
   if (nuiteesInput) nuiteesInput.value = nuitees;
   if (tauxInput) tauxInput.value = taux;
   if (montantInput) montantInput.value = montant.toFixed(2);
   if (totalInput) totalInput.value = total.toFixed(2);
-  if (avanceInput) avanceInput.value = avance.toFixed(2);
+  
+  // Calcul de l'avance (si non modifiée manuellement)
+  if (!overrideCheckbox || !overrideCheckbox.checked) {
+    const avancePerDiem = montant * 0.8;
+    const avanceAutresFrais = autresFrais * 1.0;
+    const avance = avancePerDiem + avanceAutresFrais;
+    if (avanceInput) avanceInput.value = avance.toFixed(2);
+  }
+  
+  const avance = parseFloat(avanceInput?.value) || 0;
+  const solde = total - avance;
   if (soldeInput) soldeInput.value = solde.toFixed(2);
   
-  // Afficher une indication du calcul
+  // Mettre à jour l'info-bulle
   const avanceInfo = participantCard.querySelector('.avance-info');
-  if (!avanceInfo) {
-    const infoSpan = document.createElement('small');
-    infoSpan.className = 'text-muted avance-info d-block mt-1';
-    infoSpan.innerHTML = `<i class="bi bi-info-circle me-1"></i>Avance = 80% per diem (${formatCurrencyDisplay(montant * 0.8)}) + 100% autres frais (${formatCurrencyDisplay(autresFrais)})`;
-    avanceInput?.parentNode.appendChild(infoSpan);
-  } else {
-    avanceInfo.innerHTML = `<i class="bi bi-info-circle me-1"></i>Avance = 80% per diem (${formatCurrencyDisplay(montant * 0.8)}) + 100% autres frais (${formatCurrencyDisplay(autresFrais)})`;
+  if (avanceInfo) {
+    const avancePerDiem = montant * 0.8;
+    const avanceAutresFrais = autresFrais * 1.0;
+    avanceInfo.innerHTML = `<i class="bi bi-info-circle me-1"></i>Avance auto = 80% per diem (${formatCurrencyDisplay(avancePerDiem)}) + 100% autres frais (${formatCurrencyDisplay(avanceAutresFrais)})`;
   }
 }
-
 function recalcAllParticipantsFinancials(missionRow) {
   const missionId = missionRow.id;
   const participants = missionRow.querySelectorAll('.participant-card');
