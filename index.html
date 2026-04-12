@@ -1713,10 +1713,11 @@ function buildData() {
       const nuitees = parseInt(card.querySelector('.participant-nuitees')?.value) || 0;
       const taux = parseFloat(card.querySelector('.participant-taux')?.value) || 0;
       const montant = parseFloat(card.querySelector('.participant-montant')?.value) || 0;
-      const autresFrais = parseFloat(card.querySelector('.participant-autres-frais')?.value) || 0;
-      const total = parseFloat(card.querySelector('.participant-total')?.value) || 0;
+      const autresFraisSaisis = parseFloat(card.querySelector('.participant-autres-frais')?.value) || 0;
+      const autresFrais = estChef ? autresFraisSaisis : 0;
       const avance = parseFloat(card.querySelector('.participant-avance')?.value) || 0;
-      const solde = parseFloat(card.querySelector('.participant-solde')?.value) || 0;
+      const total = +(montant + autresFrais).toFixed(2);
+      const solde = +(total - avance).toFixed(2);
       const horsProjet = parseInt(card.querySelector('.participant-hors-projet')?.value) || 0;
       const projet = parseInt(card.querySelector('.participant-projet')?.value) || 0;
       const observationParticipant = card.querySelector('.participant-observation')?.value.trim() || '';
@@ -2033,12 +2034,15 @@ function collectCompletionMissions(report) {
 function buildLiquidationSnapshot(report, missionsOverride, participant = null, participantIndex = 0) {
   // Si un participant spécifique est fourni
   if (participant) {
-    const isChef = participant.est_chef || participant.role === 'chef_mission' || participantIndex === 0;
+    const isChef = participant.est_chef
+      || participant.role === 'chef_mission'
+      || participant.nom === report.chef_mission
+      || participantIndex === 0;
     
     // Seul le chef de mission a des "autres frais"
-    const autresFrais = isChef ? (participant.autres_frais_usd || 0) : 0;
+    const autresFrais = isChef ? Number(participant.autres_frais_usd || 0) : 0;
     
-    const totalPerDiem = participant.montant_usd || 0;
+    const totalPerDiem = Number(participant.montant_usd || 0);
     const totalJustificatifs = autresFrais;
     const totalMission = totalPerDiem + autresFrais;
     
@@ -2067,8 +2071,8 @@ function buildLiquidationSnapshot(report, missionsOverride, participant = null, 
         montant_usd: participant.montant_usd,
         autres_frais_usd: autresFrais,
         total_usd: totalMission,
-        avance_usd: participant.avance_usd,
-        solde_usd: participant.solde_usd,
+        avance_usd: +(totalPerDiem * 0.8 + autresFrais).toFixed(2),
+        solde_usd: +(totalPerDiem * 0.2).toFixed(2),
         participants: 1
       }]
     };
@@ -2115,41 +2119,8 @@ function buildLiquidationSnapshot(report, missionsOverride, participant = null, 
   };
 }
 
-function buildLiquidationPrintHtml(snapshot) {
-  const session = getSession();
-  const report = snapshot.report;
-  const meta = report.meta || {};
-  const participant = snapshot.participant || {};
-  const isMultiParticipant = !!participant.nom;
-  const isChef = snapshot.isChef || (participant.est_chef) || (snapshot.participantIndex === 0);
-  
-  const participantDisplayName = isMultiParticipant ? participant.nom : (report.rapporteur || meta.rapporteur || '—');
-  const participantRole = isMultiParticipant ? getRoleLabel(participant.role) : (meta.role || report.rapporteur_role || '—');
-  const chefMission = report.chef_mission || (report.participants || []).find(p => p.est_chef)?.nom || '—';
-  const provinceLabel = meta.province_label || report.province || '—';
-  const liquidationNumber = getLiquidationNumber(report);
-  const printedAt = new Date();
-  
-  const missionRows = snapshot.missions.map((mission, index) => `
-    <tr>
-      <td>${index + 1}</td>
-      <td>${escapeHtml(mission.nature || '—')}</td>
-      <td>${escapeHtml(mission.objectif || '—')}</td>
-      <td>${escapeHtml(formatDateDisplay(mission.date_debut))} - ${escapeHtml(formatDateDisplay(mission.date_fin))}</td>
-      <td class="num">${getMissionTravelDays(mission)}</td>
-      <td class="num">${Number(mission.nuitees || 0)}</td>
-      <td class="num">${escapeHtml(formatCurrencyDisplay(mission.taux_per_diem || 0))}</td>
-      <td class="num">${escapeHtml(formatCurrencyDisplay(mission.montant_usd || 0))}</td>
-      <td class="num">${escapeHtml(formatCurrencyDisplay(mission.autres_frais_usd || 0))}</td>
-    </tr>
-  `).join('');
-
-  return `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Bordereau - ${escapeHtml(participantDisplayName)}</title>
-  <style>
+function getLiquidationPrintStyles() {
+  return `
     @page { size: A4 portrait; margin: 11mm 10mm; }
     * { box-sizing: border-box; }
     body { font-family: Arial, sans-serif; color: #14251b; margin: 0; font-size: 11px; line-height: 1.25; }
@@ -2183,14 +2154,45 @@ function buildLiquidationPrintHtml(snapshot) {
     .pay-card .amount { font-size: 18px; font-weight: 700; }
     .amount-in-words { margin-top: 8px; border: 1px dashed #bcc8c0; padding: 7px 8px; background: #fbfcfb; font-size: 9.5px; }
     .sign-grid { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 10px; margin-top: auto; padding-top: 8px; }
-    .signature-box { border: 1px solid #b8c5bd; min-height: 126px; padding: 10px; background: #fcfdfc; }
+    .signature-box { border: 1px solid #b8c5bd; min-height: 126px; padding: 10px; background: #fcfdfc; display: flex; flex-direction: column; }
     .signature-box h4 { margin: 0 0 6px; font-size: 10px; text-transform: uppercase; }
     .signature-line { margin-top: auto; border-top: 1px solid #8ea293; padding-top: 6px; font-size: 9.5px; }
     .note { font-size: 9px; color: #495b50; }
     .chef-badge { background: #d3a52c; color: #123524; padding: 2px 6px; border-radius: 4px; font-size: 8px; font-weight: 700; margin-left: 8px; }
-  </style>
-</head>
-<body>
+    .page-break { page-break-before: always; break-before: page; }
+  `;
+}
+
+function buildLiquidationPrintSheetHtml(snapshot) {
+  const session = getSession();
+  const report = snapshot.report;
+  const meta = report.meta || {};
+  const participant = snapshot.participant || {};
+  const isMultiParticipant = !!participant.nom;
+  const isChef = snapshot.isChef || (participant.est_chef) || (snapshot.participantIndex === 0);
+  
+  const participantDisplayName = isMultiParticipant ? participant.nom : (report.rapporteur || meta.rapporteur || '—');
+  const participantRole = isMultiParticipant ? getRoleLabel(participant.role) : (meta.role || report.rapporteur_role || '—');
+  const chefMission = report.chef_mission || (report.participants || []).find(p => p.est_chef)?.nom || '—';
+  const provinceLabel = meta.province_label || report.province || '—';
+  const liquidationNumber = getLiquidationNumber(report);
+  const printedAt = new Date();
+  
+  const missionRows = snapshot.missions.map((mission, index) => `
+    <tr>
+      <td>${index + 1}</td>
+      <td>${escapeHtml(mission.nature || '—')}</td>
+      <td>${escapeHtml(mission.objectif || '—')}</td>
+      <td>${escapeHtml(formatDateDisplay(mission.date_debut))} - ${escapeHtml(formatDateDisplay(mission.date_fin))}</td>
+      <td class="num">${getMissionTravelDays(mission)}</td>
+      <td class="num">${Number(mission.nuitees || 0)}</td>
+      <td class="num">${escapeHtml(formatCurrencyDisplay(mission.taux_per_diem || 0))}</td>
+      <td class="num">${escapeHtml(formatCurrencyDisplay(mission.montant_usd || 0))}</td>
+      <td class="num">${escapeHtml(formatCurrencyDisplay(mission.autres_frais_usd || 0))}</td>
+    </tr>
+  `).join('');
+
+  return `
   <div class="sheet">
     <div class="header">
       <div class="brand">
@@ -2296,7 +2298,23 @@ function buildLiquidationPrintHtml(snapshot) {
       <div class="signature-box"><h4>Comptable</h4><div class="signature-line">Visa</div></div>
       <div class="signature-box"><h4>RAF / Coordination</h4><div class="signature-line">Visa</div></div>
     </div>
-  </div>
+  </div>`;
+}
+
+function buildLiquidationPrintHtml(snapshot) {
+  const participant = snapshot.participant || {};
+  const meta = snapshot.report?.meta || {};
+  const titleName = participant.nom || snapshot.report?.rapporteur || meta.rapporteur || 'Mission';
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Bordereau - ${escapeHtml(titleName)}</title>
+  <style>${getLiquidationPrintStyles()}</style>
+</head>
+<body>
+  ${buildLiquidationPrintSheetHtml(snapshot)}
   <script>window.onload=function(){window.print()};<\/script>
 </body>
 </html>`;
@@ -2377,12 +2395,12 @@ function openMultiLiquidationPrintWindow(snapshots, report) {
   }
   
   const allHtml = snapshots.map((s, i) => 
-    (i > 0 ? '<div style="page-break-before: always;"></div>' : '') + buildLiquidationPrintHtml(s)
+    (i > 0 ? '<div class="page-break"></div>' : '') + buildLiquidationPrintSheetHtml(s)
   ).join('');
   
   printWindow.document.write(`<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Bordereaux - ${escapeHtml(report.chef_mission || 'Mission')}</title>
-<style>@page{size:A4 portrait;margin:11mm 10mm}*{box-sizing:border-box}body{font-family:Arial;margin:0;font-size:11px;background:#fff}</style></head>
+<html lang="fr"><head><meta charset="UTF-8"><title>Bordereaux - ${escapeHtml(report.chef_mission || 'Mission')}</title>
+<style>${getLiquidationPrintStyles()}</style></head>
 <body>${allHtml}<script>window.onload=function(){window.print()};<\/script></body></html>`);
   printWindow.document.close();
 }
@@ -2406,56 +2424,11 @@ async function printLiquidationBordereau(reportId) {
     openLiquidationPrintWindow(snapshot);
     return;
   }
-  
-  // Plusieurs participants : afficher la modale de sélection
-  if (!_participantSelectModalInstance) {
-    _participantSelectModalInstance = new bootstrap.Modal(document.getElementById('participantSelectModal'));
-  }
-  
-  const listContainer = document.getElementById('participant-select-list');
-  const missionInfo = report.meta || {};
-  const chefMission = report.chef_mission || participants.find(p => p.est_chef || p.role === 'chef_mission')?.nom || '—';
-  
-  listContainer.innerHTML = `
-    <div class="alert alert-light border small mb-3">
-      <strong>${escapeHtml(missionInfo.province_label || report.province || '—')}</strong><br>
-      ${escapeHtml(report.trimestre || missionInfo.trimestre || '')} ${escapeHtml(String(report.annee || missionInfo.annee || ''))}<br>
-      Chef de mission : <strong>${escapeHtml(chefMission)}</strong>
-    </div>
-    ${participants.map((p, idx) => {
-      const isChef = p.est_chef || p.role === 'chef_mission' || idx === 0;
-      const roleLabel = getRoleLabel(p.role);
-      // Note : autres frais = 0 pour les non-chefs
-      const autresFrais = isChef ? (p.autres_frais_usd || 0) : 0;
-      const totalParticipant = (p.montant_usd || 0) + autresFrais;
-      
-      return `
-        <a href="#" class="list-group-item list-group-item-action" onclick="printBordereauForParticipant('${reportId}', ${idx}); return false;">
-          <div class="d-flex w-100 justify-content-between align-items-center">
-            <div>
-              <i class="bi ${isChef ? 'bi-star-fill text-warning' : 'bi-person'} me-2"></i>
-              <strong>${escapeHtml(p.nom || '—')}</strong>
-              <span class="badge bg-secondary ms-2">${escapeHtml(roleLabel)}</span>
-              ${isChef ? '<span class="badge bg-warning text-dark ms-1">Chef</span>' : ''}
-            </div>
-            <div class="text-end">
-              <div><strong>${formatCurrencyDisplay(totalParticipant)} USD</strong></div>
-              <small class="text-muted">${isChef ? 'Per diem + frais' : 'Per diem uniquement'}</small>
-            </div>
-          </div>
-          <div class="small text-muted mt-1">
-            <i class="bi bi-calendar me-1"></i>${p.nuitees || 0} nuits × ${formatCurrencyDisplay(p.taux_per_diem || 0)} USD
-            ${isChef && autresFrais > 0 ? ` · Frais: ${formatCurrencyDisplay(autresFrais)} USD` : ''}
-          </div>
-        </a>
-      `;
-    }).join('')}
-    <a href="#" class="list-group-item list-group-item-action list-group-item-success mt-2" onclick="printAllBordereaux('${reportId}'); return false;">
-      <i class="bi bi-files me-2"></i><strong>Imprimer tous les bordereaux (${participants.length})</strong>
-    </a>
-  `;
-  
-  _participantSelectModalInstance.show();
+
+  openMultiLiquidationPrintWindow(
+    participants.map((participant, index) => buildLiquidationSnapshot(report, null, participant, index)),
+    report
+  );
 }
 
 function getRoleLabel(role) {
