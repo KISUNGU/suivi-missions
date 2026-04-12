@@ -1495,7 +1495,7 @@ function addParticipantToMission(missionId, isChef = false) {
       </div>
       <div class="col-md-3">
         <label class="form-label form-label-sm">Avance USD</label>
-        <input type="number" class="form-control form-control-sm participant-avance" value="0" min="0" step="0.01" readonly style="background:#f5f0e0;font-weight:500;">
+        <input type="number" class="form-control form-control-sm participant-avance" value="0" min="0" step="0.01">
       </div>
       <div class="col-md-3">
         <label class="form-label form-label-sm">Solde USD</label>
@@ -1529,12 +1529,12 @@ function addParticipantToMission(missionId, isChef = false) {
     });
   }
   
-  // if (avanceInput) {
-  //   avanceInput.addEventListener('input', () => {
-  //     recalcParticipantFinancials(participantCard, missionId);
-  //     renderSelectedMissionsTable();
-  //   });
-  // }
+  if (avanceInput) {
+    avanceInput.addEventListener('input', () => {
+      recalcParticipantFinancials(participantCard, missionId);
+      renderSelectedMissionsTable();
+    });
+  }
   
   // Calculer les valeurs initiales
   setTimeout(() => recalcParticipantFinancials(participantCard, missionId), 50);
@@ -2293,8 +2293,7 @@ function renderSelectedMissionsTable() {
     { label: 'Missions', value: String(data.missions.length), icon: 'bi-list-check' },
     { label: 'Participants', value: String(data.meta.total_participants || 0), icon: 'bi-people' },
     { label: 'Total général USD', value: formatCurrencyDisplay(totT), icon: 'bi-cash-stack' },
-    { label: 'Solde total USD', value: formatCurrencyDisplay(totS), icon: 'bi-wallet2' },
-    { label: 'Avance totale (80%)', value: formatCurrencyDisplay(totA), icon: 'bi-cash-coin' },
+    { label: 'Solde total USD', value: formatCurrencyDisplay(totS), icon: 'bi-wallet2' }
   ].map((item) => `
     <div class="col-6 col-md">
       <div class="card border-0 shadow-sm h-100">
