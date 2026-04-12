@@ -697,28 +697,6 @@ const _authModal = new bootstrap.Modal(document.getElementById('authModal'));
 const _toastEl   = document.getElementById('toast');
 const _bsToast   = new bootstrap.Toast(_toastEl, { delay: 3500 });
 
-<!-- ░░ MODALE DE SÉLECTION DES PARTICIPANTS ░░ -->
-<div class="modal fade" id="participantSelectModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content border-0 shadow">
-      <div class="modal-header" style="background: linear-gradient(135deg, var(--pnda-green) 0%, var(--pnda-green-md) 100%); color: #fff;">
-        <h6 class="modal-title"><i class="bi bi-people-fill me-2"></i>Sélectionner le participant pour le bordereau</h6>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p class="small text-muted mb-3">
-          <i class="bi bi-info-circle me-1"></i>
-          Cette mission comprend plusieurs participants. Sélectionnez celui pour lequel vous souhaitez imprimer un bordereau.
-        </p>
-        <div id="participant-select-list" class="list-group"></div>
-      </div>
-      <div class="modal-footer border-0 pt-0">
-        <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Annuler</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 // ─── UTILITIES ────────────────────────────────────────────────────────────────
 function esc(v) {
   return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -2338,53 +2316,6 @@ async function printCurrentLiquidationBordereau() {
   report = await ensureLiquidationIdentity(report);
   const updatedMissions = collectCompletionMissions(report);
   openLiquidationPrintWindow(buildLiquidationSnapshot(report, updatedMissions));
-}
-
-let _participantSelectModalInstance = null;
-
-async function printBordereauForParticipant(reportId, participantIndex) {
-  _participantSelectModalInstance?.hide();
-  
-  let report = ACTIVE_REPORTS_CACHE.find(r => r.id === reportId)
-    || PENDING_REPORTS_CACHE.find(r => r.id === reportId)
-    || USER_MISSIONS_CACHE.find(r => r.id === reportId);
-  
-  if (!report) return;
-  
-  report = await ensureLiquidationIdentity(report);
-  
-  const participants = report.participants || [];
-  const participant = participants[participantIndex];
-  
-  if (!participant) {
-    showToast('Participant introuvable.');
-    return;
-  }
-  
-  const snapshot = buildLiquidationSnapshot(report, null, participant, participantIndex);
-  openLiquidationPrintWindow(snapshot);
-}
-
-async function printAllBordereaux(reportId) {
-  _participantSelectModalInstance?.hide();
-  
-  let report = ACTIVE_REPORTS_CACHE.find(r => r.id === reportId)
-    || PENDING_REPORTS_CACHE.find(r => r.id === reportId)
-    || USER_MISSIONS_CACHE.find(r => r.id === reportId);
-  
-  if (!report) return;
-  
-  report = await ensureLiquidationIdentity(report);
-  
-  const participants = report.participants || [];
-  
-  if (participants.length === 0) {
-    showToast('Aucun participant trouvé.');
-    return;
-  }
-  
-  const snapshots = participants.map((p, idx) => buildLiquidationSnapshot(report, null, p, idx));
-  openMultiLiquidationPrintWindow(snapshots, report);
 }
 
 function openMultiLiquidationPrintWindow(snapshots, report) {
