@@ -756,7 +756,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.103.0/dist/umd/supabase.js"></script>
 <script src="supabase_config.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
   // ─── CLIENT SUPABASE ──────────────────────────────────────────────────────────
 const { createClient } = supabase;
@@ -1700,49 +1700,56 @@ async function deleteReport(reportId, importId = '') {
 
 // ─── EXCEL EXPORT ─────────────────────────────────────────────────────────────
 async function exportExcelWorkbook() {
-  const date = new Date().toISOString().slice(0, 10);
-  const signatory = getSignatory();
   const reports = getFilteredReports();
-  
-  const workbookXml = buildExcelWorkbookXml(signatory, reports);
-  const fileName = `PNDA_dashboard_${date}.xls`;
-  const blob = new Blob([workbookXml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
-  URL.revokeObjectURL(url);
-  showToast('Export Excel généré.');
-}
 
-function buildExcelWorkbookXml(signatory = {}, reports = getFilteredReports()) {
-  const worksheets = [
-    buildWorksheetXml('General', buildGeneralSheetRows(signatory, reports), [220, 140, 120, 120, 120, 120, 120]),
-    ...REFERENCE.provinces.map((province) => buildWorksheetXml(sheetNameForProvince(province.label), buildProvinceSheetRows(province, signatory, reports), [110, 110, 90, 110, 260, 130, 130, 70, 80, 130, 130, 110, 110, 110, 110, 110, 200])),
-    buildWorksheetXml('Toutes_Missions', buildAllMissionsSheetRows(signatory, reports), [110, 180, 90, 80, 80, 130, 260, 260, 130, 130, 130, 130, 70, 80, 110, 110, 110, 110, 110, 110, 200])
-  ].join('');
-  
-  return [
-    '<?xml version="1.0" encoding="UTF-8"?>','<?mso-application progid="Excel.Sheet"?>',
-    '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"',
-    ' xmlns:o="urn:schemas-microsoft-com:office:office"',
-    ' xmlns:x="urn:schemas-microsoft-com:office:excel"',
-    ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"',
-    ' xmlns:html="http://www.w3.org/TR/REC-html40">',
-    '<Styles>',
-    '<Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Bottom"/><Borders/><Font ss:FontName="Calibri" ss:Size="11"/><Interior/><NumberFormat/><Protection/></Style>',
-    '<Style ss:ID="logoMark"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="18" ss:Color="#FFFFFF"/><Interior ss:Color="#1D4C34" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#2F6A48"/></Borders></Style>',
-    '<Style ss:ID="brandTitle"><Alignment ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Size="16" ss:Color="#123524"/><Interior ss:Color="#DCEEE2" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#8FB89F"/></Borders></Style>',
-    '<Style ss:ID="brandSubtitle"><Alignment ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Size="11" ss:Color="#2F6A48"/><Interior ss:Color="#EDF7F0" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B9D7C3"/></Borders></Style>',
-    '<Style ss:ID="title"><Alignment ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Size="14" ss:Color="#123524"/><Interior ss:Color="#CFE5D6" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#8FB89F"/></Borders></Style>',
-    '<Style ss:ID="subtitle"><Alignment ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Size="12" ss:Color="#123524"/><Interior ss:Color="#EEF7F1" ss:Pattern="Solid"/></Style>',
-    '<Style ss:ID="header"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Color="#123524"/><Interior ss:Color="#B8D7C1" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#7DAA8C"/></Borders></Style>',
-    '<Style ss:ID="text"><Alignment ss:Vertical="Top" ss:WrapText="1"/><Interior ss:Color="#FAFDFC" ss:Pattern="Solid"/></Style>',
-    '<Style ss:ID="integer"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="0"/></Style>',
-    '<Style ss:ID="currency"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="# ##0,00"/></Style>',
-    '<Style ss:ID="date"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><NumberFormat ss:Format="dd/mm/yyyy"/></Style>',
-    '</Styles>',
-    worksheets,
-    '</Workbook>'
-  ].join('');
+  // 1. Transformer les données
+  const data = [];
+
+  reports.forEach(report => {
+    const missions = report.missions || [];
+
+    missions.forEach(m => {
+      data.push({
+        Province: getReportProvinceLabel(report),
+        Rapporteur: report.meta?.rapporteur || '',
+        Trimestre: report.meta?.trimestre || '',
+        Annee: report.meta?.annee || '',
+        Mission: m.nature || '',
+        Objectif: m.objectif || '',
+        "Date début": m.date_debut || '',
+        "Date fin": m.date_fin || '',
+        Participants: Number(m.participants || 0),
+        Nuitées: Number(m.nuitees || 0),
+        "Montant USD": Number(m.montant_usd || 0),
+        "Autres frais": Number(m.autres_frais_usd || 0),
+        "Total USD": Number(m.total_usd || 0),
+        "Avance USD": Number(m.avance_usd || 0),
+        "Solde USD": Number(m.solde_usd || 0),
+        Statut: report.statut || 'activee'
+      });
+    });
+  });
+
+  if (!data.length) {
+    showToast("Aucune donnée à exporter");
+    return;
+  }
+
+  // 2. Créer feuille
+  const worksheet = XLSX.utils.json_to_sheet(data);
+
+  // 3. Largeur colonnes auto
+  worksheet['!cols'] = Object.keys(data[0]).map(() => ({ wch: 20 }));
+
+  // 4. Créer workbook
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Missions");
+
+  // 5. Export
+  const fileName = `PNDA_dashboard_${new Date().toISOString().slice(0,10)}.xlsx`;
+  XLSX.writeFile(workbook, fileName);
+
+  showToast("Export Excel réussi");
 }
 
 function buildGeneralSheetRows(signatory = {}, reports = getFilteredReports()) {
@@ -1876,16 +1883,6 @@ function buildWorkbookHeaderRows(sheetTitle, totalColumns) {
   ];
 }
 
-function buildWorksheetXml(name, rows, columnWidths = []) {
-  return [
-    `<Worksheet ss:Name="${xmlEscape(sheetName(name))}">`,
-    buildWorksheetOptionsXml(), '<Table>',
-    columnWidths.map((w) => `<Column ss:AutoFitWidth="0" ss:Width="${w}"/>`).join(''),
-    rows.map((row) => `<Row>${(row || []).map((cell) => buildCellXml(cell)).join('')}</Row>`).join(''),
-    '</Table>', '</Worksheet>'
-  ].join('');
-}
-
 function buildWorksheetOptionsXml() {
   return [
     '<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">',
@@ -1913,14 +1910,6 @@ function buildSignatureRows(signatory, totalColumns) {
     [{ value: `Nom: ${name}`, style: 'text', mergeAcross }],
     [{ value: `Poste: ${position}`, style: 'text', mergeAcross }]
   ];
-}
-
-function buildCellXml(cell) {
-  if (!cell) return '<Cell><Data ss:Type="String"></Data></Cell>';
-  const type = cell.type || (typeof cell.value === 'number' ? 'Number' : 'String');
-  const style = cell.style ? ` ss:StyleID="${cell.style}"` : '';
-  const merge = Number.isInteger(cell.mergeAcross) && cell.mergeAcross > 0 ? ` ss:MergeAcross="${cell.mergeAcross}"` : '';
-  return `<Cell${style}${merge}><Data ss:Type="${type}">${xmlEscape(cell.value)}</Data></Cell>`;
 }
 
 function sheetNameForProvince(label) { return label.replace(/[\\/*?:\[\]]/g, '_').slice(0, 31); }
