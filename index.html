@@ -2649,7 +2649,7 @@ function exportSelectedMissionsExcel() {
     "Montant USD","Autres frais","Total USD","Avance USD","Solde USD","Observation"
   ]);
 
-  // Récupération des données du tableau
+  // Données
   const trs = table.querySelectorAll("tr");
 
   trs.forEach(tr => {
@@ -2663,27 +2663,17 @@ function exportSelectedMissionsExcel() {
     }
   });
 
-  // Création feuille Excel
-  const range = XLSX.utils.decode_range(worksheet['!ref']);
+  // ✅ CRÉATION DE LA FEUILLE (MANQUANTE CHEZ TOI)
+  const worksheet = XLSX.utils.aoa_to_sheet(rows);
 
-for (let C = range.s.c; C <= range.e.c; ++C) {
-  const cell = worksheet[XLSX.utils.encode_cell({ r: 0, c: C })];
-  if (cell) {
-    cell.s = {
-      font: { bold: true },
-      fill: { fgColor: { rgb: "D3A52C" } } // or PNDA gold
-    };
-  }
-}
-
-  // Ajustement largeur colonnes auto
+  // Largeur colonnes
   worksheet['!cols'] = rows[0].map(() => ({ wch: 18 }));
 
-  // Création classeur
+  // Classeur
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Missions");
 
-  // Export fichier
+  // Export
   XLSX.writeFile(workbook, "PNDA_Missions.xlsx");
 }
 
