@@ -2389,22 +2389,63 @@ function buildLiquidationPrintSheetHtml(snapshot) {
 }
 
 function buildLiquidationPrintHtml(snapshot) {
-  const participant = snapshot.participant || {};
-  const meta = snapshot.report?.meta || {};
-  const titleName = participant.nom || snapshot.report?.rapporteur || meta.rapporteur || 'Mission';
+  // On récupère la liste des missionnaires (participants)
+  const participants = snapshot.data.missions.flatMap(m => m.participants || []);
+  
+  let fullHtml = "";
 
-  return `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Bordereau - ${escapeHtml(titleName)}</title>
-  <style>${getLiquidationPrintStyles()}</style>
-</head>
-<body>
-  ${buildLiquidationPrintSheetHtml(snapshot)}
-  <script>window.onload=function(){window.print()};<\/script>
-</body>
-</html>`;
+  // On boucle sur chaque participant pour créer une page par personne
+  participants.forEach((p, index) => {
+    // RÈGLE : Le premier de la liste est le chef de mission
+    const isChef = (index === 0);
+    
+    // Calcul des frais propres au missionnaire
+    const fraisSejour = (snapshot.data.nuitees || 0) * (snapshot.data.taux || 0);
+    // On n'ajoute les "Autres frais" que si c'est le chef de mission
+    const autresFrais = isChef ? (parseFloat(snapshot.data.autresFrais) || 0) : 0;
+    const totalIndividuel = fraisSejour + autresFrais;
+
+    fullHtml += `
+      <div class="print-page" style="page-break-after: always;">
+        <div class="header"> ... </div>
+
+        <h3>BORDEREAU DE LIQUIDATION INDIVIDUEL</h3>
+        <p><strong>Nom du Missionnaire :</strong> ${p.nom}</p>
+        
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Désignation</th>
+              <th>Calcul</th>
+              <th>Montant (USD)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Frais de séjour (Logement & Subsistance)</td>
+              <td>${snapshot.data.nuitees} jours x ${snapshot.data.taux}</td>
+              <td>${fraisSejour.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td>Autres frais (Transport/Divers)</td>
+              <td>${isChef ? 'Pris en charge par le chef de mission' : 'N/A'}</td>
+              <td>${autresFrais.toFixed(2)}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="2">TOTAL À PERCEVOIR</th>
+              <th>${totalIndividuel.toFixed(2)}</th>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div class="signatures"> ... </div>
+      </div>
+    `;
+  });
+
+  return fullHtml;
 }
 
 function openLiquidationPrintWindow(snapshot) {
