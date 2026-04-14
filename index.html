@@ -878,11 +878,9 @@ async function initialize() {
   await loadReferenceAndUsers();
   TAB_ORDER = ['general', ...REFERENCE.provinces.map((province) => province.name)];
   if (!hydrateSession()) return;
-  initializeReportSyncChannel();
   bindEvents();
   buildTabs();
   await refreshDashboard();
-  startPolling();
 }
 
 function initializeReportSyncChannel() {
@@ -975,12 +973,6 @@ function bindEvents() {
   document.getElementById('signatory-position').addEventListener('input', persistSignatory);
   document.getElementById('signatory-location').addEventListener('input', persistSignatory);
   bindFilterEvents();
-  window.addEventListener('storage', handleStorageSync);
-  window.addEventListener('PNDA_DATA_UPDATED', refreshDashboard);
-  window.addEventListener('focus', refreshDashboard);
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) refreshDashboard();
-  });
   window.addEventListener('resize', () => {
     if (window.innerWidth >= 992) closeSidebar();
   });
@@ -1232,29 +1224,10 @@ function getReportsSnapshotSignature(reports = REPORTS_CACHE) {
 // ─── AUTO-POLL ────────────────────────────────────────────────────────────────
 let _pollInterval = null;
 function startPolling() {
-  if (_pollInterval) clearInterval(_pollInterval);
-  _pollInterval = setInterval(async () => {
-    const prevSignature = getReportsSnapshotSignature(REPORTS_CACHE);
-    await refreshReportsCache();
-    const curSignature = getReportsSnapshotSignature(REPORTS_CACHE);
-    const prevStats = JSON.parse(prevSignature);
-    const curStats = JSON.parse(curSignature);
-    
-    if (curSignature !== prevSignature) {
-      renderSummaryCards(); 
-      renderPanels(); 
-      updateActiveTab(); 
-      updateWorkflowBadges();
-      updateWorkflowPanel();
-      
-      if (curStats.statusCounts.en_attente > prevStats.statusCounts.en_attente) {
-        showToast(`${curStats.statusCounts.en_attente - prevStats.statusCounts.en_attente} nouvelle(s) mission(s) en attente !`);
-      }
-      if (curStats.statusCounts.retournee > prevStats.statusCounts.retournee) {
-        showToast(`${curStats.statusCounts.retournee - prevStats.statusCounts.retournee} mission(s) retournée(s) pour correction !`);
-      }
-    }
-  }, 30000);
+  if (_pollInterval) {
+    clearInterval(_pollInterval);
+    _pollInterval = null;
+  }
 }
 
 function handleStorageSync(event) {
