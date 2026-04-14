@@ -492,7 +492,7 @@
           <button class="btn btn-gold btn-sm" onclick="exportExcelWorkbook()">
             <i class="bi bi-download me-1"></i>Exporter Excel
           </button>
-          <button class="btn btn-pnda btn-sm" onclick="refreshDashboard()">
+          <button class="btn btn-pnda btn-sm" onclick="refreshDashboard(true)">
             <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
           </button>
         </div>
@@ -713,7 +713,7 @@
               <input class="form-control form-control-sm" id="filter-end-date" type="date">
             </div>
             <div class="col-12">
-              <button class="btn btn-pnda" onclick="refreshDashboard()">
+              <button class="btn btn-pnda" onclick="refreshDashboard(true)">
                 <i class="bi bi-check-lg me-1"></i>Appliquer les filtres
               </button>
             </div>
@@ -801,6 +801,8 @@ let importedReports = [];
 let activeTab = 'general';
 let currentStatusFilter = '';
 let reportSyncChannel = null;
+let _refreshInFlight = false;
+let _lastRefreshAt = 0;
 
 const WORKFLOW_STATUS = {
   EN_ATTENTE: 'en_attente',
@@ -909,11 +911,6 @@ function bindEvents() {
   document.getElementById('signatory-name').addEventListener('input', persistSignatory);
   document.getElementById('signatory-position').addEventListener('input', persistSignatory);
   document.getElementById('signatory-location').addEventListener('input', persistSignatory);
-  document.getElementById('filter-province').addEventListener('change', refreshDashboard);
-  document.getElementById('filter-rapporteur').addEventListener('input', refreshDashboard);
-  document.getElementById('filter-start-date').addEventListener('change', refreshDashboard);
-  document.getElementById('filter-end-date').addEventListener('change', refreshDashboard);
-  document.getElementById('filter-statut').addEventListener('change', refreshDashboard);
   window.addEventListener('resize', () => {
     if (window.innerWidth >= 992) closeSidebar();
   });
@@ -1005,7 +1002,7 @@ function filterByStatus(status) {
   const filterSelect = document.getElementById('filter-statut');
   if (filterSelect) filterSelect.value = currentStatusFilter;
   
-  refreshDashboard();
+  refreshDashboard(true);
   showToast(currentStatusFilter ? `Filtre actif : ${getStatusLabel(currentStatusFilter)}` : 'Filtre désactivé');
 }
 
@@ -1034,14 +1031,24 @@ function calculateReportLitige(report) {
   return (report.missions || []).reduce((sum, mission) => sum + Number(mission.solde_usd || 0), 0);
 }
 
-async function refreshDashboard() {
-  await refreshReportsCache();
-  populateFilterProvinceOptions();
-  renderSummaryCards();
-  renderPanels();
-  updateActiveTab();
-  updateWorkflowBadges();
-  updateWorkflowPanel();
+async function refreshDashboard(force = false) {
+  const now = Date.now();
+  if (_refreshInFlight) return;
+  if (!force && now - _lastRefreshAt < 3000) return;
+
+  _refreshInFlight = true;
+  try {
+    await refreshReportsCache();
+    populateFilterProvinceOptions();
+    renderSummaryCards();
+    renderPanels();
+    updateActiveTab();
+    updateWorkflowBadges();
+    updateWorkflowPanel();
+    _lastRefreshAt = Date.now();
+  } finally {
+    _refreshInFlight = false;
+  }
 }
 
 function updateWorkflowBadges() {
@@ -1628,7 +1635,7 @@ async function markAsRead(reportId) {
     }).eq('id', reportId);
     if (error) throw error;
     showToast('Rapport marqué comme lu.');
-    await refreshDashboard();
+    await refreshDashboard(true);
   } catch (e) { console.error(e); showToast('Erreur lors du marquage.'); }
 }
 
@@ -1648,7 +1655,7 @@ async function updateReportStatut(reportId, newStatut) {
         const { error } = await db.from('reports').update(payload).eq('id', reportId);
         if (error) throw error;
         showToast(`✓ Rapport marqué comme "${labels[newStatut]}".`);
-        await refreshDashboard();
+        await refreshDashboard(true);
       } catch (e) { console.error(e); showToast('Erreur lors de la mise à jour.'); }
     },
     'Changer le statut', labels[newStatut] || newStatut, okClass
@@ -1681,7 +1688,7 @@ async function deleteReport(reportId, importId = '') {
         updateWorkflowBadges();
         updateWorkflowPanel();
         showToast('✓ Rapport supprimé.');
-        await refreshDashboard();
+        await refreshDashboard(true);
       } catch (e) {
         console.error(e);
         showToast('Erreur lors de la suppression : ' + (e?.message || String(e)));
