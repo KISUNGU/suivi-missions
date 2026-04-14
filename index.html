@@ -621,6 +621,58 @@
         </div>
       </div>
 
+      <div class="card mb-4">
+        <div class="card-header py-3">
+          <h6><i class="bi bi-funnel me-2"></i>Filtres rapides du tableau</h6>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Province</label>
+              <select class="form-select form-select-sm" id="dashboard-filter-province" title="Filtrer par province"><option value="">Toutes les provinces</option></select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Statut</label>
+              <select class="form-select form-select-sm" id="dashboard-filter-statut" title="Filtrer par statut">
+                <option value="">Tous les statuts</option>
+                <option value="en_attente">⏳ En attente</option>
+                <option value="retournee">↩ À corriger</option>
+                <option value="activee">⚡ Activée</option>
+                <option value="realisee">✓ Réalisée</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Rapporteur</label>
+              <input class="form-control form-control-sm" id="dashboard-filter-rapporteur" placeholder="Nom du rapporteur">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Chef de mission</label>
+              <input class="form-control form-control-sm" id="dashboard-filter-chef" placeholder="Nom du chef de mission">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Mission / Objet</label>
+              <input class="form-control form-control-sm" id="dashboard-filter-mission" placeholder="Intitulé ou objectif de mission">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Période du</label>
+              <input class="form-control form-control-sm" id="dashboard-filter-start-date" type="date" title="Filtrer à partir de cette date">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Période au</label>
+              <input class="form-control form-control-sm" id="dashboard-filter-end-date" type="date" title="Filtrer jusqu'à cette date">
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+              <button class="btn btn-pnda btn-sm w-100" onclick="refreshDashboard()">
+                <i class="bi bi-search me-1"></i>Filtrer
+              </button>
+              <button class="btn btn-outline-secondary btn-sm w-100" onclick="resetDashboardFilters()">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>Réinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Province tabs -->
       <div class="d-flex gap-2 flex-wrap mb-3" id="tabs"></div>
 
@@ -705,6 +757,14 @@
               <input class="form-control form-control-sm" id="filter-rapporteur" placeholder="Nom du rapporteur">
             </div>
             <div class="col-md-6">
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Chef de mission</label>
+              <input class="form-control form-control-sm" id="filter-chef" placeholder="Nom du chef de mission">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold small text-uppercase form-label-tight">Mission / Objet</label>
+              <input class="form-control form-control-sm" id="filter-mission" placeholder="Intitulé ou objectif de mission">
+            </div>
+            <div class="col-md-6">
               <label class="form-label fw-semibold small text-uppercase form-label-tight">Période du</label>
               <input class="form-control form-control-sm" id="filter-start-date" type="date">
             </div>
@@ -715,6 +775,9 @@
             <div class="col-12">
               <button class="btn btn-pnda" onclick="refreshDashboard()">
                 <i class="bi bi-check-lg me-1"></i>Appliquer les filtres
+              </button>
+              <button class="btn btn-outline-secondary ms-2" onclick="resetDashboardFilters()">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>Réinitialiser
               </button>
             </div>
           </div>
@@ -911,11 +974,7 @@ function bindEvents() {
   document.getElementById('signatory-name').addEventListener('input', persistSignatory);
   document.getElementById('signatory-position').addEventListener('input', persistSignatory);
   document.getElementById('signatory-location').addEventListener('input', persistSignatory);
-  document.getElementById('filter-province').addEventListener('change', refreshDashboard);
-  document.getElementById('filter-rapporteur').addEventListener('input', refreshDashboard);
-  document.getElementById('filter-start-date').addEventListener('change', refreshDashboard);
-  document.getElementById('filter-end-date').addEventListener('change', refreshDashboard);
-  document.getElementById('filter-statut').addEventListener('change', refreshDashboard);
+  bindFilterEvents();
   window.addEventListener('storage', handleStorageSync);
   window.addEventListener('PNDA_DATA_UPDATED', refreshDashboard);
   window.addEventListener('focus', refreshDashboard);
@@ -925,6 +984,53 @@ function bindEvents() {
   window.addEventListener('resize', () => {
     if (window.innerWidth >= 992) closeSidebar();
   });
+}
+
+function getFilterElementIds(key) {
+  return [`filter-${key}`, `dashboard-filter-${key}`];
+}
+
+function getFilterValue(key) {
+  const dashboardEl = document.getElementById(`dashboard-filter-${key}`);
+  if (dashboardEl && dashboardEl.value) return dashboardEl.value;
+  return document.getElementById(`filter-${key}`)?.value || '';
+}
+
+function syncFilterValue(key, value, sourceId = '') {
+  getFilterElementIds(key).forEach((id) => {
+    if (id === sourceId) return;
+    const element = document.getElementById(id);
+    if (element) element.value = value;
+  });
+}
+
+function registerFilterBinding(key, eventName) {
+  getFilterElementIds(key).forEach((id) => {
+    const element = document.getElementById(id);
+    if (!element) return;
+    element.addEventListener(eventName, (event) => {
+      syncFilterValue(key, event.target.value, id);
+      refreshDashboard();
+    });
+  });
+}
+
+function bindFilterEvents() {
+  registerFilterBinding('province', 'change');
+  registerFilterBinding('statut', 'change');
+  registerFilterBinding('rapporteur', 'input');
+  registerFilterBinding('chef', 'input');
+  registerFilterBinding('mission', 'input');
+  registerFilterBinding('start-date', 'change');
+  registerFilterBinding('end-date', 'change');
+}
+
+function resetDashboardFilters() {
+  currentStatusFilter = '';
+  ['province', 'statut', 'rapporteur', 'chef', 'mission', 'start-date', 'end-date'].forEach((key) => {
+    syncFilterValue(key, '');
+  });
+  refreshDashboard();
 }
 
 function getSession() {
@@ -1012,6 +1118,7 @@ function filterByStatus(status) {
   
   const filterSelect = document.getElementById('filter-statut');
   if (filterSelect) filterSelect.value = currentStatusFilter;
+  syncFilterValue('statut', currentStatusFilter, 'filter-statut');
   
   refreshDashboard();
   showToast(currentStatusFilter ? `Filtre actif : ${getStatusLabel(currentStatusFilter)}` : 'Filtre désactivé');
@@ -1203,20 +1310,35 @@ function getReportPriority(report) {
 }
 
 function getFilteredReports() {
-  const selectedProvince = document.getElementById('filter-province').value;
-  const rapporteurFilter = document.getElementById('filter-rapporteur').value.trim().toLowerCase();
-  const startDate = document.getElementById('filter-start-date').value;
-  const endDate = document.getElementById('filter-end-date').value;
-  const statutFilter = currentStatusFilter || document.getElementById('filter-statut')?.value || '';
+  const selectedProvince = getFilterValue('province');
+  const rapporteurFilter = getFilterValue('rapporteur').trim().toLowerCase();
+  const chefFilter = getFilterValue('chef').trim().toLowerCase();
+  const missionFilter = getFilterValue('mission').trim().toLowerCase();
+  const startDate = getFilterValue('start-date');
+  const endDate = getFilterValue('end-date');
+  const statutFilter = currentStatusFilter || getFilterValue('statut') || '';
   
   return REPORTS_CACHE.filter((report) => {
     const provinceName = getReportProvinceName(report);
     const reporteur = String(report?.meta?.rapporteur || '').toLowerCase();
+    const chefMission = String(
+      report?.chef_mission
+      || report?.missions?.find((mission) => mission?.chef_mission)?.chef_mission
+      || report?.meta?.rapporteur
+      || ''
+    ).toLowerCase();
+    const missionText = String(
+      report?.mission_intitule
+      || (report?.missions || []).map((mission) => `${mission?.nature || ''} ${mission?.objectif || ''}`).join(' ')
+      || ''
+    ).toLowerCase();
     const reportDate = getReportDateValue(report);
     const reportStatut = report.statut || 'activee';
     
     if (selectedProvince && provinceName !== selectedProvince) return false;
     if (rapporteurFilter && !reporteur.includes(rapporteurFilter)) return false;
+    if (chefFilter && !chefMission.includes(chefFilter)) return false;
+    if (missionFilter && !missionText.includes(missionFilter)) return false;
     if (startDate && reportDate && reportDate < startDate) return false;
     if (endDate && reportDate && reportDate > endDate) return false;
     if (statutFilter && reportStatut !== statutFilter) return false;
@@ -1243,18 +1365,28 @@ function applyFilters(data) {
 }
 
 function populateFilterProvinceOptions() {
-  const select = document.getElementById('filter-province');
-  const currentValue = select.value;
+  const currentValue = getFilterValue('province');
   const session = getSession();
   const isSuperAdmin = session?.role === 'super_admin';
-  select.innerHTML = isSuperAdmin ? '<option value="">Toutes les provinces</option>' : '';
   const provinces = getAdminProvinces(session);
-  provinces.forEach((province) => {
-    const option = new Option(province.label, province.name);
-    if (province.name === currentValue) option.selected = true;
-    select.appendChild(option);
+
+  getFilterElementIds('province').forEach((id) => {
+    const select = document.getElementById(id);
+    if (!select) return;
+    select.innerHTML = isSuperAdmin ? '<option value="">Toutes les provinces</option>' : '';
+    provinces.forEach((province) => {
+      const option = new Option(province.label, province.name);
+      if (province.name === currentValue) option.selected = true;
+      select.appendChild(option);
+    });
+    if (!isSuperAdmin && provinces.length) {
+      select.value = currentValue || provinces[0].name;
+    }
   });
-  if (!isSuperAdmin && provinces.length) select.value = provinces[0].name;
+
+  if (!isSuperAdmin && provinces.length) {
+    syncFilterValue('province', currentValue || provinces[0].name);
+  }
 }
 
 function getPersistedImportedReports() {
