@@ -1224,6 +1224,24 @@ function getFilteredReports() {
   });
 }
 
+function applyFilters(data) {
+  const rapporteurFilter = document.getElementById('filter-rapporteur')?.value?.trim().toLowerCase()
+    || document.getElementById('filterChef')?.value?.trim().toLowerCase()
+    || '';
+  const missionFilter = document.getElementById('filterMission')?.value?.trim().toLowerCase() || '';
+
+  if (!Array.isArray(data)) return [];
+
+  return data.filter((item) => {
+    const rapporteurValue = String(item?.chef_nom || item?.meta?.rapporteur || item?.rapporteur || '').toLowerCase();
+    const missionValue = String(item?.mission_intitule || item?.nature || item?.intitule || item?.objectif || '').toLowerCase();
+
+    if (rapporteurFilter && !rapporteurValue.includes(rapporteurFilter)) return false;
+    if (missionFilter && !missionValue.includes(missionFilter)) return false;
+    return true;
+  });
+}
+
 function populateFilterProvinceOptions() {
   const select = document.getElementById('filter-province');
   const currentValue = select.value;
