@@ -1957,6 +1957,18 @@ function formatDate(value) {
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+}
+function applyFilters(data) {
+  const chef = document.getElementById('filterChef')?.value?.toLowerCase() || '';
+  const mission = document.getElementById('filterMission')?.value?.toLowerCase() || '';
+
+  return data.filter(item => {
+    return (
+      (!chef || (item.chef_nom || '').toLowerCase().includes(chef)) &&
+      (!mission || (item.mission_intitule || '').toLowerCase().includes(mission))
+    );
+  });
 }
 </script>
 </body>
