@@ -68,6 +68,32 @@ const PndaAuth = (() => {
         text-align: center; font-size: 0.7rem; color: rgba(255,255,255,0.55);
         margin-top: 18px; letter-spacing: 0.4px;
       }
+      #pnda-pwd-overlay {
+        position: fixed; inset: 0; z-index: 2100;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(10, 20, 14, 0.55);
+        padding: 20px;
+      }
+      #pnda-pwd-overlay .pwd-card {
+        width: 100%; max-width: 380px;
+        background: #fffdf7; border-radius: 12px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+        border-top: 4px solid #d3a52c;
+        padding: 24px 26px 26px;
+        position: relative;
+      }
+      #pnda-pwd-overlay .pwd-close {
+        position: absolute; top: 12px; right: 14px;
+        background: none; border: none; color: #6b7d72; font-size: 1.3rem; line-height: 1;
+      }
+      #pnda-pwd-overlay h2 {
+        font-family: 'Playfair Display', serif; font-size: 1.1rem; color: #123524; margin: 0 0 4px;
+      }
+      #pnda-pwd-overlay p.pwd-sub { font-size: 0.78rem; color: #6b7d72; margin: 0 0 16px; }
+      #pnda-pwd-overlay .form-label {
+        font-size: 0.72rem; font-weight: 700; letter-spacing: 0.6px;
+        text-transform: uppercase; color: #1d4c34;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -251,5 +277,75 @@ const PndaAuth = (() => {
     window.location.reload();
   }
 
-  return { hydrateSession, getSession, logout, accessTokenFor, ROLE_LABELS };
+  /**
+   * Ouvre une modale permettant à l'utilisateur connecté de changer
+   * lui-même son mot de passe (ex. après une réinitialisation générique).
+   */
+  function openChangePasswordModal(db) {
+    injectStyles();
+    let overlay = document.getElementById('pnda-pwd-overlay');
+    if (overlay) { overlay.style.display = 'flex'; return; }
+
+    overlay = document.createElement('div');
+    overlay.id = 'pnda-pwd-overlay';
+    overlay.innerHTML = `
+      <div class="pwd-card">
+        <button type="button" class="pwd-close" aria-label="Fermer">&times;</button>
+        <h2><i class="bi bi-key-fill me-1"></i>Changer mon mot de passe</h2>
+        <p class="pwd-sub">Choisissez un nouveau mot de passe personnel (6 caractères minimum).</p>
+        <div id="pnda-pwd-error" class="alert alert-danger auth-alert py-2 px-3 mb-3 d-none"></div>
+        <div id="pnda-pwd-success" class="alert alert-success auth-alert py-2 px-3 mb-3 d-none"></div>
+        <form id="pnda-pwd-form" novalidate>
+          <div class="mb-3">
+            <label class="form-label" for="pnda-pwd-new">Nouveau mot de passe</label>
+            <input type="password" class="form-control" id="pnda-pwd-new" autocomplete="new-password" required minlength="6">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="pnda-pwd-confirm">Confirmer le mot de passe</label>
+            <input type="password" class="form-control" id="pnda-pwd-confirm" autocomplete="new-password" required minlength="6">
+          </div>
+          <button type="submit" class="btn btn-pnda-auth w-100 py-2" id="pnda-pwd-submit">
+            <i class="bi bi-check2 me-1"></i>Enregistrer
+          </button>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const close = () => { overlay.style.display = 'none'; };
+    overlay.querySelector('.pwd-close').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+    overlay.querySelector('#pnda-pwd-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const errEl = document.getElementById('pnda-pwd-error');
+      const okEl = document.getElementById('pnda-pwd-success');
+      errEl.classList.add('d-none'); okEl.classList.add('d-none');
+      const pwd1 = document.getElementById('pnda-pwd-new').value;
+      const pwd2 = document.getElementById('pnda-pwd-confirm').value;
+      if (pwd1.length < 6) { errEl.textContent = 'Le mot de passe doit contenir au moins 6 caractères.'; errEl.classList.remove('d-none'); return; }
+      if (pwd1 !== pwd2) { errEl.textContent = 'Les deux mots de passe ne correspondent pas.'; errEl.classList.remove('d-none'); return; }
+
+      const btn = document.getElementById('pnda-pwd-submit');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enregistrement…';
+      try {
+        const { error } = await db.auth.updateUser({ password: pwd1 });
+        if (error) throw error;
+        okEl.textContent = '✓ Mot de passe mis à jour.';
+        okEl.classList.remove('d-none');
+        document.getElementById('pnda-pwd-form').reset();
+        setTimeout(close, 1800);
+      } catch (e) {
+        console.error('Erreur changement de mot de passe:', e);
+        errEl.textContent = e?.message || 'Erreur lors de la mise à jour du mot de passe.';
+        errEl.classList.remove('d-none');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Enregistrer';
+      }
+    });
+  }
+
+  return { hydrateSession, getSession, logout, accessTokenFor, openChangePasswordModal, ROLE_LABELS };
 })();
