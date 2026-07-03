@@ -3,3 +3,6 @@ dist/
 *.log
 .venv/
 .vscode/
+NOUVEAUX_MOTS_DE_PASSE*.txt
+*mots_de_passe*.txt
+*.secrets.txt
