@@ -31,7 +31,7 @@ DO $$ BEGIN
 END $$;
 
 CREATE OR REPLACE FUNCTION next_liquidation_seq(p_province TEXT, p_year INT)
-RETURNS INT LANGUAGE plpgsql AS $$
+RETURNS INT LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_seq INT;
 BEGIN
   INSERT INTO liquidation_sequences(province, year, last_seq)
@@ -45,6 +45,7 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION next_liquidation_seq(TEXT, INT) TO anon;
+GRANT EXECUTE ON FUNCTION next_liquidation_seq(TEXT, INT) TO authenticated;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reports_liquidation_number
   ON reports (liquidation_number)

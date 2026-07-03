@@ -66,6 +66,11 @@
   .statut-badge.activee    { background: #cfe2ff; color: #1b3f7a; }
   .statut-badge.realisee   { background: #d1e7dd; color: #135c34; }
   .empty-state { text-align: center; padding: 30px; color: #8b968d; }
+  .lieux-list { display: flex; flex-direction: column; gap: 6px; }
+  .lieu-item { background: #f4f6f4; border: 1px solid #d8e0d9; border-radius: 6px; padding: 6px 10px; }
+  .parcours-section { background: #eef4f0; border: 1px solid #c4d8c9; border-radius: 6px; padding: 8px 12px; }
+  .participants-section { background: #fafcfa; border: 1px solid #d8e0d9; border-radius: 6px; padding: 8px 12px; }
+  .participant-row input { font-size: 0.82rem; }
 </style>
 </head>
 <body>
@@ -144,8 +149,8 @@
         <div>Montant per diem : <span class="val" id="tot-montant">0,00</span> USD</div>
         <div>Autres frais : <span class="val" id="tot-autres">0,00</span> USD</div>
         <div>Total général : <span class="val" id="tot-total">0,00</span> USD</div>
-        <div>Avance : <span class="val" id="tot-avance">0,00</span> USD</div>
-        <div>Solde : <span class="val" id="tot-solde">0,00</span> USD</div>
+        <div>Avance (80%) : <span class="val" id="tot-avance">0,00</span> USD</div>
+        <div>Solde (20%) : <span class="val" id="tot-solde">0,00</span> USD</div>
       </div>
     </div>
   </div>
@@ -287,41 +292,50 @@ function addMissionRow(prefill = {}) {
         <label class="form-label-sm">Objectif</label>
         <input type="text" class="form-control form-control-sm f-objectif" placeholder="Objectif">
       </div>
-      <div class="col-md-3">
-        <label class="form-label-sm">Territoire</label>
-        <select class="form-select form-select-sm f-territoire" onchange="refreshSecteurOptions('${id}')"><option value="">—</option></select>
-      </div>
-      <div class="col-md-3">
-        <label class="form-label-sm">Secteur</label>
-        <select class="form-select form-select-sm f-secteur"><option value="">—</option></select>
+      <div class="col-12">
+        <label class="form-label-sm">Lieu(x) de déploiement</label>
+        <div class="lieux-list mb-1"></div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addLieuItem('${id}')">
+          <i class="bi bi-plus-sm me-1"></i>Ajouter territoire / secteur
+        </button>
       </div>
       <div class="col-md-3">
         <label class="form-label-sm">Date début</label>
-        <input type="date" class="form-control form-control-sm f-date-debut">
+        <input type="date" class="form-control form-control-sm f-date-debut" onchange="onDateChange('${id}')">
       </div>
       <div class="col-md-3">
         <label class="form-label-sm">Date fin</label>
-        <input type="date" class="form-control form-control-sm f-date-fin">
+        <input type="date" class="form-control form-control-sm f-date-fin" onchange="onDateChange('${id}')">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label-sm">Lieu de mission</label>
+        <select class="form-select form-select-sm f-lieu" onchange="onLieuChange('${id}')">
+          <option value="dans_province">Dans la province (100 $/nuit)</option>
+          <option value="hors_province">Hors province (200 $/nuit)</option>
+        </select>
       </div>
       <div class="col-md-2">
         <label class="form-label-sm">Participants</label>
-        <input type="number" min="0" class="form-control form-control-sm f-participants" value="1" onchange="recalcRow('${id}')">
+        <input type="number" min="0" class="form-control form-control-sm f-participants" value="1" onchange="onParticipantsChange('${id}')">
       </div>
       <div class="col-md-2">
-        <label class="form-label-sm">Nuitées</label>
-        <input type="number" min="0" class="form-control form-control-sm f-nuitees" value="0" onchange="recalcRow('${id}')">
+        <label class="form-label-sm">Nuitées <span class="text-muted" title="Calculé automatiquement depuis les dates">&#8635;</span></label>
+        <input type="number" min="0" class="form-control form-control-sm f-nuitees" value="0" readonly title="Calculé automatiquement depuis les dates" style="background:#f5f5f5">
       </div>
       <div class="col-md-2">
-        <label class="form-label-sm">Taux per diem (USD)</label>
-        <input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="0" onchange="recalcRow('${id}')">
+        <label class="form-label-sm">Taux/nuit (USD)</label>
+        <input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="100" onchange="recalcRow('${id}')">
       </div>
       <div class="col-md-3">
         <label class="form-label-sm">Autres frais (USD)</label>
         <input type="number" min="0" step="0.01" class="form-control form-control-sm f-autres" value="0" onchange="recalcRow('${id}')">
       </div>
       <div class="col-md-3">
-        <label class="form-label-sm">Avance perçue (USD)</label>
-        <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="0" onchange="recalcRow('${id}')">
+        <label class="form-label-sm">Avance versée <span class="text-success small fw-normal">· 80% recommandé</span></label>
+        <div class="input-group input-group-sm">
+          <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="0" onchange="recalcRow('${id}')">
+          <button type="button" class="btn btn-outline-secondary" onclick="setAvance80('${id}')" tabindex="-1" title="Appliquer 80% du total estimé">80%</button>
+        </div>
       </div>
       <div class="col-md-3">
         <label class="form-label-sm">Section</label>
@@ -332,13 +346,23 @@ function addMissionRow(prefill = {}) {
         <input type="text" class="form-control form-control-sm f-observation" placeholder="Remarques éventuelles">
       </div>
     </div>
+    <div class="parcours-section mt-2 d-none">
+      <label class="form-label-sm"><i class="bi bi-signpost-split me-1"></i>Parcours / Itinéraire</label>
+      <input type="text" class="form-control form-control-sm f-parcours mt-1" placeholder="Ex. : Kinshasa → Bulungu → Idiofa → Kinshasa">
+    </div>
+    <div class="participants-section mt-2 d-none">
+      <div class="form-label-sm mb-2 fw-bold" style="color:var(--pnda-green)"><i class="bi bi-people-fill me-1"></i>Liste des participants</div>
+      <div class="participants-list d-flex flex-column gap-1"></div>
+    </div>
     <div class="mt-2 small text-muted">
       Montant per diem : <strong class="row-montant">0,00</strong> USD ·
       Total : <strong class="row-total">0,00</strong> USD ·
-      Solde : <strong class="row-solde">0,00</strong> USD
+      Avance (80%) : <strong class="row-avance text-success">0,00</strong> USD ·
+      Solde (20%) : <strong class="row-solde text-warning">0,00</strong> USD
     </div>
   `;
   document.getElementById('mission-rows').appendChild(wrap);
+  addLieuItem(id);               // ligne initiale territoire/secteur
   refreshRowReferenceOptions(wrap);
   if (prefill && Object.keys(prefill).length) applyPrefillToRow(wrap, prefill);
   recalcRow(id);
@@ -357,22 +381,178 @@ function refreshRowReferenceOptions(row) {
     MISSIONS_REF.map((m) => `<option value="${esc(m.ref_id)}">${esc(m.nature)}</option>`).join('');
   sel.value = current;
 
-  const terrSel = row.querySelector('.f-territoire');
-  const currentTerr = terrSel.value;
-  terrSel.innerHTML = '<option value="">—</option>' + TERRITOIRES.map((t) => `<option value="${esc(t.name)}">${esc(t.label)}</option>`).join('');
-  terrSel.value = currentTerr;
-  refreshSecteurOptions(row.id);
+  // Mise à jour des options territoire dans chaque ligne lieu
+  row.querySelectorAll('.lieu-item').forEach((lieuItem) => {
+    const terrSel = lieuItem.querySelector('.f-territoire-item');
+    const cur = terrSel.value;
+    terrSel.innerHTML = '<option value="">— Territoire —</option>' +
+      TERRITOIRES.map((t) => `<option value="${esc(t.name)}">${esc(t.label)}</option>`).join('');
+    terrSel.value = cur;
+    refreshLieuSecteurOptions(lieuItem.id);
+  });
 }
 
-function refreshSecteurOptions(rowId) {
-  const row = document.getElementById(rowId);
-  const terrName = row.querySelector('.f-territoire').value;
+let lieuCounter = 0;
+
+function addLieuItem(missionRowId, terrName = '', sectName = '') {
+  lieuCounter++;
+  const lieuId = `lieu-${missionRowId}-${lieuCounter}`;
+  const missionRow = document.getElementById(missionRowId);
+  const list = missionRow.querySelector('.lieux-list');
+  const item = document.createElement('div');
+  item.className = 'lieu-item d-flex gap-2 align-items-center flex-wrap';
+  item.id = lieuId;
+  item.innerHTML = `
+    <select class="form-select form-select-sm f-territoire-item" style="max-width:220px" onchange="refreshLieuSecteurOptions('${lieuId}'); updateParcoursSection('${missionRowId}'); syncParticipantLieux('${missionRowId}')">
+      <option value="">— Territoire —</option>
+      ${TERRITOIRES.map((t) => `<option value="${esc(t.name)}"${t.name === terrName ? ' selected' : ''}>${esc(t.label)}</option>`).join('')}
+    </select>
+    <select class="form-select form-select-sm f-secteur-item" style="max-width:220px">
+      <option value="">— Secteur —</option>
+    </select>
+    <button type="button" class="btn btn-sm btn-outline-danger flex-shrink-0" onclick="removeLieuItem('${lieuId}')" title="Retirer">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  `;
+  list.appendChild(item);
+  if (terrName) {
+    refreshLieuSecteurOptions(lieuId);
+    item.querySelector('.f-secteur-item').value = sectName || '';
+  }
+  updateParcoursSection(missionRowId);
+  syncParticipantLieux(missionRowId);
+}
+
+function removeLieuItem(lieuId) {
+  const item = document.getElementById(lieuId);
+  if (!item) return;
+  const missionRow = item.closest('.mission-row');
+  const list = item.closest('.lieux-list');
+  item.remove();
+  if (list && list.children.length === 0) {
+    addLieuItem(missionRow.id);
+  }
+  if (missionRow) updateParcoursSection(missionRow.id);
+  if (missionRow) syncParticipantLieux(missionRow.id);
+}
+
+function refreshLieuSecteurOptions(lieuId) {
+  const item = document.getElementById(lieuId);
+  if (!item) return;
+  const terrName = item.querySelector('.f-territoire-item').value;
   const terr = TERRITOIRES.find((t) => t.name === terrName);
-  const secteurSel = row.querySelector('.f-secteur');
+  const secteurSel = item.querySelector('.f-secteur-item');
   const current = secteurSel.value;
   const options = terr ? SECTEURS.filter((s) => s.territoire_id === terr.id) : [];
-  secteurSel.innerHTML = '<option value="">—</option>' + options.map((s) => `<option value="${esc(s.name)}">${esc(s.label)}</option>`).join('');
+  secteurSel.innerHTML = '<option value="">— Secteur —</option>' +
+    options.map((s) => `<option value="${esc(s.name)}">${esc(s.label)}</option>`).join('');
   secteurSel.value = current;
+}
+
+function onParticipantsChange(rowId) {
+  const row = document.getElementById(rowId);
+  const n = Math.max(0, Math.min(50, parseInt(row.querySelector('.f-participants').value || '0', 10)));
+  const section = row.querySelector('.participants-section');
+  const list    = row.querySelector('.participants-list');
+  if (n <= 0) { section.classList.add('d-none'); recalcRow(rowId); return; }
+  section.classList.remove('d-none');
+  const mainNuitees = parseInt(row.querySelector('.f-nuitees').value || '0', 10);
+  const lieuItems   = Array.from(row.querySelectorAll('.lieu-item'));
+  // Préserver les données déjà saisies
+  const existing = Array.from(list.querySelectorAll('.participant-row')).map((el) => ({
+    nom:    el.querySelector('.p-nom').value,
+    titre:  el.querySelector('.p-titre').value,
+    entite: el.querySelector('.p-entite').value,
+    nuitees: el.querySelector('.p-nuitees')?.value,
+    lieuChecks: Object.fromEntries(
+      Array.from(el.querySelectorAll('.p-lieu-chk')).map((cb) => [cb.dataset.lieuId, cb.checked])
+    )
+  }));
+  list.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const d = existing[i] || {};
+    const pr = document.createElement('div');
+    pr.className = 'participant-row d-flex gap-2 align-items-start flex-wrap border-bottom pb-1';
+    const lieuChecksHtml = lieuItems.map((item) => {
+      const lieuId   = item.id;
+      const terrName = item.querySelector('.f-territoire-item').value;
+      const sectName = item.querySelector('.f-secteur-item').value;
+      const terr = TERRITOIRES.find((t) => t.name === terrName);
+      const sect = SECTEURS.find((s) => s.name === sectName);
+      const lbl  = [terr?.label || terrName, sect?.label || sectName].filter(Boolean).join(' / ') || '—';
+      const chkId  = `chk-${lieuId}-p${i}`;
+      const checked = d.lieuChecks ? (d.lieuChecks[lieuId] !== false) : true;
+      return `<label class="d-flex align-items-center gap-1 small text-nowrap" title="${esc(lbl)}">
+        <input type="checkbox" class="form-check-input p-lieu-chk" data-lieu-id="${esc(lieuId)}" id="${chkId}"${checked ? ' checked' : ''}>
+        <span style="max-width:110px;overflow:hidden;text-overflow:ellipsis">${esc(lbl)}</span>
+      </label>`;
+    }).join('');
+    const pNuitees = (d.nuitees !== undefined && d.nuitees !== '') ? d.nuitees : mainNuitees;
+    pr.innerHTML = `
+      <span class="text-muted fw-bold small flex-shrink-0 pt-1" style="min-width:20px">${i + 1}.</span>
+      <input type="text" class="form-control form-control-sm p-nom" placeholder="Nom et prénom" value="${esc(d.nom || '')}">
+      <input type="text" class="form-control form-control-sm p-titre" placeholder="Titre / Grade" style="max-width:145px" value="${esc(d.titre || '')}">
+      <input type="text" class="form-control form-control-sm p-entite" placeholder="Entité / Service" style="max-width:175px" value="${esc(d.entite || '')}">
+      <div class="p-lieux-checks d-flex gap-2 flex-wrap align-items-center">${lieuChecksHtml}</div>
+      <div class="d-flex align-items-center gap-1 flex-shrink-0">
+        <span class="small text-muted text-nowrap">Nuitées :</span>
+        <input type="number" min="0" class="form-control form-control-sm p-nuitees" style="max-width:65px" value="${esc(String(pNuitees))}">
+      </div>
+    `;
+    list.appendChild(pr);
+  }
+  recalcRow(rowId);
+}
+
+function updateParcoursSection(missionRowId) {
+  const row = document.getElementById(missionRowId);
+  if (!row) return;
+  const lieuItems     = row.querySelectorAll('.lieu-item');
+  const parcoursSection = row.querySelector('.parcours-section');
+  if (!parcoursSection) return;
+  if (lieuItems.length > 1) {
+    parcoursSection.classList.remove('d-none');
+    const parcoursInput = parcoursSection.querySelector('.f-parcours');
+    if (parcoursInput && !parcoursInput.value) {
+      const labels = Array.from(lieuItems).map((item) => {
+        const terrName = item.querySelector('.f-territoire-item').value;
+        const terr = TERRITOIRES.find((t) => t.name === terrName);
+        return terr?.label || terrName || '';
+      }).filter(Boolean);
+      if (labels.length > 0) parcoursInput.value = labels.join(' → ');
+    }
+  } else {
+    parcoursSection.classList.add('d-none');
+  }
+}
+
+function syncParticipantLieux(missionRowId) {
+  const row = document.getElementById(missionRowId);
+  if (!row) return;
+  const lieuItems = Array.from(row.querySelectorAll('.lieu-item'));
+  const pRows     = row.querySelectorAll('.participant-row');
+  if (pRows.length === 0) return;
+  pRows.forEach((pr, i) => {
+    const checksDiv = pr.querySelector('.p-lieux-checks');
+    if (!checksDiv) return;
+    const prev = Object.fromEntries(
+      Array.from(checksDiv.querySelectorAll('.p-lieu-chk')).map((cb) => [cb.dataset.lieuId, cb.checked])
+    );
+    checksDiv.innerHTML = lieuItems.map((item) => {
+      const lieuId   = item.id;
+      const terrName = item.querySelector('.f-territoire-item').value;
+      const sectName = item.querySelector('.f-secteur-item').value;
+      const terr = TERRITOIRES.find((t) => t.name === terrName);
+      const sect = SECTEURS.find((s) => s.name === sectName);
+      const lbl  = [terr?.label || terrName, sect?.label || sectName].filter(Boolean).join(' / ') || '—';
+      const chkId  = `chk-${lieuId}-p${i}`;
+      const checked = (lieuId in prev) ? prev[lieuId] : true;
+      return `<label class="d-flex align-items-center gap-1 small text-nowrap" title="${esc(lbl)}">
+        <input type="checkbox" class="form-check-input p-lieu-chk" data-lieu-id="${esc(lieuId)}" id="${chkId}"${checked ? ' checked' : ''}>
+        <span style="max-width:110px;overflow:hidden;text-overflow:ellipsis">${esc(lbl)}</span>
+      </label>`;
+    }).join('');
+  });
 }
 
 function applyReferenceMission(rowId, refId) {
@@ -388,18 +568,68 @@ function applyPrefillToRow(row, m) {
   row.querySelector('.ref-select').value = m.mission_reference_id || '';
   row.querySelector('.f-nature').value = m.nature || '';
   row.querySelector('.f-objectif').value = m.objectif || '';
-  row.querySelector('.f-territoire').value = m.territoire_name || '';
-  refreshSecteurOptions(row.id);
-  row.querySelector('.f-secteur').value = m.secteur_name || '';
+  // Lieux (multi-territoire/secteur)
+  const lieusList = row.querySelector('.lieux-list');
+  lieusList.innerHTML = '';
+  const lieux = (m.lieux && m.lieux.length > 0)
+    ? m.lieux
+    : (m.territoire_name ? [{ territoire_name: m.territoire_name, secteur_name: m.secteur_name || '' }] : []);
+  if (lieux.length > 0) {
+    lieux.forEach((lieu) => addLieuItem(row.id, lieu.territoire_name || '', lieu.secteur_name || ''));
+  } else {
+    addLieuItem(row.id);
+  }
+  if (m.parcours) {
+    const pi = row.querySelector('.f-parcours');
+    if (pi) { pi.value = m.parcours; row.querySelector('.parcours-section')?.classList.remove('d-none'); }
+  }
   row.querySelector('.f-date-debut').value = m.date_debut || '';
   row.querySelector('.f-date-fin').value = m.date_fin || '';
   row.querySelector('.f-participants').value = m.participants ?? 1;
+  onParticipantsChange(row.id);
+  if (m.participants_list && m.participants_list.length > 0) {
+    const pRows = row.querySelectorAll('.participant-row');
+    m.participants_list.forEach((p, i) => {
+      if (!pRows[i]) return;
+      pRows[i].querySelector('.p-nom').value   = p.nom   || '';
+      pRows[i].querySelector('.p-titre').value  = p.titre  || '';
+      pRows[i].querySelector('.p-entite').value = p.entite || '';
+      if (p.nuitees !== undefined) {
+        const ni = pRows[i].querySelector('.p-nuitees');
+        if (ni) ni.value = p.nuitees;
+      }
+      if (p.lieux_visits && p.lieux_visits.length > 0) {
+        pRows[i].querySelectorAll('.p-lieu-chk').forEach((cb) => {
+          cb.checked = p.lieux_visits.includes(cb.dataset.lieuId);
+        });
+      }
+    });
+  }
   row.querySelector('.f-nuitees').value = m.nuitees ?? 0;
+  row.querySelector('.f-lieu').value = (m.taux_per_diem ?? 0) >= 200 ? 'hors_province' : 'dans_province';
   row.querySelector('.f-taux').value = m.taux_per_diem ?? 0;
   row.querySelector('.f-autres').value = m.autres_frais_usd ?? 0;
   row.querySelector('.f-avance').value = m.avance_usd ?? 0;
   row.querySelector('.f-section').value = m.section || '';
   row.querySelector('.f-observation').value = m.observation || '';
+}
+
+function onDateChange(rowId) {
+  const row = document.getElementById(rowId);
+  const debut = row.querySelector('.f-date-debut').value;
+  const fin   = row.querySelector('.f-date-fin').value;
+  if (debut && fin) {
+    const diffDays = Math.round((new Date(fin) - new Date(debut)) / 86400000);
+    row.querySelector('.f-nuitees').value = Math.max(0, diffDays - 1);
+  }
+  recalcRow(rowId);
+}
+
+function onLieuChange(rowId) {
+  const row = document.getElementById(rowId);
+  const lieu = row.querySelector('.f-lieu').value;
+  row.querySelector('.f-taux').value = lieu === 'hors_province' ? 200 : 100;
+  recalcRow(rowId);
 }
 
 function recalcRow(rowId) {
@@ -413,8 +643,19 @@ function recalcRow(rowId) {
   const solde = total - avance;
   row.querySelector('.row-montant').textContent = fmtCur(montant);
   row.querySelector('.row-total').textContent = fmtCur(total);
+  row.querySelector('.row-avance').textContent = fmtCur(avance);
   row.querySelector('.row-solde').textContent = fmtCur(solde);
   recalcTotals();
+}
+
+function setAvance80(rowId) {
+  const row = document.getElementById(rowId);
+  const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
+  const taux    = Number(row.querySelector('.f-taux').value   || 0);
+  const autres  = Number(row.querySelector('.f-autres').value || 0);
+  const total   = nuitees * taux + autres;
+  row.querySelector('.f-avance').value = (total * 0.8).toFixed(2);
+  recalcRow(rowId);
 }
 
 function recalcTotals() {
@@ -440,19 +681,26 @@ function collectMissions() {
     const avance = Number(row.querySelector('.f-avance').value || 0);
     const montant = nuitees * taux;
     const total = montant + autres;
-    const terrName = row.querySelector('.f-territoire').value;
-    const terr = TERRITOIRES.find((t) => t.name === terrName);
-    const secteurName = row.querySelector('.f-secteur').value;
-    const secteur = SECTEURS.find((s) => s.name === secteurName);
+    const lieuItems = Array.from(row.querySelectorAll('.lieu-item'));
+    const lieux = lieuItems.map((lieuItem) => {
+      const tName = lieuItem.querySelector('.f-territoire-item').value;
+      const tObj  = TERRITOIRES.find((t) => t.name === tName);
+      const sName = lieuItem.querySelector('.f-secteur-item').value;
+      const sObj  = SECTEURS.find((s) => s.name === sName);
+      return { territoire_name: tName || null, territoire_label: tObj?.label || null,
+               secteur_name: sName || null, secteur_label: sObj?.label || null };
+    }).filter((l) => l.territoire_name || l.secteur_name);
+    const firstLieu = lieux[0] || {};
     return {
       numero: String(idx + 1),
       mission_reference_id: row.querySelector('.ref-select').value || null,
       nature: row.querySelector('.f-nature').value.trim(),
       objectif: row.querySelector('.f-objectif').value.trim(),
-      territoire_name: terrName || null,
-      territoire_label: terr?.label || null,
-      secteur_name: secteurName || null,
-      secteur_label: secteur?.label || null,
+      lieux: lieux.length > 0 ? lieux : null,
+      territoire_name: firstLieu.territoire_name || null,
+      territoire_label: firstLieu.territoire_label || null,
+      secteur_name: firstLieu.secteur_name || null,
+      secteur_label: firstLieu.secteur_label || null,
       date_debut: row.querySelector('.f-date-debut').value || null,
       date_fin: row.querySelector('.f-date-fin').value || null,
       participants: Number(row.querySelector('.f-participants').value || 0),
@@ -463,7 +711,23 @@ function collectMissions() {
       avance_usd: avance,
       solde_usd: total - avance,
       section: row.querySelector('.f-section').value.trim(),
-      observation: row.querySelector('.f-observation').value.trim()
+      observation: row.querySelector('.f-observation').value.trim(),
+      parcours: row.querySelector('.f-parcours')?.value?.trim() || null,
+      participants_list: (() => {
+        const pRows = Array.from(row.querySelectorAll('.participant-row'));
+        const list = pRows.map((pr) => {
+          const lieux_visits = Array.from(pr.querySelectorAll('.p-lieu-chk'))
+            .filter((cb) => cb.checked).map((cb) => cb.dataset.lieuId);
+          return {
+            nom:    pr.querySelector('.p-nom')?.value?.trim()   || '',
+            titre:  pr.querySelector('.p-titre')?.value?.trim() || '',
+            entite: pr.querySelector('.p-entite')?.value?.trim() || '',
+            nuitees: parseInt(pr.querySelector('.p-nuitees')?.value || '0', 10),
+            lieux_visits
+          };
+        }).filter((p) => p.nom || p.titre || p.entite);
+        return list.length > 0 ? list : null;
+      })()
     };
   }).filter((m) => m.nature); // ignore les lignes vides
 }
