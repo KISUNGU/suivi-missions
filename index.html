@@ -279,20 +279,37 @@
   .btn-mark-read { font-size: .72rem; padding: 1px 7px; }
 
   /* ── PRINT ───────────────────────────────────────────────── */
+  .print-only-header { display: none; }
   @media print {
-    body { background: #fff !important; }
+    body { background: #fff !important; font-size: 9pt; }
     .top-navbar, #sidebar, .toast-container { display: none !important; }
     #layout-wrapper { padding-top: 0 !important; margin-left: 0 !important; }
     #layout-wrapper > aside { display: none !important; }
     #content { padding: 4px !important; margin-left: 0 !important; max-width: 100% !important; }
     #dashboard-toolbar, #workflow-tracker-card, #summary-grid,
     #filters-card, #workflow-badges, #tabs,
-    .report-actions-cell { display: none !important; }
-    .pnda-panel { display: block !important; break-before: always; }
+    .report-actions-cell, .chevron-icon, .badge-nouveau, .status-badge-small { display: none !important; }
+    .print-only-header {
+      display: block !important; text-align: center; margin-bottom: 10px;
+      border-bottom: 2px solid var(--pnda-green, #123524); padding-bottom: 6px;
+    }
+    .print-only-header h4 { margin: 0; color: var(--pnda-green, #123524); font-size: 13pt; font-weight: 700; }
+    .print-only-header p { margin: 2px 0 0; font-size: 8pt; color: #555; font-style: italic; }
+    .pnda-panel { display: block !important; break-before: page; }
     .pnda-panel:first-child { break-before: auto; }
-    .card { break-inside: avoid; margin-bottom: 8px !important; box-shadow: none !important; border: 1px solid #ccc !important; }
+    .pnda-panel > .d-flex.justify-content-between { break-after: avoid; }
+    .card { break-inside: auto; margin-bottom: 8px !important; box-shadow: none !important; border: 1px solid #ccc !important; }
+    .card-header { break-after: avoid; break-inside: avoid; padding: 4px 8px !important; }
+    .card-header h6 { font-size: 10pt; margin: 0; }
     .is-hidden { display: none !important; }
-    @page { size: A4 landscape; margin: 1cm; }
+    table { font-size: 7pt !important; }
+    table th, table td { padding: 2px 3px !important; white-space: normal !important; word-break: break-word; }
+    .report-detail-table { font-size: 6.5pt !important; }
+    .report-detail-table th, .report-detail-table td { padding: 1px 2px !important; }
+    thead { display: table-header-group; } /* répète l'en-tête sur chaque page */
+    tr { break-inside: avoid; }
+    .table-responsive { overflow: visible !important; }
+    @page { size: A4 landscape; margin: 0.8cm; }
   }
 /* ── WORKFLOW BADGES ─────────────────────────────────────── */
 .workflow-badge-btn {
@@ -497,6 +514,10 @@
 
     <!-- ░░ VUE : TABLEAU DE BORD ░░ -->
     <div id="view-dashboard" class="view active">
+      <div class="print-only-header">
+        <h4>PNDA-SE — Suivi consolidé des missions de terrain</h4>
+        <p id="print-banner-meta"></p>
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
           <h2 class="page-title">Suivi consolidé</h2>
@@ -861,7 +882,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.103.0/dist/umd/supabase.js"></script>
 <script src="supabase_config.js"></script>
 <script src="auth-shared.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
   // ─── CLIENT SUPABASE ──────────────────────────────────────────────────────────
 const { createClient } = supabase;
@@ -1725,7 +1746,7 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
                       <div class="table-responsive">
                         <table class="table table-sm table-bordered mb-0 report-detail-table">
                           <thead><tr>
-                            <th>N°</th><th>Nature</th><th>Objectif</th><th>Prov. dest.</th><th>Territoires / Secteurs</th>
+                            <th>N°</th><th>Missionnaire</th><th>Accompagnateurs</th><th>Nature</th><th>Objectif</th><th>Prov. dest.</th><th>Territoires / Secteurs</th>
                             <th>Début</th><th>Fin</th><th>Participants</th><th>Nuitées</th><th>Taux</th>
                             <th>Montant</th><th>Autres</th><th>Total</th><th>Avance</th><th>Solde</th><th>Section</th><th>Observation</th>
                           </tr></thead>
@@ -1740,8 +1761,16 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
                               const parts = [m.territoire_label||m.territoire_name, m.secteur_label||m.secteur_name].filter(Boolean);
                               return escapeHtml(parts.join(' / ')) || '—';
                             })();
+                            const accompagnateursHtml = ((m.participants_list || [])
+                              .map((p) => [p.nom, p.titre].filter(Boolean).join(' — '))
+                              .filter(Boolean)
+                              .map((s) => escapeHtml(s))
+                              .join('<br>')) || '<span class="text-muted">—</span>';
                             return `<tr>
-                            <td>${escapeHtml(m.numero||'—')}</td><td>${escapeHtml(m.nature||'—')}</td>
+                            <td>${escapeHtml(m.numero||'—')}</td>
+                            <td class="small fw-semibold">${escapeHtml(report.meta?.rapporteur||'—')}</td>
+                            <td class="small">${accompagnateursHtml}</td>
+                            <td>${escapeHtml(m.nature||'—')}</td>
                             <td class="small">${escapeHtml(m.objectif||'—')}</td>
                             <td>${escapeHtml(m.destination_province_label||'—')}</td>
                             <td class="small">${lieuxHtml}</td>
@@ -1868,6 +1897,13 @@ let _printExpandedDetails = [];
 let _printExpandedPanels  = [];
 
 function printDashboard() {
+  const session = getSession();
+  const reports = getFilteredReports();
+  const missions = reports.flatMap((r) => r.missions || []);
+  const metaEl = document.getElementById('print-banner-meta');
+  if (metaEl) {
+    metaEl.textContent = `Imprimé le ${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })} par ${session?.user?.email || session?.user || '—'}  ·  ${reports.length} rapport(s) · ${missions.length} mission(s)`;
+  }
   _printExpandedDetails = Array.from(document.querySelectorAll('.report-detail.is-hidden'));
   _printExpandedDetails.forEach((el) => el.classList.remove('is-hidden'));
   _printExpandedPanels = Array.from(document.querySelectorAll('.pnda-panel:not(.active)'));
@@ -1942,9 +1978,25 @@ th{background:#e8e8e8;text-align:center}
 @page{size:A4;margin:1.5cm} @media print{body{padding:0}}</style>`;
 }
 
+function _accompNames(rm) {
+  const seen = new Set();
+  const names = [];
+  (rm || []).forEach((m) => {
+    (m.participants_list || []).forEach((p) => {
+      const label = [p.nom, p.titre].filter(Boolean).join(' — ');
+      if (label && !seen.has(label)) { seen.add(label); names.push(label); }
+    });
+  });
+  return names;
+}
+
 function buildBordereauHtml(report) {
   const rm = report.missions || [];
   const nom      = report.meta?.rapporteur || '';
+  const accompNames = _accompNames(rm);
+  const accompRow = accompNames.length
+    ? `<tr><td class="nb" style="vertical-align:top"><strong>Accompagné de&nbsp;:</strong></td><td class="nb" style="font-size:8pt">${escapeHtml(accompNames.join('; '))}</td></tr>`
+    : '';
   const province = report.meta?.province_label || report.meta?.province || '';
   const annee    = report.meta?.annee || new Date().getFullYear();
   const num      = report.liquidation_number || '___/____';
@@ -1983,6 +2035,7 @@ function buildBordereauHtml(report) {
 <table style="border:none;margin-bottom:8px"><tr>
   <td class="nb" style="width:50%;vertical-align:top">
     <table style="border:none"><tr><td class="nb"><strong>Nom&nbsp;:</strong></td><td class="nb"><span class="fline">${escapeHtml(nom)}</span></td></tr>
+    ${accompRow}
     <tr><td class="nb"><strong>Fonction&nbsp;:</strong></td><td class="nb"><span class="fline">&nbsp;</span></td></tr>
     <tr><td class="nb"><strong>Service&nbsp;:</strong></td><td class="nb"><span class="fline">&nbsp;</span></td></tr>
     <tr><td class="nb"><strong>Date OM&nbsp;:</strong></td><td class="nb"><span class="fline">${escapeHtml(dateActiv)}</span></td></tr>
@@ -2026,6 +2079,7 @@ function buildBordereauHtml(report) {
 function buildJustificationMissionHtml(report) {
   const rm = report.missions || [];
   const nom = report.meta?.rapporteur || '';
+  const accompNames = _accompNames(rm);
   const province = (report.meta?.province_label || report.meta?.province || '').toUpperCase();
   const objet = rm.map(m=>m.nature||'').filter(Boolean).join('; ') || '';
   const dateDepart = _docDate(rm[0]?.date_debut);
@@ -2051,7 +2105,7 @@ function buildJustificationMissionHtml(report) {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Justification mission</title>${_baseStyle()}</head><body>
 <p style="font-size:13pt;font-weight:bold;margin:0">PNDA</p>
 <p style="margin:3px 0"><strong>Justification sur la mission</strong>&nbsp;: ${escapeHtml(objet)}</p>
-<p style="margin:3px 0 10px">Monsieur <strong>${escapeHtml(nom)}</strong></p>
+<p style="margin:3px 0 10px">Monsieur <strong>${escapeHtml(nom)}</strong>${accompNames.length ? ' — Accompagné de : <em>' + escapeHtml(accompNames.join('; ')) + '</em>' : ''}</p>
 <table>
   <thead>
     <tr>
@@ -2087,6 +2141,7 @@ function buildJustificationMissionHtml(report) {
 function buildAvisJustificatifsHtml(report) {
   const rm = report.missions || [];
   const nom      = report.meta?.rapporteur || '';
+  const accompNames = _accompNames(rm);
   const province = report.meta?.province_label || report.meta?.province || '';
   const num      = report.fld_number || '___/___/____';
   const dateJustif = _docDate(report.justification_at);
@@ -2104,6 +2159,7 @@ function buildAvisJustificatifsHtml(report) {
 <h1>AVIS SUR JUSTIFICATIFS PROVISION N° ${escapeHtml(num)}</h1>
 <table style="border:none;margin:10px 0">
   <tr><td class="nb" style="width:45%;padding:3px 0"><strong>JUSTIFICATIFS PRÉSENTÉS PAR&nbsp;:</strong></td><td class="nb">${escapeHtml(nom)}</td></tr>
+  ${accompNames.length ? `<tr><td class="nb" style="padding:3px 0"><strong>ACCOMPAGNÉ DE&nbsp;:</strong></td><td class="nb" style="font-size:8pt">${escapeHtml(accompNames.join('; '))}</td></tr>` : ''}
   <tr><td class="nb" style="padding:3px 0"><strong>FONCTION&nbsp;:</strong></td><td class="nb"><span class="fline" style="min-width:200px">&nbsp;</span></td></tr>
   <tr><td class="nb" style="padding:3px 0"><strong>DIRECTION&nbsp;:</strong></td><td class="nb"><span class="fline">${escapeHtml(province)}</span></td></tr>
   <tr><td class="nb" style="padding:3px 0"><strong>MOTIF&nbsp;:</strong></td><td class="nb"><span style="border-bottom:1px solid #000;display:inline-block;min-width:260px">${escapeHtml(motif)}</span></td></tr>
@@ -2469,57 +2525,178 @@ async function saveEditedReport() {
 }
 
 // ─── EXCEL EXPORT ─────────────────────────────────────────────────────────────
-async function exportExcelWorkbook() {
-  const reports = getFilteredReports();
+const PNDA_XL_COLUMNS = [
+  { header: 'Province',               key: 'province',        width: 15 },
+  { header: 'Missionnaire',           key: 'missionnaire',     width: 20 },
+  { header: 'Accompagnateurs',        key: 'accompagnateurs',  width: 30 },
+  { header: 'Trimestre',              key: 'trimestre',        width: 9  },
+  { header: 'Année',                  key: 'annee',            width: 7  },
+  { header: 'Nature de la mission',   key: 'nature',           width: 20 },
+  { header: 'Objectif',               key: 'objectif',         width: 26 },
+  { header: 'Territoires / Secteurs', key: 'territoires',      width: 26 },
+  { header: 'Début',                  key: 'date_debut',       width: 11 },
+  { header: 'Fin',                    key: 'date_fin',         width: 11 },
+  { header: 'Part.',                  key: 'participants',     width: 6  },
+  { header: 'Nuitées',                key: 'nuitees',          width: 8  },
+  { header: 'Montant USD',            key: 'montant',          width: 13 },
+  { header: 'Autres frais',           key: 'autres',           width: 12 },
+  { header: 'Total USD',              key: 'total',            width: 13 },
+  { header: 'Avance USD',             key: 'avance',           width: 13 },
+  { header: 'Solde USD',              key: 'solde',            width: 13 },
+  { header: 'Statut',                 key: 'statut',           width: 13 }
+];
+const PNDA_XL_MONEY_KEYS = new Set(['montant', 'autres', 'total', 'avance', 'solde']);
+const PNDA_XL_INT_KEYS   = new Set(['participants', 'nuitees', 'annee']);
 
-  // 1. Transformer les données
-  const data = [];
-
-  reports.forEach(report => {
+function buildMissionExportRows(reports) {
+  const rows = [];
+  reports.forEach((report) => {
     const missions = report.missions || [];
-
-    missions.forEach(m => {
-      data.push({
-        Province: getReportProvinceLabel(report),
-        Rapporteur: report.meta?.rapporteur || '',
-        Trimestre: report.meta?.trimestre || '',
-        Annee: report.meta?.annee || '',
-        Mission: m.nature || '',
-        Objectif: m.objectif || '',
-        "Date début": m.date_debut || '',
-        "Date fin": m.date_fin || '',
-        Participants: Number(m.participants || 0),
-        Nuitées: Number(m.nuitees || 0),
-        "Montant USD": Number(m.montant_usd || 0),
-        "Autres frais": Number(m.autres_frais_usd || 0),
-        "Total USD": Number(m.total_usd || 0),
-        "Avance USD": Number(m.avance_usd || 0),
-        "Solde USD": Number(m.solde_usd || 0),
-        Statut: report.statut || 'activee'
+    const rapporteur = report.meta?.rapporteur || '—';
+    missions.forEach((m) => {
+      const lieux = (m.lieux && m.lieux.length)
+        ? m.lieux
+        : [{ territoire_label: m.territoire_label, secteur_label: m.secteur_label }];
+      const territoires = lieux
+        .map((l) => [l.territoire_label || l.territoire_name, l.secteur_label || l.secteur_name].filter(Boolean).join(' / '))
+        .filter(Boolean).join('; ') || '—';
+      const accompagnateurs = (m.participants_list || [])
+        .map((p) => [p.nom, p.titre].filter(Boolean).join(' — '))
+        .filter(Boolean).join('; ') || '—';
+      rows.push({
+        province: getReportProvinceLabel(report) || '—',
+        missionnaire: rapporteur,
+        accompagnateurs,
+        trimestre: report.meta?.trimestre || '—',
+        annee: report.meta?.annee || '',
+        nature: m.nature || '—',
+        objectif: m.objectif || '',
+        territoires,
+        date_debut: m.date_debut || '',
+        date_fin: m.date_fin || '',
+        participants: Number(m.participants || 0),
+        nuitees: Number(m.nuitees || 0),
+        montant: Number(m.montant_usd || 0),
+        autres: Number(m.autres_frais_usd || 0),
+        total: Number(m.total_usd || 0),
+        avance: Number(m.avance_usd || 0),
+        solde: Number(m.solde_usd || 0),
+        statut: getStatusLabel(report.statut || 'activee').replace(/[⏳⚡✓↩]/g, '').trim()
       });
     });
   });
+  rows.sort((a, b) => a.province.localeCompare(b.province, 'fr') || a.missionnaire.localeCompare(b.missionnaire, 'fr'));
+  return rows;
+}
 
-  if (!data.length) {
-    showToast("Aucune donnée à exporter");
+async function exportExcelWorkbook() {
+  if (!window.ExcelJS) { showToast('Erreur : bibliothèque Excel non chargée.'); return; }
+  const reports = getFilteredReports();
+  const rows = buildMissionExportRows(reports);
+
+  if (!rows.length) {
+    showToast('Aucune donnée à exporter');
     return;
   }
 
-  // 2. Créer feuille
-  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'PNDA-SE';
+  workbook.created = new Date();
 
-  // 3. Largeur colonnes auto
-  worksheet['!cols'] = Object.keys(data[0]).map(() => ({ wch: 20 }));
+  const sheet = workbook.addWorksheet('Missions', {
+    pageSetup: {
+      orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+      margins: { left: 0.3, right: 0.3, top: 0.5, bottom: 0.4, header: 0.2, footer: 0.2 }
+    },
+    views: [{ state: 'frozen', ySplit: 4 }]
+  });
 
-  // 4. Créer workbook
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Missions");
+  const colCount = PNDA_XL_COLUMNS.length;
+  sheet.columns = PNDA_XL_COLUMNS.map(({ header, key, width }) => ({ key, width }));
 
-  // 5. Export
-  const fileName = `PNDA_dashboard_${new Date().toISOString().slice(0,10)}.xlsx`;
-  XLSX.writeFile(workbook, fileName);
+  // ── Bandeau titre ──
+  sheet.mergeCells(1, 1, 1, colCount);
+  const titleCell = sheet.getCell(1, 1);
+  titleCell.value = 'PNDA-SE — Suivi consolidé des missions de terrain';
+  titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+  titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+  titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF123524' } };
+  sheet.getRow(1).height = 26;
 
-  showToast("Export Excel réussi");
+  // ── Sous-titre (métadonnées d'export) ──
+  sheet.mergeCells(2, 1, 2, colCount);
+  const session = getSession();
+  const subCell = sheet.getCell(2, 1);
+  subCell.value = `Exporté le ${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })} par ${session?.user?.email || session?.user || '—'}  ·  ${rows.length} mission(s) sur ${reports.length} rapport(s)`;
+  subCell.font = { italic: true, size: 10, color: { argb: 'FF444444' } };
+  subCell.alignment = { vertical: 'middle', horizontal: 'center' };
+  subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4EFD9' } };
+  sheet.getRow(2).height = 18;
+
+  sheet.getRow(3).height = 5; // espaceur
+
+  // ── En-têtes (ligne 4) ──
+  const headerRow = sheet.getRow(4);
+  PNDA_XL_COLUMNS.forEach((col, i) => { headerRow.getCell(i + 1).value = col.header; });
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, size: 10, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B7A43' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' }, color: { argb: 'FF0C3D22' } };
+  });
+  headerRow.height = 28;
+
+  // ── Données ──
+  rows.forEach((r, idx) => {
+    const row = sheet.addRow(r);
+    const isBand = idx % 2 === 1;
+    row.eachCell((cell, colNumber) => {
+      const key = PNDA_XL_COLUMNS[colNumber - 1].key;
+      cell.border = { top: { style: 'thin', color: { argb: 'FFDDDDDD' } }, left: { style: 'thin', color: { argb: 'FFDDDDDD' } }, bottom: { style: 'thin', color: { argb: 'FFDDDDDD' } }, right: { style: 'thin', color: { argb: 'FFDDDDDD' } } };
+      cell.font = { size: 9.5 };
+      if (isBand) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF6F8F6' } };
+      if (PNDA_XL_MONEY_KEYS.has(key)) { cell.numFmt = '#,##0.00'; cell.alignment = { horizontal: 'right' }; }
+      else if (PNDA_XL_INT_KEYS.has(key)) { cell.alignment = { horizontal: 'center' }; }
+      else { cell.alignment = { vertical: 'middle', wrapText: key === 'accompagnateurs' || key === 'territoires' || key === 'objectif' }; }
+    });
+  });
+
+  // ── Ligne de totaux ──
+  const totalRowIdx = 5 + rows.length;
+  const totalRow = sheet.getRow(totalRowIdx);
+  totalRow.getCell(1).value = 'TOTAL GÉNÉRAL';
+  sheet.mergeCells(totalRowIdx, 1, totalRowIdx, 3);
+  PNDA_XL_COLUMNS.forEach((col, i) => {
+    if (PNDA_XL_MONEY_KEYS.has(col.key)) {
+      const colLetter = sheet.getColumn(i + 1).letter;
+      totalRow.getCell(i + 1).value = { formula: `SUM(${colLetter}5:${colLetter}${totalRowIdx - 1})` };
+      totalRow.getCell(i + 1).numFmt = '#,##0.00';
+    }
+  });
+  totalRow.eachCell((cell) => {
+    cell.font = { bold: true, size: 10 };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8E0BE' } };
+    cell.border = { top: { style: 'double' }, bottom: { style: 'thin' } };
+    cell.alignment = { horizontal: cell.alignment?.horizontal || 'right', vertical: 'middle' };
+  });
+  totalRow.height = 20;
+
+  // ── Filtre + impression ──
+  sheet.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4, column: colCount } };
+  sheet.pageSetup.printTitlesRow = '4:4';
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `PNDA_missions_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+
+  showToast('✓ Export Excel généré.');
 }
 
 function buildGeneralSheetRows(signatory = {}, reports = getFilteredReports()) {
