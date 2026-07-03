@@ -21,6 +21,19 @@ const PndaAuth = (() => {
     super_admin: 'Super-administrateur (RNSE)'
   };
 
+  // Page d'accueil canonique pour chaque rôle
+  const ROLE_HOME = {
+    province:    'saisie.html',
+    comptable:   'index.html',
+    admin:       'index.html',
+    super_admin: 'superadmin.html'
+  };
+
+  function redirectToRoleHome(role) {
+    const home = ROLE_HOME[role];
+    if (home) { window.location.href = home; }
+  }
+
   function injectStyles() {
     if (document.getElementById('pnda-auth-styles')) return;
     const style = document.createElement('style');
@@ -206,10 +219,14 @@ const PndaAuth = (() => {
         }
         try {
           const profile = await fetchProfile(db, authSession.user.id);
-          if (!profile.is_active || !allowedRoles.includes(profile.role)) {
+          if (!profile.is_active) {
             await db.auth.signOut();
             localStorage.removeItem('PNDA_SESSION');
-            showLoginScreen(`Ce compte (${ROLE_LABELS[profile.role] || profile.role}) n'a pas accès à cette page.`);
+            showLoginScreen('Ce compte est désactivé. Contactez le RNSE.');
+            return;
+          }
+          if (!allowedRoles.includes(profile.role)) {
+            redirectToRoleHome(profile.role);
             return;
           }
           const localSession = buildLocalSession(profile);
@@ -241,9 +258,13 @@ const PndaAuth = (() => {
             const { data, error } = await db.auth.signInWithPassword({ email, password });
             if (error) throw error;
             const profile = await fetchProfile(db, data.user.id);
-            if (!profile.is_active || !allowedRoles.includes(profile.role)) {
+            if (!profile.is_active) {
               await db.auth.signOut();
-              setError(`Ce compte (${ROLE_LABELS[profile.role] || profile.role}) n'a pas accès à cette page.`);
+              setError('Ce compte est désactivé. Contactez le RNSE.');
+              return;
+            }
+            if (!allowedRoles.includes(profile.role)) {
+              redirectToRoleHome(profile.role);
               return;
             }
             const localSession = buildLocalSession(profile);
