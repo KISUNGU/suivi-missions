@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PNDA-SE — Saisie de mission</title>
+<link rel="icon" type="image/png" href="icone_pnda.png">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --pnda-green:    #123524;
+    --pnda-green-md: #1d4c34;
+    --pnda-green-lt: #2f6a48;
+    --pnda-gold:     #d3a52c;
+    --pnda-gold-lt:  #f1c85b;
+    --pnda-cream:    #f6f1df;
+    --pnda-paper:    #fffdf7;
+  }
+  body { background: #f0f2f5; font-family: 'Source Sans 3', sans-serif; }
+
+  .top-navbar {
+    background: var(--pnda-green);
+    border-bottom: 3px solid var(--pnda-gold);
+    height: 66px;
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 1040;
+    display: flex; align-items: center;
+    padding: 0 20px; gap: 14px;
+  }
+  .top-navbar img { height: 46px; }
+  .top-navbar .brand-text h1 { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: #fff; margin: 0; line-height: 1.2; }
+  .top-navbar .brand-text p { font-size: 0.68rem; color: rgba(255,255,255,0.55); margin: 0; text-transform: uppercase; letter-spacing: 0.8px; }
+  .top-navbar .session-user { font-weight: 700; color: var(--pnda-gold-lt); font-size: 0.9rem; display: block; }
+  .top-navbar .session-date { font-size: 0.72rem; color: rgba(255,255,255,0.5); }
+  .top-navbar .nav-actions a { color: rgba(255,255,255,0.75); font-size: 0.82rem; text-decoration: none; }
+  .top-navbar .nav-actions a:hover { color: #fff; }
+  .top-navbar .nav-actions a.danger:hover { color: #ffaaaa; }
+
+  #content-wrapper { padding: 90px 20px 60px; max-width: 1180px; margin: 0 auto; }
+
+  .page-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--pnda-green); margin: 0; }
+  .card-pnda { border: none; border-radius: 10px; box-shadow: 0 2px 10px rgba(18,53,36,0.08); margin-bottom: 24px; }
+  .card-pnda .card-header {
+    background: var(--pnda-green); color: #fff; border-radius: 10px 10px 0 0 !important;
+    font-weight: 600; letter-spacing: 0.3px; padding: 12px 18px;
+  }
+  .card-pnda .card-header i { color: var(--pnda-gold-lt); }
+  .btn-pnda { background: var(--pnda-green); border-color: var(--pnda-green); color: #fff; }
+  .btn-pnda:hover { background: var(--pnda-green-md); border-color: var(--pnda-green-md); color: #fff; }
+  .btn-gold { background: var(--pnda-gold); border-color: var(--pnda-gold); color: var(--pnda-green); font-weight: 600; }
+  .btn-gold:hover { background: var(--pnda-gold-lt); border-color: var(--pnda-gold-lt); color: var(--pnda-green); }
+
+  .mission-row { border: 1px solid #e3e6e2; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; background: #fbfcfb; position: relative; }
+  .mission-row .mission-row-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--pnda-green); }
+  .mission-row .remove-row-btn { position: absolute; top: 10px; right: 10px; }
+  .form-label-sm { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #4a564d; margin-bottom: 2px; }
+  .totals-strip { background: var(--pnda-cream); border-radius: 8px; padding: 12px 18px; font-size: 0.88rem; }
+  .totals-strip .val { font-weight: 700; color: var(--pnda-green); }
+  .statut-badge { font-size: 0.72rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+  .statut-badge.en_attente { background: #fff3cd; color: #7a5c00; }
+  .statut-badge.retournee  { background: #f8d7da; color: #7a1f27; }
+  .statut-badge.activee    { background: #cfe2ff; color: #1b3f7a; }
+  .statut-badge.realisee   { background: #d1e7dd; color: #135c34; }
+  .empty-state { text-align: center; padding: 30px; color: #8b968d; }
+</style>
+</head>
+<body>
+
+<div class="top-navbar">
+  <img src="logo_pnda.png" alt="PNDA">
+  <div class="brand-text">
+    <h1>PNDA-SE · Saisie de mission</h1>
+    <p>Espace missionnaire (province)</p>
+  </div>
+  <div class="ms-auto d-flex align-items-center gap-4">
+    <div class="text-end">
+      <span class="session-user" id="session-user">—</span>
+      <span class="session-date" id="session-date">—</span>
+    </div>
+    <div class="nav-actions d-flex flex-column flex-md-row gap-1 gap-md-3">
+      <a href="index.html" class="d-none" id="nav-back-dashboard"><i class="bi bi-speedometer2 me-1"></i>Tableau de bord</a>
+      <a href="#" onclick="PndaAuth.openChangePasswordModal(db); return false;"><i class="bi bi-key-fill me-1"></i>Mot de passe</a>
+      <a href="#" class="danger" onclick="logoutUser(); return false;"><i class="bi bi-box-arrow-right me-1"></i>Déconnexion</a>
+    </div>
+  </div>
+</div>
+
+<div id="content-wrapper">
+
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+      <h2 class="page-title">Nouveau rapport de mission</h2>
+      <p class="text-muted small mb-0">Saisissez vos missions du trimestre puis soumettez le rapport pour validation financière.</p>
+    </div>
+    <button class="btn btn-pnda btn-sm" onclick="resetForm()"><i class="bi bi-file-earmark-plus me-1"></i>Nouveau rapport vierge</button>
+  </div>
+
+  <div id="form-alert" class="alert alert-danger d-none"></div>
+
+  <div class="card card-pnda">
+    <div class="card-header"><i class="bi bi-clipboard-data me-2"></i>Informations générales</div>
+    <div class="card-body">
+      <input type="hidden" id="report-id-edit">
+      <div class="row g-3">
+        <div class="col-md-3" id="province-select-wrap">
+          <label class="form-label-sm">Province</label>
+          <select class="form-select form-select-sm" id="f-province"></select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label-sm">Trimestre</label>
+          <select class="form-select form-select-sm" id="f-trimestre">
+            <option value="T1">T1</option><option value="T2">T2</option>
+            <option value="T3">T3</option><option value="T4">T4</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label-sm">Année</label>
+          <input type="number" class="form-control form-control-sm" id="f-annee">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label-sm">Rapporteur</label>
+          <input type="text" class="form-control form-control-sm" id="f-rapporteur" readonly>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label-sm">Date du rapport</label>
+          <input type="text" class="form-control form-control-sm" id="f-date" readonly>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-pnda">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span><i class="bi bi-signpost-split me-2"></i>Missions du rapport</span>
+      <button class="btn btn-gold btn-sm" onclick="addMissionRow()"><i class="bi bi-plus-lg me-1"></i>Ajouter une mission</button>
+    </div>
+    <div class="card-body">
+      <div id="mission-rows"></div>
+      <div class="totals-strip d-flex flex-wrap gap-4 mt-2">
+        <div>Montant per diem : <span class="val" id="tot-montant">0,00</span> USD</div>
+        <div>Autres frais : <span class="val" id="tot-autres">0,00</span> USD</div>
+        <div>Total général : <span class="val" id="tot-total">0,00</span> USD</div>
+        <div>Avance : <span class="val" id="tot-avance">0,00</span> USD</div>
+        <div>Solde : <span class="val" id="tot-solde">0,00</span> USD</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end mb-4">
+    <button class="btn btn-pnda" id="submit-btn" onclick="submitReport()"><i class="bi bi-send-fill me-1"></i>Soumettre le rapport</button>
+  </div>
+
+  <div class="card card-pnda">
+    <div class="card-header"><i class="bi bi-list-check me-2"></i>Mes rapports</div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>#</th><th>Date</th><th>Trimestre</th><th>Missions</th><th>Total USD</th><th>Statut</th><th></th></tr>
+          </thead>
+          <tbody id="tbl-my-reports"><tr><td colspan="7" class="empty-state">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:2500">
+  <div id="toast" class="toast align-items-center text-bg-dark border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="toast-body"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.103.0/dist/umd/supabase.js"></script>
+<script src="supabase_config.js"></script>
+<script src="auth-shared.js"></script>
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const _toastEl = document.getElementById('toast');
+const _bsToast = new bootstrap.Toast(_toastEl, { delay: 3500 });
+function showToast(msg) { document.getElementById('toast-body').textContent = msg; _bsToast.show(); }
+function esc(v) { return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtCur(v) { return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v || 0)); }
+
+let SESSION = null;
+let MISSIONS_REF = [];   // référentiel de missions pour la province sélectionnée
+let TERRITOIRES = [];
+let SECTEURS = [];
+let PROVINCES_ALLOWED = [];
+let rowCounter = 0;
+
+function logoutUser() { PndaAuth.logout(db); }
+
+initialize();
+
+async function initialize() {
+  SESSION = await PndaAuth.hydrateSession(db, ['province', 'comptable', 'super_admin']);
+  if (!SESSION) return;
+
+  document.getElementById('session-user').textContent = (SESSION.displayName || SESSION.user).toUpperCase();
+  document.getElementById('session-date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  if (['comptable', 'admin', 'super_admin'].includes(SESSION.role)) {
+    document.getElementById('nav-back-dashboard').classList.remove('d-none');
+  }
+  document.getElementById('f-rapporteur').value = SESSION.displayName || SESSION.user;
+  document.getElementById('f-date').value = new Date().toLocaleDateString('fr-FR');
+  document.getElementById('f-annee').value = new Date().getFullYear();
+
+  await loadProvincesAllowed();
+  await loadReferenceForProvince(getSelectedProvince());
+  await loadMyReports();
+
+  document.getElementById('f-province').addEventListener('change', async () => {
+    await loadReferenceForProvince(getSelectedProvince());
+  });
+
+  addMissionRow();
+}
+
+async function loadProvincesAllowed() {
+  const sel = document.getElementById('f-province');
+  const { data: allProvinces } = await db.from('provinces').select('*').order('code');
+  let allowed = allProvinces || [];
+  if (SESSION.role !== 'super_admin' && Array.isArray(SESSION.provinces) && SESSION.provinces.length) {
+    allowed = allowed.filter((p) => SESSION.provinces.includes(p.name));
+  }
+  PROVINCES_ALLOWED = allowed;
+  sel.innerHTML = allowed.map((p) => `<option value="${esc(p.name)}">${esc(p.label)}</option>`).join('');
+  const wrap = document.getElementById('province-select-wrap');
+  if (allowed.length <= 1) { sel.disabled = true; }
+}
+
+function getSelectedProvince() {
+  return document.getElementById('f-province').value || PROVINCES_ALLOWED[0]?.name || '';
+}
+
+async function loadReferenceForProvince(provinceName) {
+  const [{ data: missions }, { data: territoires }] = await Promise.all([
+    db.from('missions_ref').select('*').eq('province_name', provinceName).order('ordre'),
+    db.from('territoires').select('*').eq('province_name', provinceName).order('name')
+  ]);
+  MISSIONS_REF = missions || [];
+  TERRITOIRES = territoires || [];
+  const territoireIds = TERRITOIRES.map((t) => t.id);
+  if (territoireIds.length) {
+    const { data: secteurs } = await db.from('secteurs').select('*').in('territoire_id', territoireIds).order('name');
+    SECTEURS = secteurs || [];
+  } else {
+    SECTEURS = [];
+  }
+  document.querySelectorAll('.mission-row').forEach((row) => refreshRowReferenceOptions(row));
+}
+
+// ─── LIGNES DE MISSION ────────────────────────────────────────────────────────
+function addMissionRow(prefill = {}) {
+  rowCounter += 1;
+  const id = `row-${rowCounter}`;
+  const wrap = document.createElement('div');
+  wrap.className = 'mission-row';
+  wrap.id = id;
+  wrap.innerHTML = `
+    <button type="button" class="btn btn-sm btn-outline-danger remove-row-btn" onclick="removeMissionRow('${id}')" title="Retirer cette mission"><i class="bi bi-x-lg"></i></button>
+    <div class="mission-row-title mb-2">Mission</div>
+    <div class="row g-2">
+      <div class="col-md-4">
+        <label class="form-label-sm">Mission de référence</label>
+        <select class="form-select form-select-sm ref-select" onchange="applyReferenceMission('${id}', this.value)">
+          <option value="">— Saisie libre —</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label-sm">Nature</label>
+        <input type="text" class="form-control form-control-sm f-nature" placeholder="Nature de la mission">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label-sm">Objectif</label>
+        <input type="text" class="form-control form-control-sm f-objectif" placeholder="Objectif">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label-sm">Territoire</label>
+        <select class="form-select form-select-sm f-territoire" onchange="refreshSecteurOptions('${id}')"><option value="">—</option></select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label-sm">Secteur</label>
+        <select class="form-select form-select-sm f-secteur"><option value="">—</option></select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label-sm">Date début</label>
+        <input type="date" class="form-control form-control-sm f-date-debut">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label-sm">Date fin</label>
+        <input type="date" class="form-control form-control-sm f-date-fin">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label-sm">Participants</label>
+        <input type="number" min="0" class="form-control form-control-sm f-participants" value="1" onchange="recalcRow('${id}')">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label-sm">Nuitées</label>
+        <input type="number" min="0" class="form-control form-control-sm f-nuitees" value="0" onchange="recalcRow('${id}')">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label-sm">Taux per diem (USD)</label>
+        <input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="0" onchange="recalcRow('${id}')">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label-sm">Autres frais (USD)</label>
+        <input type="number" min="0" step="0.01" class="form-control form-control-sm f-autres" value="0" onchange="recalcRow('${id}')">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label-sm">Avance perçue (USD)</label>
+        <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="0" onchange="recalcRow('${id}')">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label-sm">Section</label>
+        <input type="text" class="form-control form-control-sm f-section" placeholder="Section / service">
+      </div>
+      <div class="col-12">
+        <label class="form-label-sm">Observation</label>
+        <input type="text" class="form-control form-control-sm f-observation" placeholder="Remarques éventuelles">
+      </div>
+    </div>
+    <div class="mt-2 small text-muted">
+      Montant per diem : <strong class="row-montant">0,00</strong> USD ·
+      Total : <strong class="row-total">0,00</strong> USD ·
+      Solde : <strong class="row-solde">0,00</strong> USD
+    </div>
+  `;
+  document.getElementById('mission-rows').appendChild(wrap);
+  refreshRowReferenceOptions(wrap);
+  if (prefill && Object.keys(prefill).length) applyPrefillToRow(wrap, prefill);
+  recalcRow(id);
+}
+
+function removeMissionRow(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+  recalcTotals();
+}
+
+function refreshRowReferenceOptions(row) {
+  const sel = row.querySelector('.ref-select');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— Saisie libre —</option>' +
+    MISSIONS_REF.map((m) => `<option value="${esc(m.ref_id)}">${esc(m.nature)}</option>`).join('');
+  sel.value = current;
+
+  const terrSel = row.querySelector('.f-territoire');
+  const currentTerr = terrSel.value;
+  terrSel.innerHTML = '<option value="">—</option>' + TERRITOIRES.map((t) => `<option value="${esc(t.name)}">${esc(t.label)}</option>`).join('');
+  terrSel.value = currentTerr;
+  refreshSecteurOptions(row.id);
+}
+
+function refreshSecteurOptions(rowId) {
+  const row = document.getElementById(rowId);
+  const terrName = row.querySelector('.f-territoire').value;
+  const terr = TERRITOIRES.find((t) => t.name === terrName);
+  const secteurSel = row.querySelector('.f-secteur');
+  const current = secteurSel.value;
+  const options = terr ? SECTEURS.filter((s) => s.territoire_id === terr.id) : [];
+  secteurSel.innerHTML = '<option value="">—</option>' + options.map((s) => `<option value="${esc(s.name)}">${esc(s.label)}</option>`).join('');
+  secteurSel.value = current;
+}
+
+function applyReferenceMission(rowId, refId) {
+  const row = document.getElementById(rowId);
+  const ref = MISSIONS_REF.find((m) => m.ref_id === refId);
+  if (ref) {
+    row.querySelector('.f-nature').value = ref.nature || '';
+    row.querySelector('.f-objectif').value = ref.objectif || '';
+  }
+}
+
+function applyPrefillToRow(row, m) {
+  row.querySelector('.ref-select').value = m.mission_reference_id || '';
+  row.querySelector('.f-nature').value = m.nature || '';
+  row.querySelector('.f-objectif').value = m.objectif || '';
+  row.querySelector('.f-territoire').value = m.territoire_name || '';
+  refreshSecteurOptions(row.id);
+  row.querySelector('.f-secteur').value = m.secteur_name || '';
+  row.querySelector('.f-date-debut').value = m.date_debut || '';
+  row.querySelector('.f-date-fin').value = m.date_fin || '';
+  row.querySelector('.f-participants').value = m.participants ?? 1;
+  row.querySelector('.f-nuitees').value = m.nuitees ?? 0;
+  row.querySelector('.f-taux').value = m.taux_per_diem ?? 0;
+  row.querySelector('.f-autres').value = m.autres_frais_usd ?? 0;
+  row.querySelector('.f-avance').value = m.avance_usd ?? 0;
+  row.querySelector('.f-section').value = m.section || '';
+  row.querySelector('.f-observation').value = m.observation || '';
+}
+
+function recalcRow(rowId) {
+  const row = document.getElementById(rowId);
+  const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
+  const taux = Number(row.querySelector('.f-taux').value || 0);
+  const autres = Number(row.querySelector('.f-autres').value || 0);
+  const avance = Number(row.querySelector('.f-avance').value || 0);
+  const montant = nuitees * taux;
+  const total = montant + autres;
+  const solde = total - avance;
+  row.querySelector('.row-montant').textContent = fmtCur(montant);
+  row.querySelector('.row-total').textContent = fmtCur(total);
+  row.querySelector('.row-solde').textContent = fmtCur(solde);
+  recalcTotals();
+}
+
+function recalcTotals() {
+  const rows = collectMissions();
+  const totMontant = rows.reduce((s, m) => s + m.montant_usd, 0);
+  const totAutres  = rows.reduce((s, m) => s + m.autres_frais_usd, 0);
+  const totTotal   = rows.reduce((s, m) => s + m.total_usd, 0);
+  const totAvance  = rows.reduce((s, m) => s + m.avance_usd, 0);
+  const totSolde   = rows.reduce((s, m) => s + m.solde_usd, 0);
+  document.getElementById('tot-montant').textContent = fmtCur(totMontant);
+  document.getElementById('tot-autres').textContent  = fmtCur(totAutres);
+  document.getElementById('tot-total').textContent   = fmtCur(totTotal);
+  document.getElementById('tot-avance').textContent  = fmtCur(totAvance);
+  document.getElementById('tot-solde').textContent   = fmtCur(totSolde);
+}
+
+function collectMissions() {
+  const rows = Array.from(document.querySelectorAll('.mission-row'));
+  return rows.map((row, idx) => {
+    const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
+    const taux = Number(row.querySelector('.f-taux').value || 0);
+    const autres = Number(row.querySelector('.f-autres').value || 0);
+    const avance = Number(row.querySelector('.f-avance').value || 0);
+    const montant = nuitees * taux;
+    const total = montant + autres;
+    const terrName = row.querySelector('.f-territoire').value;
+    const terr = TERRITOIRES.find((t) => t.name === terrName);
+    const secteurName = row.querySelector('.f-secteur').value;
+    const secteur = SECTEURS.find((s) => s.name === secteurName);
+    return {
+      numero: String(idx + 1),
+      mission_reference_id: row.querySelector('.ref-select').value || null,
+      nature: row.querySelector('.f-nature').value.trim(),
+      objectif: row.querySelector('.f-objectif').value.trim(),
+      territoire_name: terrName || null,
+      territoire_label: terr?.label || null,
+      secteur_name: secteurName || null,
+      secteur_label: secteur?.label || null,
+      date_debut: row.querySelector('.f-date-debut').value || null,
+      date_fin: row.querySelector('.f-date-fin').value || null,
+      participants: Number(row.querySelector('.f-participants').value || 0),
+      nuitees, taux_per_diem: taux,
+      montant_usd: montant,
+      autres_frais_usd: autres,
+      total_usd: total,
+      avance_usd: avance,
+      solde_usd: total - avance,
+      section: row.querySelector('.f-section').value.trim(),
+      observation: row.querySelector('.f-observation').value.trim()
+    };
+  }).filter((m) => m.nature); // ignore les lignes vides
+}
+
+function showFormError(msg) {
+  const el = document.getElementById('form-alert');
+  if (!msg) { el.classList.add('d-none'); return; }
+  el.textContent = msg;
+  el.classList.remove('d-none');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function resetForm() {
+  document.getElementById('report-id-edit').value = '';
+  document.getElementById('mission-rows').innerHTML = '';
+  document.getElementById('f-trimestre').value = 'T1';
+  document.getElementById('f-annee').value = new Date().getFullYear();
+  showFormError('');
+  addMissionRow();
+  document.getElementById('submit-btn').innerHTML = '<i class="bi bi-send-fill me-1"></i>Soumettre le rapport';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── SOUMISSION ───────────────────────────────────────────────────────────────
+async function submitReport() {
+  showFormError('');
+  const missions = collectMissions();
+  if (!missions.length) { showFormError('Ajoutez au moins une mission avec une nature renseignée.'); return; }
+
+  const province = getSelectedProvince();
+  const provinceInfo = PROVINCES_ALLOWED.find((p) => p.name === province);
+  const trimestre = document.getElementById('f-trimestre').value;
+  const annee = Number(document.getElementById('f-annee').value) || new Date().getFullYear();
+  const editingId = document.getElementById('report-id-edit').value;
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Envoi…';
+
+  try {
+    if (editingId) {
+      // Correction d'un rapport "retournée" : renvoi en attente de validation
+      const { error } = await db.from('reports').update({
+        province, province_label: provinceInfo?.label || null, province_code: provinceInfo?.code || null,
+        trimestre, annee, missions,
+        statut: 'en_attente', returned_by: null, returned_at: null
+      }).eq('id', editingId);
+      if (error) throw error;
+      showToast('✓ Rapport corrigé et renvoyé pour validation.');
+    } else {
+      const { data: seq, error: seqErr } = await db.rpc('next_report_seq', { p_province: province });
+      if (seqErr) throw seqErr;
+      const id = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
+      const { error } = await db.from('reports').insert({
+        id, source: 'saisie-html',
+        province, province_label: provinceInfo?.label || null, province_code: provinceInfo?.code || null,
+        trimestre, annee,
+        rapporteur: SESSION.displayName || SESSION.user, rapporteur_role: SESSION.role,
+        date_generation: new Date().toISOString().slice(0, 10),
+        seq_number: seq, missions, statut: 'en_attente'
+      });
+      if (error) throw error;
+      showToast('✓ Rapport soumis. Le comptable de votre province va le traiter.');
+    }
+    resetForm();
+    await loadMyReports();
+  } catch (e) {
+    console.error('submitReport error:', e);
+    showFormError(e?.message || "Erreur lors de l'enregistrement du rapport.");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-send-fill me-1"></i>Soumettre le rapport';
+  }
+}
+
+// ─── MES RAPPORTS ─────────────────────────────────────────────────────────────
+let MY_REPORTS_CACHE = [];
+
+async function loadMyReports() {
+  const tbody = document.getElementById('tbl-my-reports');
+  try {
+    let query = db.from('reports').select('*').order('saved_at', { ascending: false }).limit(100);
+    if (SESSION.role !== 'super_admin') {
+      if (PROVINCES_ALLOWED.length) query = query.in('province', PROVINCES_ALLOWED.map((p) => p.name));
+      query = query.eq('rapporteur', SESSION.displayName || SESSION.user);
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    MY_REPORTS_CACHE = data || [];
+    renderMyReports();
+  } catch (e) {
+    console.error('loadMyReports error:', e);
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state text-danger">Erreur de chargement des rapports.</td></tr>';
+  }
+}
+
+function renderMyReports() {
+  const tbody = document.getElementById('tbl-my-reports');
+  if (!MY_REPORTS_CACHE.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Aucun rapport soumis pour le moment.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = MY_REPORTS_CACHE.map((r) => {
+    const total = (r.missions || []).reduce((s, m) => s + Number(m.total_usd || 0), 0);
+    const statut = r.statut || 'en_attente';
+    const labels = { en_attente: '⏳ En attente', retournee: '↩ À corriger', activee: '⚡ Activée', realisee: '✓ Réalisée' };
+    const canEdit = statut === 'retournee';
+    return `
+    <tr>
+      <td>${esc(r.seq_number ? '#' + r.seq_number : '—')}</td>
+      <td class="small">${esc(new Date(r.saved_at).toLocaleDateString('fr-FR'))}</td>
+      <td class="small">${esc(r.trimestre || '—')} ${esc(r.annee || '')}</td>
+      <td><span class="badge bg-secondary">${(r.missions || []).length}</span></td>
+      <td class="small">${esc(fmtCur(total))}</td>
+      <td><span class="statut-badge ${statut}">${labels[statut] || statut}</span></td>
+      <td class="text-nowrap">
+        ${canEdit ? `<button class="btn btn-sm btn-outline-warning" onclick="editReport('${esc(r.id)}')"><i class="bi bi-pencil-fill me-1"></i>Corriger</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function editReport(id) {
+  const r = MY_REPORTS_CACHE.find((x) => x.id === id);
+  if (!r) return;
+  document.getElementById('report-id-edit').value = r.id;
+  document.getElementById('f-province').value = r.province;
+  document.getElementById('f-trimestre').value = r.trimestre || 'T1';
+  document.getElementById('f-annee').value = r.annee || new Date().getFullYear();
+  document.getElementById('mission-rows').innerHTML = '';
+  (r.missions || []).forEach((m) => addMissionRow(m));
+  if (!(r.missions || []).length) addMissionRow();
+  document.getElementById('submit-btn').innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Renvoyer le rapport corrigé';
+  showToast('Rapport chargé pour correction. Modifiez puis renvoyez-le.');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

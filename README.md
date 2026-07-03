@@ -45,16 +45,17 @@ Navigateur ──► index.html / admin.html / superadmin.html
 
 | URL | Fichier | Rôles autorisés | Contenu |
 |---|---|---|---|
+| `/saisie.html` | `saisie.html` | province, comptable, super_admin | Formulaire de saisie des missions + suivi de ses propres rapports |
 | `/` | `index.html` | admin, comptable, super_admin | Tableau de bord consolidé (suivi, workflow, export Excel) |
 | `/admin` | `admin.html` | admin, comptable, super_admin | Identique à `index.html` (variante) |
 | `/superadmin` | `superadmin.html` | super_admin | Gestion utilisateurs, provinces, référentiels (RNSE) |
 
-> ⚠️ **`index.html` et `admin.html` sont aujourd'hui deux tableaux de bord
-> quasiment identiques**, pas un formulaire de saisie. Il n'existe actuellement
-> **aucune interface web permettant au rôle `province` de créer une mission** :
-> le compte se connecte mais n'a accès à aucune vue. C'est un écart entre le
-> code et l'intention d'origine (voir section « Limites connues » ci-dessous),
-> à corriger dans une prochaine itération.
+> `index.html` et `admin.html` restent deux tableaux de bord quasiment
+> identiques (candidats à une fusion future). `saisie.html` est la page dédiée
+> au rôle `province` : sélection d'une mission de référence (ou saisie libre),
+> territoire/secteur, dates, participants/nuitées/taux per diem avec calcul
+> automatique des montants, et suivi du statut de ses rapports (avec
+> correction/renvoi pour un rapport « retourné » par le comptable).
 
 ---
 
@@ -62,7 +63,7 @@ Navigateur ──► index.html / admin.html / superadmin.html
 
 | Rôle | Accès |
 |---|---|
-| `province` | Prévu pour la saisie et le suivi de ses propres missions — **UI non implémentée à ce jour** |
+| `province` | Saisie de ses missions et suivi de ses propres rapports (`saisie.html`) |
 | `comptable` | Complétion financière, activation, clôture des missions de sa province |
 | `admin` | Tableau de bord consolidé toutes provinces, export Excel |
 | `super_admin` | Gestion des utilisateurs, rôles, référentiels et provinces (RNSE) |
@@ -135,6 +136,7 @@ migration_v7_compte_uncp_comptable.sql  ← comptes UNCP
 migration_v8_liquidation_sequences.sql  ← séquences de liquidation (non branchées côté UI)
 migration_v9_province_comptables.sql    ← comptables par province
 migration_v10_supabase_auth.sql         ← authentification Supabase Auth + verrouillage RLS (obligatoire)
+migration_v13_report_sequences.sql      ← numérotation des rapports pour saisie.html (obligatoire)
 ```
 
 > `migration_v10` est indispensable : sans elle, aucun utilisateur ne peut se
@@ -204,7 +206,8 @@ suivi-missions/
 ├── index.html                  # Tableau de bord (admin / comptable / super_admin)
 ├── admin.html                  # Tableau de bord (variante quasi identique)
 ├── superadmin.html             # Gestion utilisateurs et référentiels (RNSE)
-├── auth-shared.js              # Écran de connexion Supabase Auth partagé par les 3 pages
+├── saisie.html                 # Formulaire de saisie des missions (province / comptable / super_admin)
+├── auth-shared.js              # Écran de connexion + changement de mot de passe, partagés par les 4 pages
 ├── supabase_config.js          # URL et clé anon Supabase (à configurer)
 ├── server.js                   # Serveur Express pour le développement local
 ├── package.json
@@ -221,26 +224,45 @@ suivi-missions/
 ├── migration_v7_compte_uncp_comptable.sql
 ├── migration_v8_liquidation_sequences.sql  # Non branchée côté UI
 ├── migration_v9_province_comptables.sql
-└── migration_v10_supabase_auth.sql         # Authentification + verrouillage RLS
+├── migration_v10_supabase_auth.sql         # Authentification + verrouillage RLS
+└── migration_v13_report_sequences.sql      # Numérotation des rapports (saisie.html)
 ```
+
+---
+
+## Le formulaire de saisie (`saisie.html`)
+
+Un compte `province` (ou `comptable`/`super_admin`) y saisit un rapport
+composé d'une ou plusieurs missions :
+
+- **Mission de référence** : choix dans le référentiel `missions_ref` de sa
+  province (préremplit nature/objectif) ou saisie libre.
+- **Territoire / secteur** : listes déroulantes en cascade à partir des tables
+  `territoires`/`secteurs`.
+- **Calcul automatique** : `montant_usd = nuitées × taux per diem`,
+  `total_usd = montant_usd + autres frais`, `solde_usd = total_usd − avance`.
+  Ces trois champs sont recalculés à la volée mais l'utilisateur reste libre
+  de changer nuitées/taux/frais/avance — ce ne sont pas des règles métier
+  officielles, juste une aide à la saisie à ajuster si besoin.
+- **Numérotation** : `seq_number` attribué via la fonction `next_report_seq`
+  (migration v13), un compteur par province.
+- **Suivi** : liste de ses propres rapports avec statut ; un rapport
+  « retourné » par le comptable peut être rouvert, corrigé et renvoyé
+  (repasse en `en_attente`).
 
 ---
 
 ## Limites connues
 
-- **Saisie des missions par le rôle `province`** : la table et les policies
-  existent, mais aucune page ne permet à un compte `province` de créer une
-  mission depuis le navigateur. `index.html`/`admin.html` refusent même la
-  connexion à ce rôle. À construire dans une prochaine itération.
-- **`index.html` et `admin.html`** sont deux pages quasi identiques (267
-  lignes de différence sur ~2000). Elles pourraient être fusionnées.
+- **`index.html` et `admin.html`** sont deux pages quasi identiques (candidates
+  à une fusion).
 - **Liquidation (migration_v8)** : les colonnes et la fonction
   `next_liquidation_seq` existent en base mais ne sont appelées par aucune
   page — fonctionnalité inachevée.
-- **Mots de passe existants** : réutilisés tels quels lors de la migration
-  vers Supabase Auth (ex. `user123`, `se123`) pour ne pas perturber les
-  utilisateurs actuels. Recommandé : les faire changer via l'espace RNSE une
-  fois le nouveau système en place.
+- **`saisie.html` est un premier jet fonctionnel** : le calcul du montant per
+  diem (`nuitées × taux`) est une hypothèse simple à valider avec le métier ;
+  ajustez la formule dans `recalcRow()`/`collectMissions()` si les règles
+  réelles diffèrent (ex. prise en compte du nombre de participants).
 
 ---
 
