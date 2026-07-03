@@ -922,6 +922,7 @@ const SIGNATORY_STORAGE_KEY = 'PNDA_EXPORT_SIGNATORY';
 const REPORT_SYNC_KEY = 'PNDA_REPORTS_SYNC';
 const REPORT_SYNC_CHANNEL = 'pnda-reports-sync';
 let REPORTS_CACHE = [];
+let PROFILES_DIRECTORY = {}; // email (minuscules) -> display_name enregistré dans profiles
 let importedReports = [];
 let activeTab = 'general';
 let currentStatusFilter = '';
@@ -939,12 +940,37 @@ initialize();
 async function initialize() {
   const session = await PndaAuth.hydrateSession(db, ['admin', 'super_admin', 'comptable']);
   if (!session) return; // l'écran de connexion PndaAuth prend le relais
-  await loadReference();
+  await Promise.all([loadReference(), loadProfilesDirectory()]);
   TAB_ORDER = ['general', ...REFERENCE.provinces.map((province) => province.name)];
   openDashboard(session.user);
   bindEvents();
   buildTabs();
   await refreshDashboard();
+}
+
+// ── Annuaire des profils (résolution du nom réel du missionnaire) ──────────────
+async function loadProfilesDirectory() {
+  try {
+    const { data, error } = await db.from('profiles').select('email, display_name');
+    if (error) throw error;
+    PROFILES_DIRECTORY = {};
+    (data || []).forEach((p) => {
+      if (p.email) PROFILES_DIRECTORY[p.email.trim().toLowerCase()] = p.display_name || null;
+    });
+  } catch (error) {
+    console.error('Erreur chargement annuaire des profils:', error);
+  }
+}
+
+// Résout le nom d'enregistrement réel du missionnaire à partir de l'annuaire
+// profiles, au lieu du nom de compte/email brut parfois figé dans meta.rapporteur
+// au moment de la saisie du rapport.
+function resolveMissionnaireName(report) {
+  const raw = (report && report.meta && report.meta.rapporteur) || '';
+  if (!raw) return '—';
+  const key = String(raw).trim().toLowerCase();
+  const displayName = PROFILES_DIRECTORY[key];
+  return displayName || raw;
 }
 
 function initializeReportSyncChannel() {
@@ -1648,9 +1674,10 @@ function buildGeneralPanel(reports = getFilteredReports()) {
                 </tr>
               </thead>
               <tbody>${reports.length ? reports.slice(0, 10).map((report) => {
-                const chefMission = r.chef_mission || r.meta?.rapporteur || '—';
-                const missionLabel = (r.missions && r.missions.length)
-                  ? r.missions.map(m => m.nature).join(', ')
+                const missionnaireName = resolveMissionnaireName(report);
+                const chefMission = report.chef_mission || missionnaireName || '—';
+                const missionLabel = (report.missions && report.missions.length)
+                  ? report.missions.map(m => m.nature).join(', ')
                   : '—';
                 const rm = report.missions || [];
                 const rTotal = rm.reduce((s,m) => s + Number(m.total_usd||0), 0);
@@ -1662,7 +1689,7 @@ function buildGeneralPanel(reports = getFilteredReports()) {
                   <td>${escapeHtml(getReportProvinceLabel(report) || '—')}</td>
                   <td>${escapeHtml(chefMission)}</td>
                   <td>${escapeHtml(missionLabel)}</td>
-                  <td>${escapeHtml(report.meta?.rapporteur || '—')}</td>
+                  <td>${escapeHtml(missionnaireName)}</td>
                   <td><span class="badge bg-secondary">${rm.length}</span></td>
                   <td class="text-end fw-bold">${formatCurrency(rTotal)}</td>
                   <td class="text-end ${litige > 0 ? 'text-warning fw-bold' : 'text-success'}">${formatCurrency(litige)}</td>
@@ -1717,7 +1744,7 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
               return `
                 <tr class="report-row report-row-clickable${isUnread ? ' unread' : ''}" data-report-idx="${idx}" data-report-id="${rid}" data-province="${escapeHtml(province.name)}">
                   <td>${formatDate(report.savedAt)}</td>
-                  <td>${escapeHtml(report.meta?.rapporteur || '—')}</td>
+                  <td>${escapeHtml(resolveMissionnaireName(report))}</td>
                   <td>${escapeHtml(((report.meta?.trimestre||'')+' '+(report.meta?.annee||'')).trim()||'—')}</td>
                   <td><span class="badge bg-secondary">${rm.length}</span></td>
                   <td class="text-end fw-bold">${formatCurrency(rTotal)}</td>
@@ -1768,7 +1795,7 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
                               .join('<br>')) || '<span class="text-muted">—</span>';
                             return `<tr>
                             <td>${escapeHtml(m.numero||'—')}</td>
-                            <td class="small fw-semibold">${escapeHtml(report.meta?.rapporteur||'—')}</td>
+                            <td class="small fw-semibold">${escapeHtml(resolveMissionnaireName(report))}</td>
                             <td class="small">${accompagnateursHtml}</td>
                             <td>${escapeHtml(m.nature||'—')}</td>
                             <td class="small">${escapeHtml(m.objectif||'—')}</td>
@@ -1935,7 +1962,7 @@ async function shareDashboard() {
       const missions = r.missions || [];
       const total = missions.reduce((s, m) => s + Number(m.total_usd || 0), 0);
       const prov  = r.province || '—';
-      const rapp  = r.meta?.rapporteur || '—';
+      const rapp  = resolveMissionnaireName(r);
       const tri   = ((r.meta?.trimestre || '') + ' ' + (r.meta?.annee || '')).trim() || '—';
       const st    = statLabels[r.statut] || r.statut || '—';
       return `• [${prov}] ${rapp}  —  ${tri}  —  ${missions.length} mission(s)  —  ${formatCurrency(total)} USD  —  ${st}`;
@@ -1992,7 +2019,7 @@ function _accompNames(rm) {
 
 function buildBordereauHtml(report) {
   const rm = report.missions || [];
-  const nom      = report.meta?.rapporteur || '';
+  const nom      = resolveMissionnaireName(report);
   const accompNames = _accompNames(rm);
   const accompRow = accompNames.length
     ? `<tr><td class="nb" style="vertical-align:top"><strong>Accompagné de&nbsp;:</strong></td><td class="nb" style="font-size:8pt">${escapeHtml(accompNames.join('; '))}</td></tr>`
@@ -2078,7 +2105,7 @@ function buildBordereauHtml(report) {
 
 function buildJustificationMissionHtml(report) {
   const rm = report.missions || [];
-  const nom = report.meta?.rapporteur || '';
+  const nom = resolveMissionnaireName(report);
   const accompNames = _accompNames(rm);
   const province = (report.meta?.province_label || report.meta?.province || '').toUpperCase();
   const objet = rm.map(m=>m.nature||'').filter(Boolean).join('; ') || '';
@@ -2140,7 +2167,7 @@ function buildJustificationMissionHtml(report) {
 
 function buildAvisJustificatifsHtml(report) {
   const rm = report.missions || [];
-  const nom      = report.meta?.rapporteur || '';
+  const nom      = resolveMissionnaireName(report);
   const accompNames = _accompNames(rm);
   const province = report.meta?.province_label || report.meta?.province || '';
   const num      = report.fld_number || '___/___/____';
@@ -2408,7 +2435,7 @@ function editReport(reportId) {
   _editingReportId = reportId;
 
   const missions = report.missions || [];
-  const rapporteur = escapeHtml(report.meta?.rapporteur || '—');
+  const rapporteur = escapeHtml(resolveMissionnaireName(report));
   const periode = escapeHtml(((report.meta?.trimestre || '') + ' ' + (report.meta?.annee || '')).trim() || '—');
   const province = escapeHtml(report.meta?.province_label || report.meta?.province || '—');
 
@@ -2552,7 +2579,7 @@ function buildMissionExportRows(reports) {
   const rows = [];
   reports.forEach((report) => {
     const missions = report.missions || [];
-    const rapporteur = report.meta?.rapporteur || '—';
+    const rapporteur = resolveMissionnaireName(report);
     missions.forEach((m) => {
       const lieux = (m.lieux && m.lieux.length)
         ? m.lieux
@@ -2680,6 +2707,44 @@ async function exportExcelWorkbook() {
     cell.alignment = { horizontal: cell.alignment?.horizontal || 'right', vertical: 'middle' };
   });
   totalRow.height = 20;
+
+  // ── Bloc signature (comptable / responsable de l'export) ──
+  const roleLabels = (typeof PndaAuth !== 'undefined' && PndaAuth.ROLE_LABELS) || { comptable: 'Comptable', admin: 'Administrateur', super_admin: 'Super-administrateur' };
+  const signatoryName = session?.displayName || session?.user?.email || session?.user || '—';
+  const signatoryRole = roleLabels[session?.role] || 'Comptable';
+
+  let sigRowIdx = totalRowIdx + 2;
+  sheet.mergeCells(sigRowIdx, 1, sigRowIdx, colCount);
+  const sigTitleCell = sheet.getCell(sigRowIdx, 1);
+  sigTitleCell.value = 'Visa et signature';
+  sigTitleCell.font = { bold: true, size: 10, color: { argb: 'FF123524' } };
+  sigTitleCell.border = { bottom: { style: 'thin', color: { argb: 'FF123524' } } };
+  sigRowIdx += 2;
+
+  sheet.mergeCells(sigRowIdx, 1, sigRowIdx, 4);
+  sheet.getCell(sigRowIdx, 1).value = `Établi par (${signatoryRole}) :`;
+  sheet.getCell(sigRowIdx, 1).font = { bold: true, size: 10 };
+  sheet.mergeCells(sigRowIdx, 5, sigRowIdx, 9);
+  sheet.getCell(sigRowIdx, 5).value = signatoryName;
+  sheet.getCell(sigRowIdx, 5).font = { size: 10 };
+  sheet.getCell(sigRowIdx, 5).border = { bottom: { style: 'thin', color: { argb: 'FF999999' } } };
+  sigRowIdx += 2;
+
+  sheet.mergeCells(sigRowIdx, 1, sigRowIdx, 4);
+  sheet.getCell(sigRowIdx, 1).value = 'Date :';
+  sheet.getCell(sigRowIdx, 1).font = { bold: true, size: 10 };
+  sheet.mergeCells(sigRowIdx, 5, sigRowIdx, 9);
+  sheet.getCell(sigRowIdx, 5).value = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  sheet.getCell(sigRowIdx, 5).font = { size: 10 };
+  sheet.getCell(sigRowIdx, 5).border = { bottom: { style: 'thin', color: { argb: 'FF999999' } } };
+  sigRowIdx += 2;
+
+  sheet.mergeCells(sigRowIdx, 1, sigRowIdx, 4);
+  sheet.getCell(sigRowIdx, 1).value = 'Signature :';
+  sheet.getCell(sigRowIdx, 1).font = { bold: true, size: 10 };
+  sheet.mergeCells(sigRowIdx, 5, sigRowIdx, 9);
+  sheet.getRow(sigRowIdx).height = 30;
+  sheet.getCell(sigRowIdx, 5).border = { bottom: { style: 'thin', color: { argb: 'FF999999' } } };
 
   // ── Filtre + impression ──
   sheet.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4, column: colCount } };
