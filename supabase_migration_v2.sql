@@ -1,6 +1,15 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 -- PNDA-SE — Migration v2 : Plateforme de gestion des missions
 -- Exécuter dans l'éditeur SQL Supabase APRÈS supabase_db.sql
+--
+-- ⚠ NON UTILISÉE EN PRODUCTION : les tables `missions` et `mission_sequences`
+-- créées ici ne sont référencées par aucune page de l'application (index.html,
+-- admin.html, superadmin.html utilisent exclusivement la table `reports` avec
+-- une colonne JSONB `missions`, définie dans supabase_db.sql). Ce script n'a
+-- jamais été exécuté sur le projet Supabase de production. Conservé à titre
+-- historique / pour une éventuelle migration future vers un schéma normalisé.
+-- Corrigé le 03/07/2026 : la syntaxe `CREATE POLICY IF NOT EXISTS` n'existe pas
+-- en PostgreSQL et aurait fait échouer ce script s'il avait été exécuté.
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- ── 1. MISE À JOUR TABLE USERS ────────────────────────────────────────────────
@@ -79,9 +88,19 @@ CREATE POLICY "mission_seq_all" ON mission_sequences
   FOR ALL TO anon USING (true) WITH CHECK (true);
 
 -- Users : autoriser insert/update/delete pour la gestion par super_admin
-CREATE POLICY IF NOT EXISTS "users_insert" ON users FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY IF NOT EXISTS "users_update" ON users FOR UPDATE TO anon USING (true);
-CREATE POLICY IF NOT EXISTS "users_delete" ON users FOR DELETE TO anon USING (true);
+-- (CREATE POLICY ne supporte pas IF NOT EXISTS en PostgreSQL ; on passe par
+-- un bloc DO conditionnel, comme dans les autres scripts de migration.)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='users' AND policyname='users_insert') THEN
+    CREATE POLICY "users_insert" ON users FOR INSERT TO anon WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='users' AND policyname='users_update') THEN
+    CREATE POLICY "users_update" ON users FOR UPDATE TO anon USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='users' AND policyname='users_delete') THEN
+    CREATE POLICY "users_delete" ON users FOR DELETE TO anon USING (true);
+  END IF;
+END $$;
 
 -- ── 6. EXPOSER LA FONCTION next_mission_seq À LA CLÉ ANON ────────────────────
 -- Obligatoire pour appeler la fonction depuis le client JS

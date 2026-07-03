@@ -43,11 +43,18 @@ Navigateur ──► index.html / admin.html / superadmin.html
 
 ## Pages
 
-| URL | Fichier | Rôles autorisés |
-|---|---|---|
-| `/` | `index.html` | province, comptable |
-| `/admin` | `admin.html` | admin, comptable |
-| `/superadmin` | `superadmin.html` | super_admin |
+| URL | Fichier | Rôles autorisés | Contenu |
+|---|---|---|---|
+| `/` | `index.html` | admin, comptable, super_admin | Tableau de bord consolidé (suivi, workflow, export Excel) |
+| `/admin` | `admin.html` | admin, comptable, super_admin | Identique à `index.html` (variante) |
+| `/superadmin` | `superadmin.html` | super_admin | Gestion utilisateurs, provinces, référentiels (RNSE) |
+
+> ⚠️ **`index.html` et `admin.html` sont aujourd'hui deux tableaux de bord
+> quasiment identiques**, pas un formulaire de saisie. Il n'existe actuellement
+> **aucune interface web permettant au rôle `province` de créer une mission** :
+> le compte se connecte mais n'a accès à aucune vue. C'est un écart entre le
+> code et l'intention d'origine (voir section « Limites connues » ci-dessous),
+> à corriger dans une prochaine itération.
 
 ---
 
@@ -55,10 +62,15 @@ Navigateur ──► index.html / admin.html / superadmin.html
 
 | Rôle | Accès |
 |---|---|
-| `province` | Saisie et suivi de ses propres missions |
+| `province` | Prévu pour la saisie et le suivi de ses propres missions — **UI non implémentée à ce jour** |
 | `comptable` | Complétion financière, activation, clôture des missions de sa province |
 | `admin` | Tableau de bord consolidé toutes provinces, export Excel |
 | `super_admin` | Gestion des utilisateurs, rôles, référentiels et provinces (RNSE) |
+
+Le rôle et les provinces autorisées de chaque compte sont stockés dans la
+table `profiles` (liée à Supabase Auth). Une province vide/`NULL` signifie
+« accès à toutes les provinces » (cas des comptes `admin` et de certains
+comptes `comptable` historiques rattachés à l'UNCP).
 
 ---
 
@@ -113,23 +125,44 @@ Dans l'éditeur SQL de votre projet Supabase (**SQL Editor → New query**), ex�
 
 ```
 supabase_db.sql                         ← schéma de base
-supabase_migration_v2.sql               ← table missions normalisée
+supabase_migration_v2.sql               ← non utilisée en prod, conservée pour l'historique (voir note dans le fichier)
 migration_v2_columns.sql                ← colonnes supplémentaires
 migration_v3_territoires_secteurs.sql   ← territoires et secteurs
 migration_v4_is_read.sql                ← marqueur de lecture
 migration_v5_statut_roles.sql           ← statuts et rôle comptable
 migration_v6_retournee_workflow.sql     ← workflow retour comptable
 migration_v7_compte_uncp_comptable.sql  ← comptes UNCP
-migration_v8_liquidation_sequences.sql  ← séquences de liquidation
+migration_v8_liquidation_sequences.sql  ← séquences de liquidation (non branchées côté UI)
 migration_v9_province_comptables.sql    ← comptables par province
+migration_v10_supabase_auth.sql         ← authentification Supabase Auth + verrouillage RLS (obligatoire)
 ```
 
-### 5. Autoriser le domaine dans Supabase
+> `migration_v10` est indispensable : sans elle, aucun utilisateur ne peut se
+> connecter (aucun compte Supabase Auth n'existe) et les données restent
+> accessibles publiquement via la clé anon.
+
+### 5. Déployer la fonction Edge `admin-users`
+
+La création, l'édition du mot de passe et la suppression de comptes depuis
+l'espace RNSE (`superadmin.html`) nécessitent la clé `service_role`, qui ne
+doit jamais être exposée au navigateur. Cette logique vit dans une fonction
+Edge (`supabase/functions/admin-users`) :
+
+```bash
+supabase login
+supabase link --project-ref VOTRE_PROJET
+supabase functions deploy admin-users
+```
+
+### 6. Configurer les URL dans Supabase Auth
 
 Dans **Authentication → URL Configuration**, ajouter :
 
 - **Site URL** : `http://localhost:3000` (développement) ou `https://kisungu.github.io` (production)
 - **Allowed Redirect URLs** : les mêmes
+
+Optionnel mais recommandé : dans **Authentication → Policies**, activer
+« Leaked password protection » (nécessite un plan Supabase Pro).
 
 ---
 
@@ -168,24 +201,46 @@ L'app sera disponible à **https://kisungu.github.io/suivi-missions/** après qu
 
 ```
 suivi-missions/
-├── index.html                  # Formulaire de saisie (province / comptable)
-├── admin.html                  # Tableau de bord admin
+├── index.html                  # Tableau de bord (admin / comptable / super_admin)
+├── admin.html                  # Tableau de bord (variante quasi identique)
 ├── superadmin.html             # Gestion utilisateurs et référentiels (RNSE)
+├── auth-shared.js              # Écran de connexion Supabase Auth partagé par les 3 pages
 ├── supabase_config.js          # URL et clé anon Supabase (à configurer)
 ├── server.js                   # Serveur Express pour le développement local
 ├── package.json
 │
+├── supabase/functions/admin-users/index.ts # Fonction Edge (gestion des comptes, clé service_role)
+│
 ├── supabase_db.sql                         # Schéma initial
-├── supabase_migration_v2.sql               # Missions normalisées
+├── supabase_migration_v2.sql               # Non utilisée en prod (historique)
 ├── migration_v2_columns.sql
 ├── migration_v3_territoires_secteurs.sql
 ├── migration_v4_is_read.sql
 ├── migration_v5_statut_roles.sql
 ├── migration_v6_retournee_workflow.sql
 ├── migration_v7_compte_uncp_comptable.sql
-├── migration_v8_liquidation_sequences.sql
-└── migration_v9_province_comptables.sql
+├── migration_v8_liquidation_sequences.sql  # Non branchée côté UI
+├── migration_v9_province_comptables.sql
+└── migration_v10_supabase_auth.sql         # Authentification + verrouillage RLS
 ```
+
+---
+
+## Limites connues
+
+- **Saisie des missions par le rôle `province`** : la table et les policies
+  existent, mais aucune page ne permet à un compte `province` de créer une
+  mission depuis le navigateur. `index.html`/`admin.html` refusent même la
+  connexion à ce rôle. À construire dans une prochaine itération.
+- **`index.html` et `admin.html`** sont deux pages quasi identiques (267
+  lignes de différence sur ~2000). Elles pourraient être fusionnées.
+- **Liquidation (migration_v8)** : les colonnes et la fonction
+  `next_liquidation_seq` existent en base mais ne sont appelées par aucune
+  page — fonctionnalité inachevée.
+- **Mots de passe existants** : réutilisés tels quels lors de la migration
+  vers Supabase Auth (ex. `user123`, `se123`) pour ne pas perturber les
+  utilisateurs actuels. Recommandé : les faire changer via l'espace RNSE une
+  fois le nouveau système en place.
 
 ---
 

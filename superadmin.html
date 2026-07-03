@@ -1078,11 +1078,30 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.103.0/dist/umd/supabase.js"></script>
 <script src="supabase_config.js"></script>
+<script src="auth-shared.js"></script>
 
 <script>
   // ─── CLIENT SUPABASE ──────────────────────────────────────────────────────────
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const ADMIN_USERS_FN_URL = `${SUPABASE_URL}/functions/v1/admin-users`;
+
+async function callAdminUsersFn(action, payload) {
+  const token = await PndaAuth.accessTokenFor(db);
+  if (!token) throw new Error('Session expirée. Merci de vous reconnecter.');
+  const res = await fetch(ADMIN_USERS_FN_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      'apikey': SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify({ action, ...payload })
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || json?.error) throw new Error(json?.error || `Erreur (${res.status})`);
+  return json;
+}
 
 // ─── BOOTSTRAP TOAST ──────────────────────────────────────────────────────────
 const _toastEl = document.getElementById('toast');
@@ -1146,11 +1165,6 @@ function fmtCur(v) {
   return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v || 0));
 }
 
-function safeB64(str) {
-  try { return window.btoa(unescape(encodeURIComponent(str))); }
-  catch { return window.btoa(String(str)); }
-}
-
 function getStatusLabel(status) {
   const labels = {
     'en_attente': '⏳ En attente',
@@ -1208,12 +1222,8 @@ function handleStorageSync(event) {
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 (async function init() {
-  const session = getSession();
-  if (session?.role !== 'super_admin') {
-    localStorage.removeItem('PNDA_SESSION');
-    window.location.href = 'index.html?manual-login=1';
-    return;
-  }
+  const session = await PndaAuth.hydrateSession(db, ['super_admin']);
+  if (!session) return; // l'écran de connexion PndaAuth prend le relais
   document.getElementById('session-user').textContent = session.user.toUpperCase();
   document.getElementById('session-date').textContent = new Date().toLocaleDateString('fr-FR', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
@@ -1225,12 +1235,11 @@ function handleStorageSync(event) {
 })();
 
 function getSession() {
-  try { return JSON.parse(localStorage.getItem('PNDA_SESSION') || 'null'); } catch { return null; }
+  return PndaAuth.getSession();
 }
 
 function logout() {
-  localStorage.removeItem('PNDA_SESSION');
-  window.location.href = 'index.html?manual-login=1';
+  PndaAuth.logout(db);
 }
 
 // ─── SIDEBAR TOGGLE ──────────────────────────────────────────────────────────
@@ -1381,7 +1390,7 @@ async function loadDashboard() {
       { data: reports },
       { count: nbReports }
     ] = await Promise.all([
-      db.from('users').select('*',    { count: 'exact', head: true }),
+      db.from('profiles').select('*', { count: 'exact', head: true }),
       db.from('provinces').select('*',{ count: 'exact', head: true }),
       db.from('reports').select('id,saved_at,province_label,rapporteur,seq_number,statut,meta,missions').order('saved_at',{ascending:false}).limit(10),
       db.from('reports').select('*',  { count: 'exact', head: true })
@@ -1421,7 +1430,7 @@ async function loadDashboard() {
 async function loadUsers() {
   const tbody = document.getElementById('tbl-users');
   tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Chargement…</td></tr>';
-  const { data, error } = await db.from('users').select('*').order('role').order('email');
+  const { data, error } = await db.from('profiles').select('*').order('role').order('email');
   if (error) {
     tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-3"><i class="bi bi-exclamation-triangle me-1"></i>Erreur : ${esc(error.message)}</td></tr>`;
     showToast('Erreur chargement utilisateurs : ' + error.message);
@@ -1445,7 +1454,7 @@ async function loadUsers() {
 }
 
 function formatUserAccess(user) {
-  if (!user?.provinces || user.provinces === '*') {
+  if (!user?.provinces || !user.provinces.length) {
     return '<span class="badge bg-light text-dark border">Toutes provinces</span>';
   }
   const labels = user.provinces.map((provinceName) => {
@@ -1462,6 +1471,7 @@ function openUserModal(user) {
   setHidden(errEl, true); errEl.textContent = '';
   document.getElementById('uid-edit').value   = user?.id || '';
   document.getElementById('u-email').value    = user?.email || '';
+  document.getElementById('u-email').disabled = !!user; // email non modifiable après création (lié au compte Supabase Auth)
   document.getElementById('u-display').value  = user?.display_name || '';
   document.getElementById('u-password').value = '';
   document.getElementById('u-role').value     = user?.role || 'province';
@@ -1507,28 +1517,35 @@ async function saveUser() {
 
   if (!email) { errEl.textContent = 'L\'email est obligatoire.'; setHidden(errEl, false); errEl.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
   if (!id && !password) { errEl.textContent = 'Le mot de passe est obligatoire pour un nouveau compte.'; setHidden(errEl, false); errEl.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
+  if (password && password.length < 6) { errEl.textContent = 'Le mot de passe doit contenir au moins 6 caractères.'; setHidden(errEl, false); errEl.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
   if (['province','comptable'].includes(role) && (!provinces||!provinces.length)) { errEl.textContent = 'Sélectionnez au moins une province.'; setHidden(errEl, false); errEl.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
-
-  const payload = { email, display_name: display||null, role, provinces };
-  if (password) {
-    try { payload.password_b64 = safeB64(password); }
-    catch (e) { errEl.textContent = 'Erreur d\'encodage du mot de passe.'; setHidden(errEl, false); return; }
-  }
 
   const btn = document.querySelector('#user-form-card button[onclick="saveUser()"]');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enregistrement…'; }
 
   try {
-    const { error } = id
-      ? await db.from('users').update(payload).eq('id', id)
-      : await db.from('users').insert({ ...payload, password_b64: payload.password_b64 || '' });
-    if (error) throw error;
-    showToast(id ? '✓ Utilisateur mis à jour.' : '✓ Utilisateur créé avec succès.');
+    if (id) {
+      // Compte existant : mise à jour du profil (rôle/provinces/nom) via RLS directe,
+      // et réinitialisation du mot de passe via la fonction Edge (privilège super_admin).
+      const { error } = await db.from('profiles')
+        .update({ display_name: display || null, role, provinces })
+        .eq('id', id);
+      if (error) throw error;
+      if (password) {
+        await callAdminUsersFn('reset_password', { id, password });
+      }
+      showToast('✓ Utilisateur mis à jour.');
+    } else {
+      // Nouveau compte : création via la fonction Edge (Supabase Auth + profil),
+      // impossible à faire depuis le client avec la seule clé anon.
+      await callAdminUsersFn('create', { email, password, role, provinces, display_name: display || null });
+      showToast('✓ Utilisateur créé avec succès.');
+    }
     closeUserForm();
     await loadUsers();
   } catch (e) {
     console.error('saveUser error:', e);
-    const msg = e?.message || 'Erreur d\'enregistrement. Vérifiez les politiques RLS dans Supabase.';
+    const msg = e?.message || 'Erreur d\'enregistrement.';
     errEl.textContent = msg;
     setHidden(errEl, false);
     errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1543,13 +1560,12 @@ async function deleteUser(id, email) {
     `Supprimer le compte "${email}" ? Cette action est irréversible.`,
     async () => {
       try {
-        const { error } = await db.from('users').delete().eq('id', id);
-        if (error) throw error;
+        await callAdminUsersFn('delete', { id });
         showToast('✓ Utilisateur supprimé.');
         await loadUsers();
       } catch (e) {
         console.error('deleteUser error:', e);
-        showToast('Erreur de suppression : ' + (e?.message || 'Vérifiez les politiques RLS dans Supabase.'));
+        showToast('Erreur de suppression : ' + (e?.message || 'Erreur inconnue.'));
       }
     },
     'Supprimer le compte',

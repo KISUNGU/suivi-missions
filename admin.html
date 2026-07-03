@@ -466,11 +466,6 @@
         </a>
       </li>
       <li class="nav-item">
-        <a href="index.html?manual-login=1" class="nav-link">
-          <i class="bi bi-file-earmark-text"></i> Formulaire
-        </a>
-      </li>
-      <li class="nav-item">
         <a href="#" class="nav-link danger" onclick="logoutAdmin(); return false;">
           <i class="bi bi-box-arrow-right"></i> Déconnexion
         </a>
@@ -756,6 +751,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.103.0/dist/umd/supabase.js"></script>
 <script src="supabase_config.js"></script>
+<script src="auth-shared.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
   // ─── CLIENT SUPABASE ──────────────────────────────────────────────────────────
@@ -789,7 +785,6 @@ function askConfirm(message, onOk, title = 'Confirmer', okLabel = 'Confirmer', o
 }
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
-let USERS = {};
 let REFERENCE = { provinces: [] };
 let TAB_ORDER = ['general'];
 const IMPORT_STORAGE_KEY = 'PNDA_IMPORTED_REPORTS';
@@ -814,9 +809,11 @@ const WORKFLOW_STATUS = {
 initialize();
 
 async function initialize() {
-  await loadReferenceAndUsers();
+  const session = await PndaAuth.hydrateSession(db, ['admin', 'super_admin', 'comptable']);
+  if (!session) return; // l'écran de connexion PndaAuth prend le relais
+  await loadReference();
   TAB_ORDER = ['general', ...REFERENCE.provinces.map((province) => province.name)];
-  if (!hydrateSession()) return;
+  openDashboard(session.user);
   bindEvents();
   buildTabs();
   await refreshDashboard();
@@ -836,18 +833,16 @@ function initializeReportSyncChannel() {
   }
 }
 
-async function loadReferenceAndUsers() {
+async function loadReference() {
   try {
     const [
       { data: provinces, error: provError },
-      { data: missions,  error: misError  },
-      { data: users,     error: usrError  }
+      { data: missions,  error: misError  }
     ] = await Promise.all([
       db.from('provinces').select('*').order('code'),
-      db.from('missions_ref').select('*').order('ordre'),
-      db.from('users').select('*')
+      db.from('missions_ref').select('*').order('ordre')
     ]);
-    if (provError || misError || usrError) throw (provError || misError || usrError);
+    if (provError || misError) throw (provError || misError);
 
     REFERENCE = {
       provinces: (provinces || []).map((prov) => ({
@@ -856,22 +851,10 @@ async function loadReferenceAndUsers() {
           .map((m) => ({ id: m.ref_id, nature: m.nature, objectif: m.objectif || '' }))
       }))
     };
-    USERS = {};
-    (users || []).forEach((u) => {
-      USERS[u.email] = { password: u.password_b64, provinces: u.provinces === null ? '*' : u.provinces, role: u.role };
-    });
   } catch (error) {
     console.error('Erreur chargement Supabase:', error);
+    showToast('Erreur de chargement des données de référence.');
   }
-}
-
-function hydrateSession() {
-  const session = getSession();
-  if (!session?.user || !USERS[session.user] || !['admin', 'super_admin', 'comptable'].includes(session.role)) {
-    redirectToLogin(); return false;
-  }
-  openDashboard(session.user);
-  return true;
 }
 
 function showAdminView(name) {
@@ -920,11 +903,6 @@ function getSession() {
   try { return JSON.parse(localStorage.getItem('PNDA_SESSION') || 'null'); } catch { return null; }
 }
 
-function redirectToLogin() {
-  localStorage.removeItem('PNDA_SESSION');
-  window.location.href = 'index.html?manual-login=1';
-}
-
 function openDashboard(user) {
   const session = getSession();
   document.getElementById('session-user').textContent = user.toUpperCase();
@@ -940,16 +918,16 @@ function openDashboard(user) {
 }
 
 function logoutAdmin() {
-  localStorage.removeItem('PNDA_SESSION');
-  window.location.href = 'index.html?manual-login=1';
+  PndaAuth.logout(db);
 }
 
 function getAdminProvinces(session) {
   if (session?.role === 'super_admin') return REFERENCE.provinces;
-  if (session?.province) return REFERENCE.provinces.filter((p) => p.name === session.province);
-  const userProvs = USERS[session?.user]?.provinces;
-  if (userProvs === '*') return REFERENCE.provinces;
-  if (Array.isArray(userProvs)) return REFERENCE.provinces.filter((p) => userProvs.includes(p.name));
+  const userProvs = session?.provinces;
+  if (Array.isArray(userProvs) && userProvs.length) {
+    return REFERENCE.provinces.filter((p) => userProvs.includes(p.name));
+  }
+  // provinces NULL/vide (ex: admin, comptes UNCP historiques) => accès à toutes les provinces
   return REFERENCE.provinces;
 }
 
@@ -1132,7 +1110,7 @@ function startPolling() {
 
 function handleStorageSync(event) {
   if ([IMPORT_STORAGE_KEY, REPORT_SYNC_KEY, 'PNDA_SESSION'].includes(event.key)) {
-    if (event.key === 'PNDA_SESSION' && !getSession()) { redirectToLogin(); return; }
+    if (event.key === 'PNDA_SESSION' && !getSession()) { window.location.reload(); return; }
     importedReports = getPersistedImportedReports();
     refreshDashboard();
   }
@@ -1282,28 +1260,26 @@ async function getStoredReports() {
     let query = db.from('reports').select('*').order('saved_at', { ascending: false }).limit(500);
     
     if (session?.role !== 'super_admin') {
-      if (session?.province) {
-        query = query.eq('province', session.province);
-      } else {
-        const userProvs = USERS[session?.user]?.provinces;
-        if (userProvs !== '*' && Array.isArray(userProvs) && userProvs.length) {
-          query = query.in('province', userProvs);
-        }
+      const userProvs = session?.provinces;
+      if (Array.isArray(userProvs) && userProvs.length) {
+        query = query.in('province', userProvs);
       }
+      // provinces NULL/vide (ex: admin, comptes UNCP historiques) => pas de filtre
+      // supplémentaire côté client ; les RLS Supabase bornent déjà l'accès réel.
     }
     const { data, error } = await query;
     if (error) throw error;
-    
+
     return (data || []).map((row) => ({
       id: row.id,
       meta: { ...(row.meta || {}), province: row.province, province_label: row.province_label,
               province_code: row.province_code, trimestre: row.trimestre, annee: row.annee,
               rapporteur: row.rapporteur, role: row.rapporteur_role },
-      missions: row.missions || [], 
-      savedAt: row.saved_at, 
+      missions: row.missions || [],
+      savedAt: row.saved_at,
       source: row.source || 'supabase',
-      is_read: !!row.is_read, 
-      read_at: row.read_at || null, 
+      is_read: !!row.is_read,
+      read_at: row.read_at || null,
       read_by: row.read_by || null,
       statut: row.statut || 'activee',
       returned_by: row.returned_by || null,
