@@ -41,7 +41,7 @@ const PndaAuth = (() => {
     style.textContent = `
       #pnda-auth-overlay {
         position: fixed; inset: 0; z-index: 2000;
-        display: flex; align-items: center; justify-content: center;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
         background: radial-gradient(circle at top, #1d4c34 0%, #0d2318 65%, #081712 100%);
         padding: 20px;
       }
