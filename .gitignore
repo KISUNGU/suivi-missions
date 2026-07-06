@@ -6,3 +6,7 @@ dist/
 NOUVEAUX_MOTS_DE_PASSE*.txt
 *mots_de_passe*.txt
 *.secrets.txt
+# Photos temporaires
+*.jpg
+*.jpeg
+_thumb_*
