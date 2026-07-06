@@ -639,12 +639,12 @@ function recalcRow(rowId) {
   const autres = Number(row.querySelector('.f-autres').value || 0);
   const avance = Number(row.querySelector('.f-avance').value || 0);
   const montant = nuitees * taux;
-  const total = montant + autres;
-  const solde = total - avance;
+  const total   = montant + autres;
+  const solde   = montant * 0.2;  // 20% du per diem uniquement
   row.querySelector('.row-montant').textContent = fmtCur(montant);
-  row.querySelector('.row-total').textContent = fmtCur(total);
-  row.querySelector('.row-avance').textContent = fmtCur(avance);
-  row.querySelector('.row-solde').textContent = fmtCur(solde);
+  row.querySelector('.row-total').textContent   = fmtCur(total);
+  row.querySelector('.row-avance').textContent  = fmtCur(avance);
+  row.querySelector('.row-solde').textContent   = fmtCur(solde);
   recalcTotals();
 }
 
@@ -654,8 +654,8 @@ function setAvance80(rowId) {
   const taux    = Number(row.querySelector('.f-taux').value   || 0);
   const autres  = Number(row.querySelector('.f-autres').value || 0);
   const montant = nuitees * taux;
-  // Avance = 80% per diem + 100% autres frais
-  row.querySelector('.f-avance').value = (montant * 0.8 + autres).toFixed(2);
+  // Avance = 80% du per diem uniquement (autres frais remboursés séparément)
+  row.querySelector('.f-avance').value = (montant * 0.8).toFixed(2);
   recalcRow(rowId);
 }
 
@@ -672,7 +672,7 @@ function recalcTotals() {
     totAutres  += autres;
     totTotal   += total;
     totAvance  += avance;
-    totSolde   += (total - avance);
+    totSolde   += montant * 0.2;  // 20% per diem uniquement
   });
   document.getElementById('tot-montant').textContent = fmtCur(totMontant);
   document.getElementById('tot-autres').textContent  = fmtCur(totAutres);
@@ -718,7 +718,7 @@ function collectMissions() {
       autres_frais_usd: autres,
       total_usd: total,
       avance_usd: avance,
-      solde_usd: total - avance,
+      solde_usd: montant * 0.2,  // 20% du per diem uniquement
       section: row.querySelector('.f-section').value.trim(),
       observation: row.querySelector('.f-observation').value.trim(),
       parcours: row.querySelector('.f-parcours')?.value?.trim() || null,
