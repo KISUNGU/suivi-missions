@@ -659,12 +659,20 @@ function setAvance80(rowId) {
 }
 
 function recalcTotals() {
-  const rows = collectMissions();
-  const totMontant = rows.reduce((s, m) => s + m.montant_usd, 0);
-  const totAutres  = rows.reduce((s, m) => s + m.autres_frais_usd, 0);
-  const totTotal   = rows.reduce((s, m) => s + m.total_usd, 0);
-  const totAvance  = rows.reduce((s, m) => s + m.avance_usd, 0);
-  const totSolde   = rows.reduce((s, m) => s + m.solde_usd, 0);
+  let totMontant = 0, totAutres = 0, totTotal = 0, totAvance = 0, totSolde = 0;
+  document.querySelectorAll('.mission-row').forEach(row => {
+    const nuitees = Number(row.querySelector('.f-nuitees')?.value || 0);
+    const taux    = Number(row.querySelector('.f-taux')?.value    || 0);
+    const autres  = Number(row.querySelector('.f-autres')?.value  || 0);
+    const avance  = Number(row.querySelector('.f-avance')?.value  || 0);
+    const montant = nuitees * taux;
+    const total   = montant + autres;
+    totMontant += montant;
+    totAutres  += autres;
+    totTotal   += total;
+    totAvance  += avance;
+    totSolde   += (total - avance);
+  });
   document.getElementById('tot-montant').textContent = fmtCur(totMontant);
   document.getElementById('tot-autres').textContent  = fmtCur(totAutres);
   document.getElementById('tot-total').textContent   = fmtCur(totTotal);
