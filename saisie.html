@@ -65,6 +65,11 @@
   .statut-badge.retournee  { background: #f8d7da; color: #7a1f27; }
   .statut-badge.activee    { background: #cfe2ff; color: #1b3f7a; }
   .statut-badge.realisee   { background: #d1e7dd; color: #135c34; }
+  .notif-count { font-size: 0.82rem; padding: 6px 14px; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+  .notif-count.en_attente { background: #fff3cd; color: #7a5c00; }
+  .notif-count.retournee  { background: #f8d7da; color: #7a1f27; }
+  .notif-count.activee    { background: #cfe2ff; color: #1b3f7a; }
+  .notif-count.realisee   { background: #d1e7dd; color: #135c34; }
   .empty-state { text-align: center; padding: 30px; color: #8b968d; }
   .lieux-list { display: flex; flex-direction: column; gap: 6px; }
   .lieu-item { background: #f4f6f4; border: 1px solid #d8e0d9; border-radius: 6px; padding: 6px 10px; }
@@ -95,6 +100,8 @@
 </div>
 
 <div id="content-wrapper">
+
+  <div id="notif-panel" class="mb-3"></div>
 
   <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div>
@@ -225,6 +232,9 @@ async function initialize() {
   await loadProvincesAllowed();
   await loadReferenceForProvince(getSelectedProvince());
   await loadMyReports();
+
+  // Rafraîchissement automatique toutes les 30 secondes
+  setInterval(async () => { await loadMyReports(); }, 30000);
 
   document.getElementById('f-province').addEventListener('change', async () => {
     await loadReferenceForProvince(getSelectedProvince());
@@ -833,7 +843,34 @@ async function loadMyReports() {
   }
 }
 
+function renderNotifications() {
+  const counts = { en_attente: 0, activee: 0, realisee: 0, retournee: 0 };
+  MY_REPORTS_CACHE.forEach(r => { const s = r.statut || 'en_attente'; if (s in counts) counts[s]++; });
+  const retournees = MY_REPORTS_CACHE.filter(r => r.statut === 'retournee');
+  let html = '';
+  if (retournees.length > 0) {
+    html += `<div class="alert alert-warning d-flex align-items-start gap-2 py-2">
+      <i class="bi bi-exclamation-triangle-fill fs-5 mt-1 flex-shrink-0"></i>
+      <div><strong>${retournees.length} r\u00e9quisition(s) retourn\u00e9e(s) \u00e0 corriger</strong><br>
+      <small>Le comptable a retourn\u00e9 votre r\u00e9quisition. Cliquez sur <strong>Corriger</strong> dans le tableau ci-dessous, modifiez et renvoyez.</small></div>
+    </div>`;
+  }
+  if (MY_REPORTS_CACHE.length > 0) {
+    const defs = [
+      { key: 'en_attente', icon: 'bi-hourglass-split',       label: 'En attente de validation' },
+      { key: 'activee',    icon: 'bi-lightning-fill',         label: 'Mission(s) autoris\u00e9e(s)' },
+      { key: 'realisee',   icon: 'bi-check-circle-fill',      label: 'Mission(s) termin\u00e9e(s)' },
+      { key: 'retournee',  icon: 'bi-arrow-return-left',      label: '\u00c0 corriger' },
+    ];
+    const parts = defs.filter(d => counts[d.key] > 0)
+      .map(d => `<span class="notif-count ${d.key}"><i class="bi ${d.icon}"></i>${counts[d.key]} ${d.label}</span>`);
+    if (parts.length) html += `<div class="d-flex flex-wrap gap-2 mb-2">${parts.join('')}</div>`;
+  }
+  document.getElementById('notif-panel').innerHTML = html;
+}
+
 function renderMyReports() {
+  renderNotifications();
   const tbody = document.getElementById('tbl-my-reports');
   if (!MY_REPORTS_CACHE.length) {
     tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Aucun rapport soumis pour le moment.</td></tr>';
@@ -842,7 +879,12 @@ function renderMyReports() {
   tbody.innerHTML = MY_REPORTS_CACHE.map((r) => {
     const total = (r.missions || []).reduce((s, m) => s + Number(m.total_usd || 0), 0);
     const statut = r.statut || 'en_attente';
-    const labels = { en_attente: '⏳ En attente', retournee: '↩ À corriger', activee: '⚡ Activée', realisee: '✓ Réalisée' };
+    const labels = {
+      en_attente: '<i class="bi bi-hourglass-split me-1"></i>En attente',
+      retournee:  '<i class="bi bi-arrow-return-left me-1"></i>\u00c0 corriger',
+      activee:    '<i class="bi bi-lightning-fill me-1"></i>Mission autoris\u00e9e',
+      realisee:   '<i class="bi bi-check-circle-fill me-1"></i>Mission termin\u00e9e'
+    };
     const canEdit = statut === 'retournee';
     return `
     <tr>
