@@ -653,8 +653,9 @@ function setAvance80(rowId) {
   const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
   const taux    = Number(row.querySelector('.f-taux').value   || 0);
   const autres  = Number(row.querySelector('.f-autres').value || 0);
-  const total   = nuitees * taux + autres;
-  row.querySelector('.f-avance').value = (total * 0.8).toFixed(2);
+  const montant = nuitees * taux;
+  // Avance = 80% per diem + 100% autres frais
+  row.querySelector('.f-avance').value = (montant * 0.8 + autres).toFixed(2);
   recalcRow(rowId);
 }
 
