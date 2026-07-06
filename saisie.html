@@ -892,7 +892,7 @@ function renderNotifications() {
     badge.classList.toggle('d-none', n === 0);
   });
 
-  // ── Panneau de notifications (sous le header) ──────────────────────────────
+  // ── Panneau de notifications (sous le header) — alerte retournée uniquement ─
   let html = '';
   if (retournees.length > 0) {
     html += `<div class="alert alert-warning d-flex align-items-start gap-2 py-2">
@@ -900,17 +900,6 @@ function renderNotifications() {
       <div><strong>${retournees.length} r\u00e9quisition(s) retourn\u00e9e(s) \u00e0 corriger</strong><br>
       <small>Le comptable a retourn\u00e9 votre r\u00e9quisition. Cliquez sur <strong>Corriger</strong> dans le tableau ci-dessous, modifiez et renvoyez.</small></div>
     </div>`;
-  }
-  if (MY_REPORTS_CACHE.length > 0) {
-    const defs = [
-      { key: 'en_attente', icon: 'bi-hourglass-split',   label: 'En attente de validation' },
-      { key: 'activee',    icon: 'bi-lightning-fill',     label: 'Mission(s) autoris\u00e9e(s)' },
-      { key: 'realisee',   icon: 'bi-check-circle-fill',  label: 'Mission(s) termin\u00e9e(s)' },
-      { key: 'retournee',  icon: 'bi-arrow-return-left',  label: '\u00c0 corriger' },
-    ];
-    const parts = defs.filter(d => counts[d.key] > 0)
-      .map(d => `<span class="notif-count ${d.key}"><i class="bi ${d.icon}"></i>${counts[d.key]} ${d.label}</span>`);
-    if (parts.length) html += `<div class="d-flex flex-wrap gap-2 mb-2">${parts.join('')}</div>`;
   }
   document.getElementById('notif-panel').innerHTML = html;
 }
