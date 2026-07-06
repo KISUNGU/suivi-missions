@@ -622,14 +622,14 @@ function onDateChange(rowId) {
     const diffDays = Math.round((new Date(fin) - new Date(debut)) / 86400000);
     row.querySelector('.f-nuitees').value = Math.max(0, diffDays - 1);
   }
-  recalcRow(rowId);
+  setAvance80(rowId);
 }
 
 function onLieuChange(rowId) {
   const row = document.getElementById(rowId);
   const lieu = row.querySelector('.f-lieu').value;
   row.querySelector('.f-taux').value = lieu === 'hors_province' ? 200 : 100;
-  recalcRow(rowId);
+  setAvance80(rowId);
 }
 
 function recalcRow(rowId) {
