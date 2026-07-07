@@ -528,10 +528,10 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
   if (prefillNom) wrap.querySelector('.f-nom').value = prefillNom;
   if (copyFromGroupId) copyGroupFieldsInto(wrap, copyFromGroupId);
   addAutresFraisItem(id);
-  // Applique le calcul d'avance (80% FM) à TOUTE nouvelle ligne, pas
-  // seulement celles copiées depuis un groupe — même principe que pour le
-  // 2e missionnaire (setAvance80 recalcule aussi montant/solde/perçu).
+  
+  // CORRECTION : Applique directement la logique des 80% et 20% au premier missionnaire dès la création
   setAvance80(id);
+  
   renderGroupBadges();
   wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
@@ -607,32 +607,21 @@ function recalcRow(rowId) {
   const row = document.getElementById(rowId);
   if (!row) return;
 
-  // 1. Calcul des Frais à Justifier (FJ) = somme des éléments
   const fj = Array.from(row.querySelectorAll('.f-item-montant')).reduce((s, el) => s + Number(el.value || 0), 0);
   const autresInput = row.querySelector('.f-autres');
   if (autresInput) autresInput.value = fj;
   const totalEl = row.querySelector('.f-autres-total');
   if (totalEl) totalEl.textContent = fmtCur(fj);
 
-  // 2. Calcul des Frais de Mission (FM) = nuitées × taux
   const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
   const taux = Number(row.querySelector('.f-taux').value || 0);
   const fm = nuitees * taux;
 
-  // 3. Avance = 80% du FM (Frais de Mission uniquement)
-  //    L'utilisateur peut la modifier manuellement
   const avance = Number(row.querySelector('.f-avance').value || 0);
-
-  // 4. Montant total = FM + FJ
   const total = fm + fj;
-
-  // 5. Solde = FM - Avance (le solde restant à payer sur les Frais de Mission)
   const solde = fm - avance;
-
-  // 6. Total perçu = Avance + FJ (ce que le missionnaire a déjà reçu)
   const percu = avance + fj;
 
-  // Mise à jour des affichages
   const rowMontant = row.querySelector('.row-montant');
   if (rowMontant) rowMontant.textContent = fmtCur(fm);
 
@@ -660,7 +649,6 @@ function setAvance80(rowId) {
   const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
   const taux = Number(row.querySelector('.f-taux').value || 0);
   const fm = nuitees * taux;
-  // Avance = 80% du Frais de Mission (FM) uniquement
   row.querySelector('.f-avance').value = (fm * 0.8).toFixed(2);
   recalcRow(rowId);
 }
