@@ -575,19 +575,96 @@ function removeMissionRow(id) {
 }
 
 // ─── SYNCHRONISATION DE GROUPE ──────────────────────────────────────────────────
+// ─── SYNCHRONISATION ET RECALCULS AUTOMATIQUES CORRIGÉS ──────────────────
+
 function onGroupFieldChange(rowId) {
   const row = document.getElementById(rowId);
   if (!row) return;
   const groupId = row.dataset.group;
+  
+  // Met à jour les autres membres du groupe si les champs sont liés
   document.querySelectorAll(`.mission-row[data-group="${groupId}"]`).forEach((other) => {
-    if (other === row) return;
-    ['f-date-debut', 'f-date-fin', 'f-taux', 'f-nuitees'].forEach((cls) => {
-      const srcEl = row.querySelector('.' + cls);
-      const dstEl = other.querySelector('.' + cls);
-      if (srcEl && dstEl) dstEl.value = srcEl.value;
-    });
+    if (other !== row) {
+      ['f-date-debut', 'f-date-fin', 'f-taux', 'f-nuitees'].forEach((cls) => {
+        const srcEl = row.querySelector('.' + cls);
+        const dstEl = other.querySelector('.' + cls);
+        if (srcEl && dstEl) dstEl.value = srcEl.value;
+      });
+    }
+    // CORRECTION : Force le recalcul strict des 80% pour TOUS les membres du groupe dès que le taux ou les nuitées changent
     setAvance80(other.id);
   });
+}
+
+function onDateChange(rowId) {
+  const row = document.getElementById(rowId);
+  const debut = row.querySelector('.f-date-debut').value;
+  const fin   = row.querySelector('.f-date-fin').value;
+  if (debut && fin) {
+    const diffDays = Math.round((new Date(fin) - new Date(debut)) / 86400000);
+    row.querySelector('.f-nuitees').value = Math.max(0, diffDays);
+  }
+  // Déclenche la mise à jour des 80% et la synchronisation du groupe
+  setAvance80(rowId);
+  onGroupFieldChange(rowId);
+}
+
+function setAvance80(rowId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
+  const taux = Number(row.querySelector('.f-taux').value || 0);
+  const fm = nuitees * taux;
+  
+  // Calcule et force strictement la valeur à 80% du Frais de Mission réel
+  row.querySelector('.f-avance').value = (fm * 0.8).toFixed(2);
+  recalcRow(rowId);
+}
+
+function recalcRow(rowId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+
+  // 1. Frais à Justifier (FJ)
+  const fj = Array.from(row.querySelectorAll('.f-item-montant')).reduce((s, el) => s + Number(el.value || 0), 0);
+  const autresInput = row.querySelector('.f-autres');
+  if (autresInput) autresInput.value = fj;
+  const totalEl = row.querySelector('.f-autres-total');
+  if (totalEl) totalEl.textContent = fmtCur(fj);
+
+  // 2. Frais de Mission (FM)
+  const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
+  const taux = Number(row.querySelector('.f-taux').value || 0);
+  const fm = nuitees * taux;
+
+  // 3. Récupération de l'avance mise à jour
+  const avance = Number(row.querySelector('.f-avance').value || 0);
+
+  // 4. Calculs des totaux de la ligne
+  const total = fm + fj;
+  const solde = fm - avance; // Le solde ne prend que le reste du FM (20%)
+  const percu = avance + fj; // Ce qui est réellement déboursé au départ
+
+  // Mise à jour des affichages HTML de la ligne
+  const rowMontant = row.querySelector('.row-montant');
+  if (rowMontant) rowMontant.textContent = fmtCur(fm);
+
+  const rowAutres = row.querySelector('.row-autres-sum');
+  if (rowAutres) rowAutres.textContent = fmtCur(fj);
+
+  const rowTotal = row.querySelector('.row-total');
+  if (rowTotal) rowTotal.textContent = fmtCur(total);
+
+  const rowAvance = row.querySelector('.row-avance');
+  if (rowAvance) rowAvance.textContent = fmtCur(avance);
+
+  const rowSolde = row.querySelector('.row-solde');
+  if (rowSolde) rowSolde.textContent = fmtCur(solde);
+
+  const rowPercu = row.querySelector('.row-percu');
+  if (rowPercu) rowPercu.textContent = fmtCur(percu);
+
+  recalcTotals();
 }
 
 function onDateChange(rowId) {
