@@ -155,10 +155,10 @@
       <div class="row g-3">
         <div class="col-md-3" id="province-select-wrap">
           <label class="form-label-sm">Province</label>
-          <select class="form-select form-select-sm" id="f-province"></select>
+          <input type="text" class="form-control form-control-sm" id="f-province" placeholder="Ex. : Kwilu">
         </div>
         <div class="col-md-3">
-          <label class="form-label-sm">Territoire</label>
+          <label class="form-label-sm">Territoire <span class="text-muted fw-normal">(aléatoire)</span></label>
           <select class="form-select form-select-sm" id="f-territoire"><option value="">— Territoire —</option></select>
         </div>
         <div class="col-md-6">
@@ -246,7 +246,7 @@
           <input class="form-check-input" type="radio" name="addmode" id="addmode-same" value="same" onchange="onAddModeChange()">
           <label class="form-check-label" for="addmode-same">
             <strong>Mêmes informations</strong><br>
-            <span class="small text-muted">Reprend les dates, le lieu et le taux d'un missionnaire déjà saisi. Seuls le nom et la fonction changent.</span>
+            <span class="small text-muted">Reprend les dates et le taux d'un missionnaire déjà saisi. Seuls le nom et la fonction changent.</span>
           </label>
         </div>
         <div class="mt-3 ps-4 d-none" id="addmode-group-select-wrap">
@@ -312,37 +312,32 @@ async function initialize() {
   document.getElementById('f-annee').value = new Date().getFullYear();
 
   await loadProvincesAllowed();
-  await loadTerritoiresForProvince(getSelectedProvince());
+  await loadAllTerritoires();
   await loadMyReports();
 
   // Rafraîchissement automatique toutes les 30 secondes
   setInterval(async () => { await loadMyReports(); }, 30000);
 
-  document.getElementById('f-province').addEventListener('change', async () => {
-    await loadTerritoiresForProvince(getSelectedProvince());
-  });
-
   addMissionRow();
 }
 
 async function loadProvincesAllowed() {
-  const sel = document.getElementById('f-province');
   const { data: allProvinces } = await db.from('provinces').select('*').order('code');
   let allowed = allProvinces || [];
   if (SESSION.role !== 'super_admin' && Array.isArray(SESSION.provinces) && SESSION.provinces.length) {
     allowed = allowed.filter((p) => SESSION.provinces.includes(p.name));
   }
   PROVINCES_ALLOWED = allowed;
-  sel.innerHTML = allowed.map((p) => `<option value="${esc(p.name)}">${esc(p.label)}</option>`).join('');
-  if (allowed.length <= 1) { sel.disabled = true; }
+  const input = document.getElementById('f-province');
+  if (!input.value) input.value = allowed[0]?.label || allowed[0]?.name || '';
 }
 
 function getSelectedProvince() {
-  return document.getElementById('f-province').value || PROVINCES_ALLOWED[0]?.name || '';
+  return document.getElementById('f-province').value.trim() || PROVINCES_ALLOWED[0]?.name || '';
 }
 
-async function loadTerritoiresForProvince(provinceName) {
-  const { data } = await db.from('territoires').select('*').eq('province_name', provinceName).order('name');
+async function loadAllTerritoires() {
+  const { data } = await db.from('territoires').select('*').order('name');
   TERRITOIRES = data || [];
   const sel = document.getElementById('f-territoire');
   const current = sel.value;
@@ -395,7 +390,7 @@ function leaveGroup(rowId) {
   const row = document.getElementById(rowId);
   if (!row) return;
   row.dataset.group = newGroupId();
-  row.querySelectorAll('.f-date-debut, .f-date-fin, .f-lieu, .f-taux, .f-nuitees').forEach((el) => el.classList.remove('field-locked'));
+  row.querySelectorAll('.f-date-debut, .f-date-fin, .f-taux, .f-nuitees').forEach((el) => el.classList.remove('field-locked'));
   renderGroupBadges();
 }
 
@@ -475,23 +470,12 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
         <input type="date" class="form-control form-control-sm f-date-fin" onchange="onDateChange('${id}')">
       </div>
       <div class="col-md-3">
-        <label class="form-label-sm">Barème (lieu de mission)</label>
-        <select class="form-select form-select-sm f-lieu" onchange="onLieuChange('${id}')">
-          <option value="dans_province">Dans la province (100 $/nuit)</option>
-          <option value="hors_province">Hors province (200 $/nuit)</option>
-        </select>
-      </div>
-      <div class="col-md-3">
         <label class="form-label-sm">Nuitées <span class="text-muted" title="Calculé automatiquement depuis les dates">&#8635;</span></label>
         <input type="number" min="0" class="form-control form-control-sm f-nuitees" value="0" readonly style="background:#f5f5f5">
       </div>
       <div class="col-md-3">
         <label class="form-label-sm">Taux/nuit (USD)</label>
         <input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="100" onchange="recalcRow('${id}'); onGroupFieldChange('${id}')">
-      </div>
-      <div class="col-md-3">
-        <label class="form-label-sm">Autres frais (USD)</label>
-        <input type="number" min="0" step="0.01" class="form-control form-control-sm f-autres" value="0" onchange="recalcRow('${id}')">
       </div>
       <div class="col-md-3">
         <label class="form-label-sm">Avance versée <span class="text-success small fw-normal">· 80% recommandé</span></label>
@@ -505,6 +489,21 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
         <div class="small text-muted pt-1">Solde (20%) calculé automatiquement</div>
       </div>
     </div>
+    <div class="row g-2 mt-1">
+      <div class="col-12">
+        <div class="autres-frais-box border rounded p-2">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label-sm mb-0">Autres frais à justifier <span class="text-muted fw-normal">(libellé + montant)</span></label>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addAutresFraisItem('${id}')"><i class="bi bi-plus-lg me-1"></i>Ajouter un élément</button>
+          </div>
+          <div class="autres-frais-items"></div>
+          <div class="text-end small mt-1">
+            Total autres frais : <strong class="f-autres-total">0,00</strong> USD
+            <input type="hidden" class="f-autres" value="0">
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="mt-2 small text-muted">
       Montant per diem : <strong class="row-montant">0,00</strong> USD ·
       Total : <strong class="row-total">0,00</strong> USD ·
@@ -515,15 +514,37 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
   document.getElementById('mission-rows').appendChild(wrap);
   if (prefillNom) wrap.querySelector('.f-nom').value = prefillNom;
   if (copyFromGroupId) copyGroupFieldsInto(wrap, copyFromGroupId);
+  addAutresFraisItem(id);
   recalcRow(id);
   renderGroupBadges();
   wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+// ─── AUTRES FRAIS À JUSTIFIER (libellé + montant, par missionnaire) ───────────
+function addAutresFraisItem(rowId, libelle = '', montant = 0) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  const container = row.querySelector('.autres-frais-items');
+  const item = document.createElement('div');
+  item.className = 'row g-2 align-items-center mb-1 autres-frais-item';
+  item.innerHTML = `
+    <div class="col-md-7"><input type="text" class="form-control form-control-sm f-item-libelle" placeholder="Libellé (ex. Transport, Communication...)" value="${esc(libelle)}" onchange="recalcRow('${rowId}')"></div>
+    <div class="col-md-3"><input type="number" min="0" step="0.01" class="form-control form-control-sm f-item-montant" placeholder="Montant" value="${Number(montant) || 0}" onchange="recalcRow('${rowId}')"></div>
+    <div class="col-md-2 text-end"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeAutresFraisItem(this, '${rowId}')" title="Retirer cet élément"><i class="bi bi-trash"></i></button></div>
+  `;
+  container.appendChild(item);
+  recalcRow(rowId);
+}
+
+function removeAutresFraisItem(btn, rowId) {
+  btn.closest('.autres-frais-item')?.remove();
+  recalcRow(rowId);
+}
+
 function copyGroupFieldsInto(wrap, groupId) {
   const source = document.querySelector(`.mission-row[data-group="${groupId}"]`);
   if (!source || source === wrap) return;
-  ['f-date-debut', 'f-date-fin', 'f-lieu', 'f-taux', 'f-nuitees'].forEach((cls) => {
+  ['f-date-debut', 'f-date-fin', 'f-taux', 'f-nuitees'].forEach((cls) => {
     const srcEl = source.querySelector('.' + cls);
     const dstEl = wrap.querySelector('.' + cls);
     if (srcEl && dstEl) dstEl.value = srcEl.value;
@@ -544,7 +565,7 @@ function onGroupFieldChange(rowId) {
   const groupId = row.dataset.group;
   document.querySelectorAll(`.mission-row[data-group="${groupId}"]`).forEach((other) => {
     if (other === row) return;
-    ['f-date-debut', 'f-date-fin', 'f-lieu', 'f-taux', 'f-nuitees'].forEach((cls) => {
+    ['f-date-debut', 'f-date-fin', 'f-taux', 'f-nuitees'].forEach((cls) => {
       const srcEl = row.querySelector('.' + cls);
       const dstEl = other.querySelector('.' + cls);
       if (srcEl && dstEl) dstEl.value = srcEl.value;
@@ -565,20 +586,18 @@ function onDateChange(rowId) {
   onGroupFieldChange(rowId);
 }
 
-function onLieuChange(rowId) {
-  const row = document.getElementById(rowId);
-  const lieu = row.querySelector('.f-lieu').value;
-  row.querySelector('.f-taux').value = lieu === 'hors_province' ? 200 : 100;
-  setAvance80(rowId);
-  onGroupFieldChange(rowId);
-}
-
 function recalcRow(rowId) {
   const row = document.getElementById(rowId);
   if (!row) return;
+  const itemsTotal = Array.from(row.querySelectorAll('.f-item-montant')).reduce((s, el) => s + Number(el.value || 0), 0);
+  const autresInput = row.querySelector('.f-autres');
+  if (autresInput) autresInput.value = itemsTotal;
+  const totalEl = row.querySelector('.f-autres-total');
+  if (totalEl) totalEl.textContent = fmtCur(itemsTotal);
+
   const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
   const taux = Number(row.querySelector('.f-taux').value || 0);
-  const autres = Number(row.querySelector('.f-autres').value || 0);
+  const autres = itemsTotal;
   const avance = Number(row.querySelector('.f-avance').value || 0);
   const montant = nuitees * taux;
   const total   = montant + autres;
@@ -631,7 +650,11 @@ function collectMissions() {
   return rows.map((row, idx) => {
     const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
     const taux = Number(row.querySelector('.f-taux').value || 0);
-    const autres = Number(row.querySelector('.f-autres').value || 0);
+    const autresItems = Array.from(row.querySelectorAll('.autres-frais-item')).map((it) => ({
+      libelle: it.querySelector('.f-item-libelle').value.trim(),
+      montant: Number(it.querySelector('.f-item-montant').value || 0)
+    })).filter((it) => it.libelle || it.montant);
+    const autres = autresItems.reduce((s, it) => s + it.montant, 0);
     const avance = Number(row.querySelector('.f-avance').value || 0);
     const montant = nuitees * taux;
     const total = montant + autres;
@@ -650,6 +673,7 @@ function collectMissions() {
       nuitees, taux_per_diem: taux,
       montant_usd: montant,
       autres_frais_usd: autres,
+      autres_frais_details: autresItems,
       total_usd: total,
       avance_usd: avance,
       solde_usd: montant * 0.2,
@@ -720,7 +744,7 @@ async function submitReport() {
   try {
     if (editingId) {
       const { error } = await db.from('reports').update({
-        province, province_label: provinceInfo?.label || null, province_code: provinceInfo?.code || null,
+        province, province_label: provinceInfo?.label || province, province_code: provinceInfo?.code || null,
         trimestre, annee, missions,
         statut: 'en_attente', returned_by: null, returned_at: null
       }).eq('id', editingId);
@@ -732,7 +756,7 @@ async function submitReport() {
       const id = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
       const { error } = await db.from('reports').insert({
         id, source: 'saisie-html',
-        province, province_label: provinceInfo?.label || null, province_code: provinceInfo?.code || null,
+        province, province_label: provinceInfo?.label || province, province_code: provinceInfo?.code || null,
         trimestre, annee,
         rapporteur: SESSION.displayName || SESSION.user, rapporteur_role: SESSION.role,
         date_generation: new Date().toISOString().slice(0, 10),
@@ -833,7 +857,7 @@ async function editReport(id) {
   if (!r) return;
   document.getElementById('report-id-edit').value = r.id;
   document.getElementById('f-province').value = r.province;
-  await loadTerritoiresForProvince(r.province);
+  await loadAllTerritoires();
   document.getElementById('f-trimestre').value = r.trimestre || 'T1';
   document.getElementById('f-annee').value = r.annee || new Date().getFullYear();
 
@@ -861,21 +885,32 @@ async function editReport(id) {
         <div class="col-md-4"><label class="form-label-sm">Entité / Service</label><input type="text" class="form-control form-control-sm f-entite" value="${esc(m.missionnaire_entite)}"></div>
         <div class="col-md-3"><label class="form-label-sm">Date de départ</label><input type="date" class="form-control form-control-sm f-date-debut" value="${m.date_debut || ''}" onchange="onDateChange('${rid}')"></div>
         <div class="col-md-3"><label class="form-label-sm">Date de retour</label><input type="date" class="form-control form-control-sm f-date-fin" value="${m.date_fin || ''}" onchange="onDateChange('${rid}')"></div>
-        <div class="col-md-3">
-          <label class="form-label-sm">Barème (lieu de mission)</label>
-          <select class="form-select form-select-sm f-lieu" onchange="onLieuChange('${rid}')">
-            <option value="dans_province" ${(m.taux_per_diem||0) < 200 ? 'selected' : ''}>Dans la province (100 $/nuit)</option>
-            <option value="hors_province" ${(m.taux_per_diem||0) >= 200 ? 'selected' : ''}>Hors province (200 $/nuit)</option>
-          </select>
-        </div>
         <div class="col-md-3"><label class="form-label-sm">Nuitées</label><input type="number" min="0" class="form-control form-control-sm f-nuitees" value="${m.nuitees||0}" readonly style="background:#f5f5f5"></div>
         <div class="col-md-3"><label class="form-label-sm">Taux/nuit (USD)</label><input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="${m.taux_per_diem||100}" onchange="recalcRow('${rid}'); onGroupFieldChange('${rid}')"></div>
-        <div class="col-md-3"><label class="form-label-sm">Autres frais (USD)</label><input type="number" min="0" step="0.01" class="form-control form-control-sm f-autres" value="${m.autres_frais_usd||0}" onchange="recalcRow('${rid}')"></div>
         <div class="col-md-3">
           <label class="form-label-sm">Avance versée</label>
           <div class="input-group input-group-sm">
             <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="${m.avance_usd||0}" onchange="recalcRow('${rid}')">
             <button type="button" class="btn btn-outline-secondary" onclick="setAvance80('${rid}')" tabindex="-1">80%</button>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label-sm">&nbsp;</label>
+          <div class="small text-muted pt-1">Solde (20%) calculé automatiquement</div>
+        </div>
+      </div>
+      <div class="row g-2 mt-1">
+        <div class="col-12">
+          <div class="autres-frais-box border rounded p-2">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label-sm mb-0">Autres frais à justifier <span class="text-muted fw-normal">(libellé + montant)</span></label>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addAutresFraisItem('${rid}')"><i class="bi bi-plus-lg me-1"></i>Ajouter un élément</button>
+            </div>
+            <div class="autres-frais-items"></div>
+            <div class="text-end small mt-1">
+              Total autres frais : <strong class="f-autres-total">0,00</strong> USD
+              <input type="hidden" class="f-autres" value="0">
+            </div>
           </div>
         </div>
       </div>
@@ -887,6 +922,11 @@ async function editReport(id) {
       </div>
     `;
     document.getElementById('mission-rows').appendChild(wrap);
+    const details = Array.isArray(m.autres_frais_details) && m.autres_frais_details.length
+      ? m.autres_frais_details
+      : (Number(m.autres_frais_usd || 0) > 0 ? [{ libelle: 'Autres frais', montant: m.autres_frais_usd }] : []);
+    if (details.length) details.forEach((d) => addAutresFraisItem(rid, d.libelle, d.montant));
+    else addAutresFraisItem(rid);
     recalcRow(rid);
   });
   if (!missions.length) addMissionRow();
