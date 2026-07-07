@@ -601,7 +601,7 @@ function recalcRow(rowId) {
   const avance = Number(row.querySelector('.f-avance').value || 0);
   const montant = nuitees * taux;
   const total   = montant + autres;
-  const solde   = montant * 0.2;
+  const solde   = total - avance;
   row.querySelector('.row-montant').textContent = fmtCur(montant);
   row.querySelector('.row-total').textContent   = fmtCur(total);
   row.querySelector('.row-avance').textContent  = fmtCur(avance);
@@ -614,7 +614,9 @@ function setAvance80(rowId) {
   if (!row) return;
   const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
   const taux    = Number(row.querySelector('.f-taux').value   || 0);
-  row.querySelector('.f-avance').value = (nuitees * taux * 0.8).toFixed(2);
+  const autres  = Number(row.querySelector('.f-autres').value || 0);
+  const total   = nuitees * taux + autres;
+  row.querySelector('.f-avance').value = (total * 0.8).toFixed(2);
   recalcRow(rowId);
 }
 
@@ -631,7 +633,7 @@ function recalcTotals() {
     totAutres  += autres;
     totTotal   += total;
     totAvance  += avance;
-    totSolde   += montant * 0.2;
+    totSolde   += total - avance;
   });
   document.getElementById('tot-montant').textContent = fmtCur(totMontant);
   document.getElementById('tot-autres').textContent  = fmtCur(totAutres);
@@ -676,7 +678,7 @@ function collectMissions() {
       autres_frais_details: autresItems,
       total_usd: total,
       avance_usd: avance,
-      solde_usd: montant * 0.2,
+      solde_usd: total - avance,
       section: null, observation: null,
       lieux: null, secteurs: null, parcours: null, participants: 1
     };

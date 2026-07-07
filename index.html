@@ -2535,7 +2535,7 @@ async function saveEditedReport() {
     const total   = montant + autres;
     return { ...m, nuitees, taux_per_diem: taux, montant_usd: montant,
              autres_frais_usd: autres, total_usd: total,
-             avance_usd: avance, solde_usd: montant * 0.2, observation: obs };
+             avance_usd: avance, solde_usd: total - avance, observation: obs };
   });
 
   const btn = document.getElementById('saveEditReportBtn');
