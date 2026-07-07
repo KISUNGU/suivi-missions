@@ -2236,12 +2236,17 @@ async function activerMission(reportId) {
         const email    = session?.user?.email || session?.user || null;
         const now      = new Date().toISOString();
         const province = report.meta?.province || '';
+        const provinceCode = report.meta?.province_code || province.slice(0, 3).toUpperCase() || 'X';
         const annee    = parseInt(report.meta?.annee || new Date().getFullYear());
         let liqNumber  = report.liquidation_number;
         if (!liqNumber) {
           const { data: seq, error: seqErr } = await db.rpc('next_liquidation_seq', { p_province: province, p_year: annee });
           if (seqErr) throw seqErr;
-          liqNumber = String(seq).padStart(4, '0') + '/' + annee;
+          // Le compteur "seq" est incrémenté séparément par province : on doit
+          // inclure le code province dans le numéro pour rester unique parmi
+          // TOUS les rapports (l'index unique liquidation_number est global,
+          // sinon deux provinces génèrent toutes les deux "0001/<année>").
+          liqNumber = String(seq).padStart(4, '0') + '/' + provinceCode + '/' + annee;
         }
         const { error } = await db.from('reports').update({
           statut: 'activee', activated_by: email, activated_at: now,
@@ -2252,7 +2257,13 @@ async function activerMission(reportId) {
         await refreshDashboard();
         const updated = { ...report, statut: 'activee', activated_at: now, liquidation_number: liqNumber };
         openPrintWindow(buildBordereauHtml(updated));
-      } catch (e) { console.error(e); showToast('Erreur lors de l\'activation.'); }
+      } catch (e) {
+        console.error(e);
+        const isConflict = e?.code === '23505' || String(e?.message || '').toLowerCase().includes('duplicate');
+        showToast(isConflict
+          ? 'Ce numéro de bordereau existe déjà. Réessayez (le compteur va se resynchroniser).'
+          : ("Erreur lors de l'activation : " + (e?.message || e?.hint || 'inconnue')));
+      }
     },
     'Activer la mission', 'Activer', 'btn-success'
   );
