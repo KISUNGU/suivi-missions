@@ -515,7 +515,7 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
   if (prefillNom) wrap.querySelector('.f-nom').value = prefillNom;
   if (copyFromGroupId) copyGroupFieldsInto(wrap, copyFromGroupId);
   addAutresFraisItem(id);
-  recalcRow(id);
+  if (copyFromGroupId) setAvance80(id); else recalcRow(id);
   renderGroupBadges();
   wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
