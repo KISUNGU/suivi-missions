@@ -155,7 +155,8 @@
       <div class="row g-3">
         <div class="col-md-3" id="province-select-wrap">
           <label class="form-label-sm">Province</label>
-          <input type="text" class="form-control form-control-sm" id="f-province" placeholder="Ex. : Kwilu">
+          <input type="text" class="form-control form-control-sm" id="f-province" placeholder="Ex. : Kwilu" list="province-datalist" autocomplete="off">
+          <datalist id="province-datalist"></datalist>
         </div>
         <div class="col-md-3">
           <label class="form-label-sm">Territoire <span class="text-muted fw-normal">(aléatoire)</span></label>
@@ -330,10 +331,22 @@ async function loadProvincesAllowed() {
   PROVINCES_ALLOWED = allowed;
   const input = document.getElementById('f-province');
   if (!input.value) input.value = allowed[0]?.label || allowed[0]?.name || '';
+  const datalist = document.getElementById('province-datalist');
+  if (datalist) datalist.innerHTML = allowed.map((p) => `<option value="${esc(p.label || p.name)}">`).join('');
 }
 
 function getSelectedProvince() {
   return document.getElementById('f-province').value.trim() || PROVINCES_ALLOWED[0]?.name || '';
+}
+
+// Fait correspondre le texte tapé (libre) à une province connue de la liste
+// autorisée, en ignorant la casse/les espaces, afin que le rapport reste bien
+// visible du comptable (dont le filtre est une comparaison exacte en base).
+function matchProvince(typed) {
+  const norm = (s) => String(s || '').trim().toLowerCase();
+  const t = norm(typed);
+  if (!t) return null;
+  return PROVINCES_ALLOWED.find((p) => norm(p.name) === t || norm(p.label) === t) || null;
 }
 
 async function loadAllTerritoires() {
@@ -733,8 +746,14 @@ async function submitReport() {
   const dup = findDuplicateNamesInGroups();
   if (dup) { showFormError(`Deux missionnaires du même groupe portent le même nom (${dup}). Corrigez les noms avant de soumettre.`); return; }
 
-  const province = getSelectedProvince();
-  const provinceInfo = PROVINCES_ALLOWED.find((p) => p.name === province);
+  const typedProvince = getSelectedProvince();
+  const provinceInfo = matchProvince(typedProvince);
+  if (!provinceInfo) {
+    const suggestions = PROVINCES_ALLOWED.map((p) => p.label || p.name).join(', ');
+    showFormError(`Province « ${typedProvince} » non reconnue. Choisissez une valeur exacte parmi : ${suggestions || 'aucune province disponible'}.`);
+    return;
+  }
+  const province = provinceInfo.name;
   const trimestre = document.getElementById('f-trimestre').value;
   const annee = Number(document.getElementById('f-annee').value) || new Date().getFullYear();
   const editingId = document.getElementById('report-id-edit').value;
