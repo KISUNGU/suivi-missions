@@ -922,7 +922,7 @@ async function editReport(id) {
         <div class="col-md-3"><label class="form-label-sm">Nuitées</label><input type="number" min="0" class="form-control form-control-sm f-nuitees" value="${m.nuitees||0}" readonly style="background:#f5f5f5"></div>
         <div class="col-md-3"><label class="form-label-sm">Taux/nuit (USD)</label><input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="${m.taux_per_diem||100}" onchange="recalcRow('${rid}'); onGroupFieldChange('${rid}')"></div>
         <div class="col-md-3">
-          <label class="form-label-sm">Avance versée</label>
+          <label class="form-label-sm">Avance versée <span class="text-success small fw-normal">· 80% FM recommandé</span></label>
           <div class="input-group input-group-sm">
             <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="${m.avance_usd||0}" onchange="recalcRow('${rid}')">
             <button type="button" class="btn btn-outline-secondary" onclick="setAvance80('${rid}')" tabindex="-1">80%</button>
@@ -962,7 +962,10 @@ async function editReport(id) {
       : (Number(m.autres_frais_usd || 0) > 0 ? [{ libelle: 'Autres frais', montant: m.autres_frais_usd }] : []);
     if (details.length) details.forEach((d) => addAutresFraisItem(rid, d.libelle, d.montant));
     else addAutresFraisItem(rid);
-    recalcRow(rid);
+    // Recalcule l'avance selon la règle actuelle (80% du FM) plutôt que de
+    // garder telle quelle une valeur potentiellement enregistrée avec une
+    // ancienne formule (ex. 80% du total FM+FJ) — évite un solde incohérent.
+    setAvance80(rid);
   });
   if (!missions.length) addMissionRow();
   renderGroupBadges();
