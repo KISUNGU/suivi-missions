@@ -199,12 +199,12 @@
     <div class="card-body">
       <div id="mission-rows"></div>
       <div class="totals-strip d-flex flex-wrap gap-4 mt-2">
-        <div>Montant per diem (FM) : <span class="val" id="tot-montant">0,00</span> USD</div>
-        <div>Total frais à justifier (FJ) : <span class="val" id="tot-autres">0,00</span> USD</div>
-        <div>Montant total : <span class="val" id="tot-total">0,00</span> USD</div>
+        <div>Frais de mission (FM) : <span class="val" id="tot-montant">0,00</span> USD</div>
+        <div>Frais à justifier (FJ) : <span class="val" id="tot-autres">0,00</span> USD</div>
+        <div>Montant total (FM + FJ) : <span class="val" id="tot-total">0,00</span> USD</div>
         <div>Avance versée (80% FM) : <span class="val" id="tot-avance">0,00</span> USD</div>
-        <div>Solde à payer au retour : <span class="val" id="tot-solde">0,00</span> USD</div>
-        <div>Total perçu (FM + FJ) : <span class="val" id="tot-percu">0,00</span> USD</div>
+        <div>Solde à payer (20% FM) : <span class="val" id="tot-solde">0,00</span> USD</div>
+        <div>Total perçu (Avance + FJ) : <span class="val" id="tot-percu">0,00</span> USD</div>
       </div>
     </div>
   </div>
@@ -528,7 +528,9 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
   if (prefillNom) wrap.querySelector('.f-nom').value = prefillNom;
   if (copyFromGroupId) copyGroupFieldsInto(wrap, copyFromGroupId);
   addAutresFraisItem(id);
-  if (copyFromGroupId) setAvance80(id); else recalcRow(id);
+  // CORRECTION : Appliquer le calcul à la ligne créée
+  recalcRow(id);
+  if (copyFromGroupId) setAvance80(id);
   renderGroupBadges();
   wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
@@ -583,7 +585,7 @@ function onGroupFieldChange(rowId) {
       const dstEl = other.querySelector('.' + cls);
       if (srcEl && dstEl) dstEl.value = srcEl.value;
     });
-    setAvance80(other.id);
+    recalcRow(other.id);
   });
 }
 
@@ -595,11 +597,11 @@ function onDateChange(rowId) {
     const diffDays = Math.round((new Date(fin) - new Date(debut)) / 86400000);
     row.querySelector('.f-nuitees').value = Math.max(0, diffDays);
   }
-  setAvance80(rowId);
+  recalcRow(rowId);
   onGroupFieldChange(rowId);
 }
 
-// ─── CALCULS CORRIGÉS ──────────────────────────────────────────────────────────
+// ─── CALCULS CORRIGÉS (APPLIQUÉS À TOUS LES MISSIONNAIRES) ──────────────────
 function recalcRow(rowId) {
   const row = document.getElementById(rowId);
   if (!row) return;
@@ -769,6 +771,8 @@ function resetForm() {
   document.getElementById('f-trimestre').value = 'T1';
   document.getElementById('f-annee').value = new Date().getFullYear();
   showFormError('');
+  rowCounter = 0;
+  groupCounter = 0;
   addMissionRow();
   document.getElementById('submit-btn').innerHTML = '<i class="bi bi-send-fill me-1"></i>Soumettre le rapport';
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -929,6 +933,8 @@ async function editReport(id) {
   document.getElementById('f-territoire').value = premiere?.territoire_name || '';
 
   document.getElementById('mission-rows').innerHTML = '';
+  rowCounter = 0;
+  groupCounter = 0;
   missions.forEach((m) => {
     let gid = m.group_id;
     if (!gid) gid = newGroupId();
@@ -991,7 +997,7 @@ async function editReport(id) {
       : (Number(m.autres_frais_usd || 0) > 0 ? [{ libelle: 'Autres frais', montant: m.autres_frais_usd }] : []);
     if (details.length) details.forEach((d) => addAutresFraisItem(rid, d.libelle, d.montant));
     else addAutresFraisItem(rid);
-    setAvance80(rid);
+    recalcRow(rid);
   });
   if (!missions.length) addMissionRow();
   renderGroupBadges();
