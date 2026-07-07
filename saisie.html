@@ -55,8 +55,13 @@
   .btn-gold:hover { background: var(--pnda-gold-lt); border-color: var(--pnda-gold-lt); color: var(--pnda-green); }
 
   .mission-row { border: 1px solid #e3e6e2; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; background: #fbfcfb; position: relative; }
-  .mission-row .mission-row-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--pnda-green); }
+  .mission-row.is-grouped { border-left: 4px solid var(--pnda-gold); background: #fffdf5; }
+  .mission-row .mission-row-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--pnda-green); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .mission-row .remove-row-btn { position: absolute; top: 10px; right: 10px; }
+  .group-badge { font-size: 0.66rem; font-weight: 700; padding: 2px 9px; border-radius: 12px; background: var(--pnda-gold-lt); color: var(--pnda-green); text-transform: none; letter-spacing: 0.2px; }
+  .group-leave-link { font-size: 0.68rem; font-weight: 600; text-transform: none; letter-spacing: 0; color: #7a1f27; text-decoration: none; }
+  .group-leave-link:hover { text-decoration: underline; }
+  .field-locked { background: #f5f1e2 !important; }
   .form-label-sm { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #4a564d; margin-bottom: 2px; }
   .totals-strip { background: var(--pnda-cream); border-radius: 8px; padding: 12px 18px; font-size: 0.88rem; }
   .totals-strip .val { font-weight: 700; color: var(--pnda-green); }
@@ -75,11 +80,6 @@
   .user-dropdown-btn { background: none; border: none; color: inherit; text-align: right; line-height: 1.3; }
   .user-dropdown-btn:hover, .user-dropdown-btn:focus { background: none; border: none; color: inherit; box-shadow: none; }
   .empty-state { text-align: center; padding: 30px; color: #8b968d; }
-  .lieux-list { display: flex; flex-direction: column; gap: 6px; }
-  .lieu-item { background: #f4f6f4; border: 1px solid #d8e0d9; border-radius: 6px; padding: 6px 10px; }
-  .parcours-section { background: #eef4f0; border: 1px solid #c4d8c9; border-radius: 6px; padding: 8px 12px; }
-  .participants-section { background: #fafcfa; border: 1px solid #d8e0d9; border-radius: 6px; padding: 8px 12px; }
-  .participant-row input { font-size: 0.82rem; }
 </style>
 </head>
 <body>
@@ -140,13 +140,14 @@
   <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div>
       <h2 class="page-title">Réquisition de frais de mission</h2>
-      <p class="text-muted small mb-0">Encodez les détails de votre mission, puis soumettez la réquisition au comptable pour liquidation.</p>
+      <p class="text-muted small mb-0">Le chef de mission remplit une fiche complète pour lui-même et pour chaque missionnaire accompagnant. Chacun recevra son propre bordereau (note de frais) à l'impression.</p>
     </div>
     <button class="btn btn-pnda btn-sm" onclick="resetForm()"><i class="bi bi-file-earmark-plus me-1"></i>Nouveau rapport vierge</button>
   </div>
 
   <div id="form-alert" class="alert alert-danger d-none"></div>
 
+  <!-- Informations générales : tout ce qui concerne la mission elle-même -->
   <div class="card card-pnda">
     <div class="card-header"><i class="bi bi-clipboard-data me-2"></i>Informations générales</div>
     <div class="card-body">
@@ -155,6 +156,14 @@
         <div class="col-md-3" id="province-select-wrap">
           <label class="form-label-sm">Province</label>
           <select class="form-select form-select-sm" id="f-province"></select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label-sm">Territoire</label>
+          <select class="form-select form-select-sm" id="f-territoire"><option value="">— Territoire —</option></select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label-sm">Objet de la mission</label>
+          <input type="text" class="form-control form-control-sm" id="f-objet" placeholder="Ex. : Supervision terrain campagne agricole">
         </div>
         <div class="col-md-2">
           <label class="form-label-sm">Trimestre</label>
@@ -167,8 +176,8 @@
           <label class="form-label-sm">Année</label>
           <input type="number" class="form-control form-control-sm" id="f-annee">
         </div>
-        <div class="col-md-3">
-          <label class="form-label-sm">Rapporteur</label>
+        <div class="col-md-4">
+          <label class="form-label-sm">Rapporteur (chef de mission)</label>
           <input type="text" class="form-control form-control-sm" id="f-rapporteur" readonly>
         </div>
         <div class="col-md-2">
@@ -179,10 +188,11 @@
     </div>
   </div>
 
+  <!-- Missionnaires : uniquement les données propres à chaque personne -->
   <div class="card card-pnda">
     <div class="card-header d-flex justify-content-between align-items-center">
-      <span><i class="bi bi-signpost-split me-2"></i>Missions du rapport</span>
-      <button class="btn btn-gold btn-sm" onclick="addMissionRow()"><i class="bi bi-plus-lg me-1"></i>Ajouter une mission</button>
+      <span><i class="bi bi-people-fill me-2"></i>Missionnaires</span>
+      <button class="btn btn-gold btn-sm" onclick="addMissionRow()"><i class="bi bi-person-plus-fill me-1"></i>Ajouter un missionnaire</button>
     </div>
     <div class="card-body">
       <div id="mission-rows"></div>
@@ -206,7 +216,7 @@
       <div class="table-responsive">
         <table class="table table-sm align-middle mb-0">
           <thead class="table-light">
-            <tr><th>#</th><th>Date</th><th>Trimestre</th><th>Missions</th><th>Total USD</th><th>Statut</th><th></th></tr>
+            <tr><th>#</th><th>Date</th><th>Trimestre</th><th>Missionnaires</th><th>Total USD</th><th>Statut</th><th></th></tr>
           </thead>
           <tbody id="tbl-my-reports"><tr><td colspan="7" class="empty-state">Chargement…</td></tr></tbody>
         </table>
@@ -214,6 +224,42 @@
     </div>
   </div>
 
+</div>
+
+<!-- Choix lors de l'ajout d'un missionnaire -->
+<div class="modal fade" id="addMissionaryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-person-plus-fill me-2"></i>Ajouter un missionnaire</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="radio" name="addmode" id="addmode-new" value="new" checked onchange="onAddModeChange()">
+          <label class="form-check-label" for="addmode-new">
+            <strong>Nouvelles informations</strong><br>
+            <span class="small text-muted">Fiche complète et indépendante : dates, lieu et taux propres à cette personne.</span>
+          </label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="addmode" id="addmode-same" value="same" onchange="onAddModeChange()">
+          <label class="form-check-label" for="addmode-same">
+            <strong>Mêmes informations</strong><br>
+            <span class="small text-muted">Reprend les dates, le lieu et le taux d'un missionnaire déjà saisi. Seuls le nom et la fonction changent.</span>
+          </label>
+        </div>
+        <div class="mt-3 ps-4 d-none" id="addmode-group-select-wrap">
+          <label class="form-label-sm">Regrouper avec</label>
+          <select class="form-select form-select-sm" id="addmode-group-select"></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Annuler</button>
+        <button class="btn btn-pnda btn-sm" onclick="confirmAddMissionary()"><i class="bi bi-check-lg me-1"></i>Ajouter</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:2500">
@@ -240,11 +286,11 @@ function esc(v) { return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt
 function fmtCur(v) { return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v || 0)); }
 
 let SESSION = null;
-let MISSIONS_REF = [];   // référentiel de missions pour la province sélectionnée
 let TERRITOIRES = [];
-let SECTEURS = [];
 let PROVINCES_ALLOWED = [];
 let rowCounter = 0;
+let groupCounter = 0;
+const GROUP_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 function logoutUser() { PndaAuth.logout(db); }
 
@@ -266,14 +312,14 @@ async function initialize() {
   document.getElementById('f-annee').value = new Date().getFullYear();
 
   await loadProvincesAllowed();
-  await loadReferenceForProvince(getSelectedProvince());
+  await loadTerritoiresForProvince(getSelectedProvince());
   await loadMyReports();
 
   // Rafraîchissement automatique toutes les 30 secondes
   setInterval(async () => { await loadMyReports(); }, 30000);
 
   document.getElementById('f-province').addEventListener('change', async () => {
-    await loadReferenceForProvince(getSelectedProvince());
+    await loadTerritoiresForProvince(getSelectedProvince());
   });
 
   addMissionRow();
@@ -288,7 +334,6 @@ async function loadProvincesAllowed() {
   }
   PROVINCES_ALLOWED = allowed;
   sel.innerHTML = allowed.map((p) => `<option value="${esc(p.name)}">${esc(p.label)}</option>`).join('');
-  const wrap = document.getElementById('province-select-wrap');
   if (allowed.length <= 1) { sel.disabled = true; }
 }
 
@@ -296,81 +341,153 @@ function getSelectedProvince() {
   return document.getElementById('f-province').value || PROVINCES_ALLOWED[0]?.name || '';
 }
 
-async function loadReferenceForProvince(provinceName) {
-  const [{ data: missions }, { data: territoires }] = await Promise.all([
-    db.from('missions_ref').select('*').eq('province_name', provinceName).order('ordre'),
-    db.from('territoires').select('*').eq('province_name', provinceName).order('name')
-  ]);
-  MISSIONS_REF = missions || [];
-  TERRITOIRES = territoires || [];
-  const territoireIds = TERRITOIRES.map((t) => t.id);
-  if (territoireIds.length) {
-    const { data: secteurs } = await db.from('secteurs').select('*').in('territoire_id', territoireIds).order('name');
-    SECTEURS = secteurs || [];
-  } else {
-    SECTEURS = [];
-  }
-  document.querySelectorAll('.mission-row').forEach((row) => refreshRowReferenceOptions(row));
+async function loadTerritoiresForProvince(provinceName) {
+  const { data } = await db.from('territoires').select('*').eq('province_name', provinceName).order('name');
+  TERRITOIRES = data || [];
+  const sel = document.getElementById('f-territoire');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— Territoire —</option>' +
+    TERRITOIRES.map((t) => `<option value="${esc(t.name)}">${esc(t.label)}</option>`).join('');
+  sel.value = TERRITOIRES.some((t) => t.name === current) ? current : '';
 }
 
-// ─── LIGNES DE MISSION ────────────────────────────────────────────────────────
-function addMissionRow(prefill = {}) {
+// ─── GROUPES (missionnaires partageant les mêmes dates / lieu / taux) ─────────
+function newGroupId() { groupCounter += 1; return `g${groupCounter}`; }
+
+function existingGroups() {
+  const seen = [];
+  document.querySelectorAll('.mission-row').forEach((row) => {
+    const gid = row.dataset.group;
+    if (!seen.includes(gid)) seen.push(gid);
+  });
+  return seen.map((gid, i) => {
+    const rows = Array.from(document.querySelectorAll(`.mission-row[data-group="${gid}"]`));
+    const first = rows[0];
+    const debut = first?.querySelector('.f-date-debut')?.value || '';
+    const fin   = first?.querySelector('.f-date-fin')?.value || '';
+    const noms  = rows.map((r) => r.querySelector('.f-nom')?.value).filter(Boolean);
+    const label = `Groupe ${GROUP_LETTERS[i] || (i + 1)} — ${debut || '?'} → ${fin || '?'}${noms.length ? ' (' + noms.join(', ') + ')' : ''}`;
+    return { gid, label };
+  });
+}
+
+function renderGroupBadges() {
+  const groups = existingGroups();
+  const letterByGid = {};
+  groups.forEach((g, i) => { letterByGid[g.gid] = GROUP_LETTERS[i] || String(i + 1); });
+  document.querySelectorAll('.mission-row').forEach((row) => {
+    const gid = row.dataset.group;
+    const members = document.querySelectorAll(`.mission-row[data-group="${gid}"]`);
+    const badge = row.querySelector('.group-badge-slot');
+    if (!badge) return;
+    if (members.length > 1) {
+      row.classList.add('is-grouped');
+      badge.innerHTML = `<span class="group-badge">Groupe ${letterByGid[gid]} · ${members.length} personnes</span> ` +
+        `<a href="#" class="group-leave-link" onclick="leaveGroup('${row.id}'); return false;">Dissocier</a>`;
+    } else {
+      row.classList.remove('is-grouped');
+      badge.innerHTML = '';
+    }
+  });
+}
+
+function leaveGroup(rowId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  row.dataset.group = newGroupId();
+  row.querySelectorAll('.f-date-debut, .f-date-fin, .f-lieu, .f-taux, .f-nuitees').forEach((el) => el.classList.remove('field-locked'));
+  renderGroupBadges();
+}
+
+// ─── MODALE D'AJOUT ────────────────────────────────────────────────────────────
+let _addMissionaryModal = null;
+function getAddMissionaryModal() {
+  if (!_addMissionaryModal) _addMissionaryModal = new bootstrap.Modal(document.getElementById('addMissionaryModal'));
+  return _addMissionaryModal;
+}
+
+function onAddModeChange() {
+  const same = document.getElementById('addmode-same').checked;
+  document.getElementById('addmode-group-select-wrap').classList.toggle('d-none', !same);
+}
+
+function openAddMissionaryModal() {
+  const groups = existingGroups();
+  const sel = document.getElementById('addmode-group-select');
+  sel.innerHTML = groups.map((g) => `<option value="${esc(g.gid)}">${esc(g.label)}</option>`).join('');
+  document.getElementById('addmode-new').checked = true;
+  onAddModeChange();
+  getAddMissionaryModal().show();
+}
+
+function confirmAddMissionary() {
+  const mode = document.querySelector('input[name="addmode"]:checked')?.value || 'new';
+  getAddMissionaryModal().hide();
+  if (mode === 'same') {
+    const gid = document.getElementById('addmode-group-select').value;
+    addMissionRow({ groupId: gid, copyFromGroupId: gid });
+  } else {
+    addMissionRow({ groupId: newGroupId() });
+  }
+}
+
+// ─── LIGNES MISSIONNAIRE ───────────────────────────────────────────────────────
+function addMissionRow(opts) {
+  const hasRows = document.querySelectorAll('.mission-row').length > 0;
+  if (!hasRows) {
+    createMissionRow({ groupId: newGroupId(), prefillNom: SESSION?.displayName || SESSION?.user || '' });
+    return;
+  }
+  if (!opts) { openAddMissionaryModal(); return; }
+  createMissionRow(opts);
+}
+
+function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
   rowCounter += 1;
   const id = `row-${rowCounter}`;
+  groupId = groupId || newGroupId();
   const wrap = document.createElement('div');
   wrap.className = 'mission-row';
   wrap.id = id;
+  wrap.dataset.group = groupId;
   wrap.innerHTML = `
-    <button type="button" class="btn btn-sm btn-outline-danger remove-row-btn" onclick="removeMissionRow('${id}')" title="Retirer cette mission"><i class="bi bi-x-lg"></i></button>
-    <div class="mission-row-title mb-2">Mission</div>
+    <button type="button" class="btn btn-sm btn-outline-danger remove-row-btn" onclick="removeMissionRow('${id}')" title="Retirer ce missionnaire"><i class="bi bi-x-lg"></i></button>
+    <div class="mission-row-title mb-2"><span>Missionnaire</span><span class="group-badge-slot"></span></div>
     <div class="row g-2">
       <div class="col-md-4">
-        <label class="form-label-sm">Mission de référence</label>
-        <select class="form-select form-select-sm ref-select" onchange="applyReferenceMission('${id}', this.value)">
-          <option value="">— Saisie libre —</option>
-        </select>
+        <label class="form-label-sm">Nom et prénom</label>
+        <input type="text" class="form-control form-control-sm f-nom" placeholder="Nom complet">
       </div>
       <div class="col-md-4">
-        <label class="form-label-sm">Nature</label>
-        <input type="text" class="form-control form-control-sm f-nature" placeholder="Nature de la mission">
+        <label class="form-label-sm">Fonction / Grade</label>
+        <input type="text" class="form-control form-control-sm f-titre" placeholder="Fonction / Grade">
       </div>
       <div class="col-md-4">
-        <label class="form-label-sm">Objectif</label>
-        <input type="text" class="form-control form-control-sm f-objectif" placeholder="Objectif">
-      </div>
-      <div class="col-12">
-        <label class="form-label-sm">Lieu(x) de déploiement</label>
-        <div class="lieux-list mb-1"></div>
-        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addLieuItem('${id}')">
-          <i class="bi bi-plus-sm me-1"></i>Ajouter territoire / secteur
-        </button>
+        <label class="form-label-sm">Entité / Service</label>
+        <input type="text" class="form-control form-control-sm f-entite" placeholder="Entité / Service">
       </div>
       <div class="col-md-3">
-        <label class="form-label-sm">Date début</label>
+        <label class="form-label-sm">Date de départ</label>
         <input type="date" class="form-control form-control-sm f-date-debut" onchange="onDateChange('${id}')">
       </div>
       <div class="col-md-3">
-        <label class="form-label-sm">Date fin</label>
+        <label class="form-label-sm">Date de retour</label>
         <input type="date" class="form-control form-control-sm f-date-fin" onchange="onDateChange('${id}')">
       </div>
       <div class="col-md-3">
-        <label class="form-label-sm">Lieu de mission</label>
+        <label class="form-label-sm">Barème (lieu de mission)</label>
         <select class="form-select form-select-sm f-lieu" onchange="onLieuChange('${id}')">
           <option value="dans_province">Dans la province (100 $/nuit)</option>
           <option value="hors_province">Hors province (200 $/nuit)</option>
         </select>
       </div>
-      <div class="col-md-2">
-        <label class="form-label-sm">Participants</label>
-        <input type="number" min="0" class="form-control form-control-sm f-participants" value="1" onchange="onParticipantsChange('${id}')">
-      </div>
-      <div class="col-md-2">
+      <div class="col-md-3">
         <label class="form-label-sm">Nuitées <span class="text-muted" title="Calculé automatiquement depuis les dates">&#8635;</span></label>
-        <input type="number" min="0" class="form-control form-control-sm f-nuitees" value="0" readonly title="Calculé automatiquement depuis les dates" style="background:#f5f5f5">
+        <input type="number" min="0" class="form-control form-control-sm f-nuitees" value="0" readonly style="background:#f5f5f5">
       </div>
-      <div class="col-md-2">
+      <div class="col-md-3">
         <label class="form-label-sm">Taux/nuit (USD)</label>
-        <input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="100" onchange="recalcRow('${id}')">
+        <input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="100" onchange="recalcRow('${id}'); onGroupFieldChange('${id}')">
       </div>
       <div class="col-md-3">
         <label class="form-label-sm">Autres frais (USD)</label>
@@ -380,284 +497,60 @@ function addMissionRow(prefill = {}) {
         <label class="form-label-sm">Avance versée <span class="text-success small fw-normal">· 80% recommandé</span></label>
         <div class="input-group input-group-sm">
           <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="0" onchange="recalcRow('${id}')">
-          <button type="button" class="btn btn-outline-secondary" onclick="setAvance80('${id}')" tabindex="-1" title="Appliquer 80% du total estimé">80%</button>
+          <button type="button" class="btn btn-outline-secondary" onclick="setAvance80('${id}')" tabindex="-1" title="Appliquer 80% du per diem">80%</button>
         </div>
       </div>
       <div class="col-md-3">
-        <label class="form-label-sm">Section</label>
-        <input type="text" class="form-control form-control-sm f-section" placeholder="Section / service">
+        <label class="form-label-sm">&nbsp;</label>
+        <div class="small text-muted pt-1">Solde (20%) calculé automatiquement</div>
       </div>
-      <div class="col-12">
-        <label class="form-label-sm">Observation</label>
-        <input type="text" class="form-control form-control-sm f-observation" placeholder="Remarques éventuelles">
-      </div>
-    </div>
-    <div class="parcours-section mt-2 d-none">
-      <label class="form-label-sm"><i class="bi bi-signpost-split me-1"></i>Parcours / Itinéraire</label>
-      <input type="text" class="form-control form-control-sm f-parcours mt-1" placeholder="Ex. : Kinshasa → Bulungu → Idiofa → Kinshasa">
-    </div>
-    <div class="participants-section mt-2 d-none">
-      <div class="form-label-sm mb-2 fw-bold" style="color:var(--pnda-green)"><i class="bi bi-people-fill me-1"></i>Liste des participants</div>
-      <div class="participants-list d-flex flex-column gap-1"></div>
     </div>
     <div class="mt-2 small text-muted">
       Montant per diem : <strong class="row-montant">0,00</strong> USD ·
       Total : <strong class="row-total">0,00</strong> USD ·
-      Avance (80%) : <strong class="row-avance text-success">0,00</strong> USD ·
-      Solde (20%) : <strong class="row-solde text-warning">0,00</strong> USD
+      Avance : <strong class="row-avance text-success">0,00</strong> USD ·
+      Solde : <strong class="row-solde text-warning">0,00</strong> USD
     </div>
   `;
   document.getElementById('mission-rows').appendChild(wrap);
-  addLieuItem(id);               // ligne initiale territoire/secteur
-  refreshRowReferenceOptions(wrap);
-  if (prefill && Object.keys(prefill).length) applyPrefillToRow(wrap, prefill);
+  if (prefillNom) wrap.querySelector('.f-nom').value = prefillNom;
+  if (copyFromGroupId) copyGroupFieldsInto(wrap, copyFromGroupId);
   recalcRow(id);
+  renderGroupBadges();
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function copyGroupFieldsInto(wrap, groupId) {
+  const source = document.querySelector(`.mission-row[data-group="${groupId}"]`);
+  if (!source || source === wrap) return;
+  ['f-date-debut', 'f-date-fin', 'f-lieu', 'f-taux', 'f-nuitees'].forEach((cls) => {
+    const srcEl = source.querySelector('.' + cls);
+    const dstEl = wrap.querySelector('.' + cls);
+    if (srcEl && dstEl) dstEl.value = srcEl.value;
+  });
 }
 
 function removeMissionRow(id) {
   const el = document.getElementById(id);
   if (el) el.remove();
   recalcTotals();
+  renderGroupBadges();
 }
 
-function refreshRowReferenceOptions(row) {
-  const sel = row.querySelector('.ref-select');
-  const current = sel.value;
-  sel.innerHTML = '<option value="">— Saisie libre —</option>' +
-    MISSIONS_REF.map((m) => `<option value="${esc(m.ref_id)}">${esc(m.nature)}</option>`).join('');
-  sel.value = current;
-
-  // Mise à jour des options territoire dans chaque ligne lieu
-  row.querySelectorAll('.lieu-item').forEach((lieuItem) => {
-    const terrSel = lieuItem.querySelector('.f-territoire-item');
-    const cur = terrSel.value;
-    terrSel.innerHTML = '<option value="">— Territoire —</option>' +
-      TERRITOIRES.map((t) => `<option value="${esc(t.name)}">${esc(t.label)}</option>`).join('');
-    terrSel.value = cur;
-    refreshLieuSecteurOptions(lieuItem.id);
-  });
-}
-
-let lieuCounter = 0;
-
-function addLieuItem(missionRowId, terrName = '', sectName = '') {
-  lieuCounter++;
-  const lieuId = `lieu-${missionRowId}-${lieuCounter}`;
-  const missionRow = document.getElementById(missionRowId);
-  const list = missionRow.querySelector('.lieux-list');
-  const item = document.createElement('div');
-  item.className = 'lieu-item d-flex gap-2 align-items-center flex-wrap';
-  item.id = lieuId;
-  item.innerHTML = `
-    <select class="form-select form-select-sm f-territoire-item" style="max-width:220px" onchange="refreshLieuSecteurOptions('${lieuId}'); updateParcoursSection('${missionRowId}'); syncParticipantLieux('${missionRowId}')">
-      <option value="">— Territoire —</option>
-      ${TERRITOIRES.map((t) => `<option value="${esc(t.name)}"${t.name === terrName ? ' selected' : ''}>${esc(t.label)}</option>`).join('')}
-    </select>
-    <select class="form-select form-select-sm f-secteur-item" style="max-width:220px">
-      <option value="">— Secteur —</option>
-    </select>
-    <button type="button" class="btn btn-sm btn-outline-danger flex-shrink-0" onclick="removeLieuItem('${lieuId}')" title="Retirer">
-      <i class="bi bi-x-lg"></i>
-    </button>
-  `;
-  list.appendChild(item);
-  if (terrName) {
-    refreshLieuSecteurOptions(lieuId);
-    item.querySelector('.f-secteur-item').value = sectName || '';
-  }
-  updateParcoursSection(missionRowId);
-  syncParticipantLieux(missionRowId);
-}
-
-function removeLieuItem(lieuId) {
-  const item = document.getElementById(lieuId);
-  if (!item) return;
-  const missionRow = item.closest('.mission-row');
-  const list = item.closest('.lieux-list');
-  item.remove();
-  if (list && list.children.length === 0) {
-    addLieuItem(missionRow.id);
-  }
-  if (missionRow) updateParcoursSection(missionRow.id);
-  if (missionRow) syncParticipantLieux(missionRow.id);
-}
-
-function refreshLieuSecteurOptions(lieuId) {
-  const item = document.getElementById(lieuId);
-  if (!item) return;
-  const terrName = item.querySelector('.f-territoire-item').value;
-  const terr = TERRITOIRES.find((t) => t.name === terrName);
-  const secteurSel = item.querySelector('.f-secteur-item');
-  const current = secteurSel.value;
-  const options = terr ? SECTEURS.filter((s) => s.territoire_id === terr.id) : [];
-  secteurSel.innerHTML = '<option value="">— Secteur —</option>' +
-    options.map((s) => `<option value="${esc(s.name)}">${esc(s.label)}</option>`).join('');
-  secteurSel.value = current;
-}
-
-function onParticipantsChange(rowId) {
+// ─── SYNCHRONISATION DE GROUPE ──────────────────────────────────────────────────
+function onGroupFieldChange(rowId) {
   const row = document.getElementById(rowId);
-  const n = Math.max(0, Math.min(50, parseInt(row.querySelector('.f-participants').value || '0', 10)));
-  const section = row.querySelector('.participants-section');
-  const list    = row.querySelector('.participants-list');
-  if (n <= 0) { section.classList.add('d-none'); recalcRow(rowId); return; }
-  section.classList.remove('d-none');
-  const mainNuitees = parseInt(row.querySelector('.f-nuitees').value || '0', 10);
-  const lieuItems   = Array.from(row.querySelectorAll('.lieu-item'));
-  // Préserver les données déjà saisies
-  const existing = Array.from(list.querySelectorAll('.participant-row')).map((el) => ({
-    nom:    el.querySelector('.p-nom').value,
-    titre:  el.querySelector('.p-titre').value,
-    entite: el.querySelector('.p-entite').value,
-    nuitees: el.querySelector('.p-nuitees')?.value,
-    lieuChecks: Object.fromEntries(
-      Array.from(el.querySelectorAll('.p-lieu-chk')).map((cb) => [cb.dataset.lieuId, cb.checked])
-    )
-  }));
-  list.innerHTML = '';
-  for (let i = 0; i < n; i++) {
-    const d = existing[i] || {};
-    const pr = document.createElement('div');
-    pr.className = 'participant-row d-flex gap-2 align-items-start flex-wrap border-bottom pb-1';
-    const lieuChecksHtml = lieuItems.map((item) => {
-      const lieuId   = item.id;
-      const terrName = item.querySelector('.f-territoire-item').value;
-      const sectName = item.querySelector('.f-secteur-item').value;
-      const terr = TERRITOIRES.find((t) => t.name === terrName);
-      const sect = SECTEURS.find((s) => s.name === sectName);
-      const lbl  = [terr?.label || terrName, sect?.label || sectName].filter(Boolean).join(' / ') || '—';
-      const chkId  = `chk-${lieuId}-p${i}`;
-      const checked = d.lieuChecks ? (d.lieuChecks[lieuId] !== false) : true;
-      return `<label class="d-flex align-items-center gap-1 small text-nowrap" title="${esc(lbl)}">
-        <input type="checkbox" class="form-check-input p-lieu-chk" data-lieu-id="${esc(lieuId)}" id="${chkId}"${checked ? ' checked' : ''}>
-        <span style="max-width:110px;overflow:hidden;text-overflow:ellipsis">${esc(lbl)}</span>
-      </label>`;
-    }).join('');
-    const pNuitees = (d.nuitees !== undefined && d.nuitees !== '') ? d.nuitees : mainNuitees;
-    pr.innerHTML = `
-      <span class="text-muted fw-bold small flex-shrink-0 pt-1" style="min-width:20px">${i + 1}.</span>
-      <input type="text" class="form-control form-control-sm p-nom" placeholder="Nom et prénom" value="${esc(d.nom || '')}">
-      <input type="text" class="form-control form-control-sm p-titre" placeholder="Titre / Grade" style="max-width:145px" value="${esc(d.titre || '')}">
-      <input type="text" class="form-control form-control-sm p-entite" placeholder="Entité / Service" style="max-width:175px" value="${esc(d.entite || '')}">
-      <div class="p-lieux-checks d-flex gap-2 flex-wrap align-items-center">${lieuChecksHtml}</div>
-      <div class="d-flex align-items-center gap-1 flex-shrink-0">
-        <span class="small text-muted text-nowrap">Nuitées :</span>
-        <input type="number" min="0" class="form-control form-control-sm p-nuitees" style="max-width:65px" value="${esc(String(pNuitees))}">
-      </div>
-    `;
-    list.appendChild(pr);
-  }
-  recalcRow(rowId);
-}
-
-function updateParcoursSection(missionRowId) {
-  const row = document.getElementById(missionRowId);
   if (!row) return;
-  const lieuItems     = row.querySelectorAll('.lieu-item');
-  const parcoursSection = row.querySelector('.parcours-section');
-  if (!parcoursSection) return;
-  if (lieuItems.length > 1) {
-    parcoursSection.classList.remove('d-none');
-    const parcoursInput = parcoursSection.querySelector('.f-parcours');
-    if (parcoursInput && !parcoursInput.value) {
-      const labels = Array.from(lieuItems).map((item) => {
-        const terrName = item.querySelector('.f-territoire-item').value;
-        const terr = TERRITOIRES.find((t) => t.name === terrName);
-        return terr?.label || terrName || '';
-      }).filter(Boolean);
-      if (labels.length > 0) parcoursInput.value = labels.join(' → ');
-    }
-  } else {
-    parcoursSection.classList.add('d-none');
-  }
-}
-
-function syncParticipantLieux(missionRowId) {
-  const row = document.getElementById(missionRowId);
-  if (!row) return;
-  const lieuItems = Array.from(row.querySelectorAll('.lieu-item'));
-  const pRows     = row.querySelectorAll('.participant-row');
-  if (pRows.length === 0) return;
-  pRows.forEach((pr, i) => {
-    const checksDiv = pr.querySelector('.p-lieux-checks');
-    if (!checksDiv) return;
-    const prev = Object.fromEntries(
-      Array.from(checksDiv.querySelectorAll('.p-lieu-chk')).map((cb) => [cb.dataset.lieuId, cb.checked])
-    );
-    checksDiv.innerHTML = lieuItems.map((item) => {
-      const lieuId   = item.id;
-      const terrName = item.querySelector('.f-territoire-item').value;
-      const sectName = item.querySelector('.f-secteur-item').value;
-      const terr = TERRITOIRES.find((t) => t.name === terrName);
-      const sect = SECTEURS.find((s) => s.name === sectName);
-      const lbl  = [terr?.label || terrName, sect?.label || sectName].filter(Boolean).join(' / ') || '—';
-      const chkId  = `chk-${lieuId}-p${i}`;
-      const checked = (lieuId in prev) ? prev[lieuId] : true;
-      return `<label class="d-flex align-items-center gap-1 small text-nowrap" title="${esc(lbl)}">
-        <input type="checkbox" class="form-check-input p-lieu-chk" data-lieu-id="${esc(lieuId)}" id="${chkId}"${checked ? ' checked' : ''}>
-        <span style="max-width:110px;overflow:hidden;text-overflow:ellipsis">${esc(lbl)}</span>
-      </label>`;
-    }).join('');
-  });
-}
-
-function applyReferenceMission(rowId, refId) {
-  const row = document.getElementById(rowId);
-  const ref = MISSIONS_REF.find((m) => m.ref_id === refId);
-  if (ref) {
-    row.querySelector('.f-nature').value = ref.nature || '';
-    row.querySelector('.f-objectif').value = ref.objectif || '';
-  }
-}
-
-function applyPrefillToRow(row, m) {
-  row.querySelector('.ref-select').value = m.mission_reference_id || '';
-  row.querySelector('.f-nature').value = m.nature || '';
-  row.querySelector('.f-objectif').value = m.objectif || '';
-  // Lieux (multi-territoire/secteur)
-  const lieusList = row.querySelector('.lieux-list');
-  lieusList.innerHTML = '';
-  const lieux = (m.lieux && m.lieux.length > 0)
-    ? m.lieux
-    : (m.territoire_name ? [{ territoire_name: m.territoire_name, secteur_name: m.secteur_name || '' }] : []);
-  if (lieux.length > 0) {
-    lieux.forEach((lieu) => addLieuItem(row.id, lieu.territoire_name || '', lieu.secteur_name || ''));
-  } else {
-    addLieuItem(row.id);
-  }
-  if (m.parcours) {
-    const pi = row.querySelector('.f-parcours');
-    if (pi) { pi.value = m.parcours; row.querySelector('.parcours-section')?.classList.remove('d-none'); }
-  }
-  row.querySelector('.f-date-debut').value = m.date_debut || '';
-  row.querySelector('.f-date-fin').value = m.date_fin || '';
-  row.querySelector('.f-participants').value = m.participants ?? 1;
-  onParticipantsChange(row.id);
-  if (m.participants_list && m.participants_list.length > 0) {
-    const pRows = row.querySelectorAll('.participant-row');
-    m.participants_list.forEach((p, i) => {
-      if (!pRows[i]) return;
-      pRows[i].querySelector('.p-nom').value   = p.nom   || '';
-      pRows[i].querySelector('.p-titre').value  = p.titre  || '';
-      pRows[i].querySelector('.p-entite').value = p.entite || '';
-      if (p.nuitees !== undefined) {
-        const ni = pRows[i].querySelector('.p-nuitees');
-        if (ni) ni.value = p.nuitees;
-      }
-      if (p.lieux_visits && p.lieux_visits.length > 0) {
-        pRows[i].querySelectorAll('.p-lieu-chk').forEach((cb) => {
-          cb.checked = p.lieux_visits.includes(cb.dataset.lieuId);
-        });
-      }
+  const groupId = row.dataset.group;
+  document.querySelectorAll(`.mission-row[data-group="${groupId}"]`).forEach((other) => {
+    if (other === row) return;
+    ['f-date-debut', 'f-date-fin', 'f-lieu', 'f-taux', 'f-nuitees'].forEach((cls) => {
+      const srcEl = row.querySelector('.' + cls);
+      const dstEl = other.querySelector('.' + cls);
+      if (srcEl && dstEl) dstEl.value = srcEl.value;
     });
-  }
-  row.querySelector('.f-nuitees').value = m.nuitees ?? 0;
-  row.querySelector('.f-lieu').value = (m.taux_per_diem ?? 0) >= 200 ? 'hors_province' : 'dans_province';
-  row.querySelector('.f-taux').value = m.taux_per_diem ?? 0;
-  row.querySelector('.f-autres').value = m.autres_frais_usd ?? 0;
-  row.querySelector('.f-avance').value = m.avance_usd ?? 0;
-  row.querySelector('.f-section').value = m.section || '';
-  row.querySelector('.f-observation').value = m.observation || '';
+    setAvance80(other.id);
+  });
 }
 
 function onDateChange(rowId) {
@@ -669,6 +562,7 @@ function onDateChange(rowId) {
     row.querySelector('.f-nuitees').value = Math.max(0, diffDays - 1);
   }
   setAvance80(rowId);
+  onGroupFieldChange(rowId);
 }
 
 function onLieuChange(rowId) {
@@ -676,17 +570,19 @@ function onLieuChange(rowId) {
   const lieu = row.querySelector('.f-lieu').value;
   row.querySelector('.f-taux').value = lieu === 'hors_province' ? 200 : 100;
   setAvance80(rowId);
+  onGroupFieldChange(rowId);
 }
 
 function recalcRow(rowId) {
   const row = document.getElementById(rowId);
+  if (!row) return;
   const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
   const taux = Number(row.querySelector('.f-taux').value || 0);
   const autres = Number(row.querySelector('.f-autres').value || 0);
   const avance = Number(row.querySelector('.f-avance').value || 0);
   const montant = nuitees * taux;
   const total   = montant + autres;
-  const solde   = montant * 0.2;  // 20% du per diem uniquement
+  const solde   = montant * 0.2;
   row.querySelector('.row-montant').textContent = fmtCur(montant);
   row.querySelector('.row-total').textContent   = fmtCur(total);
   row.querySelector('.row-avance').textContent  = fmtCur(avance);
@@ -696,12 +592,10 @@ function recalcRow(rowId) {
 
 function setAvance80(rowId) {
   const row = document.getElementById(rowId);
+  if (!row) return;
   const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
   const taux    = Number(row.querySelector('.f-taux').value   || 0);
-  const autres  = Number(row.querySelector('.f-autres').value || 0);
-  const montant = nuitees * taux;
-  // Avance = 80% du per diem uniquement (autres frais remboursés séparément)
-  row.querySelector('.f-avance').value = (montant * 0.8).toFixed(2);
+  row.querySelector('.f-avance').value = (nuitees * taux * 0.8).toFixed(2);
   recalcRow(rowId);
 }
 
@@ -718,7 +612,7 @@ function recalcTotals() {
     totAutres  += autres;
     totTotal   += total;
     totAvance  += avance;
-    totSolde   += montant * 0.2;  // 20% per diem uniquement
+    totSolde   += montant * 0.2;
   });
   document.getElementById('tot-montant').textContent = fmtCur(totMontant);
   document.getElementById('tot-autres').textContent  = fmtCur(totAutres);
@@ -728,6 +622,11 @@ function recalcTotals() {
 }
 
 function collectMissions() {
+  const objet = document.getElementById('f-objet').value.trim();
+  const terrSel = document.getElementById('f-territoire');
+  const terrName = terrSel.value;
+  const terrLabel = terrName ? terrSel.options[terrSel.selectedIndex].text : null;
+
   const rows = Array.from(document.querySelectorAll('.mission-row'));
   return rows.map((row, idx) => {
     const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
@@ -736,55 +635,42 @@ function collectMissions() {
     const avance = Number(row.querySelector('.f-avance').value || 0);
     const montant = nuitees * taux;
     const total = montant + autres;
-    const lieuItems = Array.from(row.querySelectorAll('.lieu-item'));
-    const lieux = lieuItems.map((lieuItem) => {
-      const tName = lieuItem.querySelector('.f-territoire-item').value;
-      const tObj  = TERRITOIRES.find((t) => t.name === tName);
-      const sName = lieuItem.querySelector('.f-secteur-item').value;
-      const sObj  = SECTEURS.find((s) => s.name === sName);
-      return { territoire_name: tName || null, territoire_label: tObj?.label || null,
-               secteur_name: sName || null, secteur_label: sObj?.label || null };
-    }).filter((l) => l.territoire_name || l.secteur_name);
-    const firstLieu = lieux[0] || {};
     return {
       numero: String(idx + 1),
-      mission_reference_id: row.querySelector('.ref-select').value || null,
-      nature: row.querySelector('.f-nature').value.trim(),
-      objectif: row.querySelector('.f-objectif').value.trim(),
-      lieux: lieux.length > 0 ? lieux : null,
-      territoire_name: firstLieu.territoire_name || null,
-      territoire_label: firstLieu.territoire_label || null,
-      secteur_name: firstLieu.secteur_name || null,
-      secteur_label: firstLieu.secteur_label || null,
+      group_id: row.dataset.group || null,
+      missionnaire_nom: row.querySelector('.f-nom').value.trim(),
+      missionnaire_titre: row.querySelector('.f-titre').value.trim(),
+      missionnaire_entite: row.querySelector('.f-entite').value.trim(),
+      nature: objet,
+      objectif: objet,
+      territoire_name: terrName || null,
+      territoire_label: terrLabel,
       date_debut: row.querySelector('.f-date-debut').value || null,
       date_fin: row.querySelector('.f-date-fin').value || null,
-      participants: Number(row.querySelector('.f-participants').value || 0),
       nuitees, taux_per_diem: taux,
       montant_usd: montant,
       autres_frais_usd: autres,
       total_usd: total,
       avance_usd: avance,
-      solde_usd: montant * 0.2,  // 20% du per diem uniquement
-      section: row.querySelector('.f-section').value.trim(),
-      observation: row.querySelector('.f-observation').value.trim(),
-      parcours: row.querySelector('.f-parcours')?.value?.trim() || null,
-      participants_list: (() => {
-        const pRows = Array.from(row.querySelectorAll('.participant-row'));
-        const list = pRows.map((pr) => {
-          const lieux_visits = Array.from(pr.querySelectorAll('.p-lieu-chk'))
-            .filter((cb) => cb.checked).map((cb) => cb.dataset.lieuId);
-          return {
-            nom:    pr.querySelector('.p-nom')?.value?.trim()   || '',
-            titre:  pr.querySelector('.p-titre')?.value?.trim() || '',
-            entite: pr.querySelector('.p-entite')?.value?.trim() || '',
-            nuitees: parseInt(pr.querySelector('.p-nuitees')?.value || '0', 10),
-            lieux_visits
-          };
-        }).filter((p) => p.nom || p.titre || p.entite);
-        return list.length > 0 ? list : null;
-      })()
+      solde_usd: montant * 0.2,
+      section: null, observation: null,
+      lieux: null, secteurs: null, parcours: null, participants: 1
     };
-  }).filter((m) => m.nature); // ignore les lignes vides
+  }).filter((m) => m.missionnaire_nom);
+}
+
+function findDuplicateNamesInGroups() {
+  const groups = {};
+  document.querySelectorAll('.mission-row').forEach((row) => {
+    const gid = row.dataset.group;
+    const nom = row.querySelector('.f-nom').value.trim().toLowerCase();
+    if (!nom) return;
+    groups[gid] = groups[gid] || [];
+    if (groups[gid].includes(nom)) { groups[gid].__dup = nom; }
+    groups[gid].push(nom);
+  });
+  const dupGroup = Object.entries(groups).find(([, arr]) => arr.__dup);
+  return dupGroup ? dupGroup[1].__dup : null;
 }
 
 function showFormError(msg) {
@@ -797,6 +683,8 @@ function showFormError(msg) {
 
 function resetForm() {
   document.getElementById('report-id-edit').value = '';
+  document.getElementById('f-objet').value = '';
+  document.getElementById('f-territoire').value = '';
   document.getElementById('mission-rows').innerHTML = '';
   document.getElementById('f-trimestre').value = 'T1';
   document.getElementById('f-annee').value = new Date().getFullYear();
@@ -809,8 +697,15 @@ function resetForm() {
 // ─── SOUMISSION ───────────────────────────────────────────────────────────────
 async function submitReport() {
   showFormError('');
+  const objet = document.getElementById('f-objet').value.trim();
+  if (!objet) { showFormError("Veuillez renseigner l'Objet de la mission dans les Informations générales."); return; }
+  if (!document.getElementById('f-territoire').value) { showFormError('Veuillez sélectionner le Territoire dans les Informations générales.'); return; }
+
   const missions = collectMissions();
-  if (!missions.length) { showFormError('Ajoutez au moins une mission avec une nature renseignée.'); return; }
+  if (!missions.length) { showFormError('Ajoutez au moins un missionnaire avec son nom complet.'); return; }
+
+  const dup = findDuplicateNamesInGroups();
+  if (dup) { showFormError(`Deux missionnaires du même groupe portent le même nom (${dup}). Corrigez les noms avant de soumettre.`); return; }
 
   const province = getSelectedProvince();
   const provinceInfo = PROVINCES_ALLOWED.find((p) => p.name === province);
@@ -824,7 +719,6 @@ async function submitReport() {
 
   try {
     if (editingId) {
-      // Correction d'un rapport "retournée" : renvoi en attente de validation
       const { error } = await db.from('reports').update({
         province, province_label: provinceInfo?.label || null, province_code: provinceInfo?.code || null,
         trimestre, annee, missions,
@@ -884,7 +778,6 @@ function renderNotifications() {
   MY_REPORTS_CACHE.forEach(r => { const s = r.statut || 'en_attente'; if (s in counts) counts[s]++; });
   const retournees = MY_REPORTS_CACHE.filter(r => r.statut === 'retournee');
 
-  // ── Badges header ──────────────────────────────────────────────────────────
   Object.entries(counts).forEach(([key, n]) => {
     const badge = document.getElementById('badge-' + key);
     if (!badge) return;
@@ -892,13 +785,12 @@ function renderNotifications() {
     badge.classList.toggle('d-none', n === 0);
   });
 
-  // ── Panneau de notifications (sous le header) — alerte retournée uniquement ─
   let html = '';
   if (retournees.length > 0) {
     html += `<div class="alert alert-warning d-flex align-items-start gap-2 py-2">
       <i class="bi bi-exclamation-triangle-fill fs-5 mt-1 flex-shrink-0"></i>
-      <div><strong>${retournees.length} r\u00e9quisition(s) retourn\u00e9e(s) \u00e0 corriger</strong><br>
-      <small>Le comptable a retourn\u00e9 votre r\u00e9quisition. Cliquez sur <strong>Corriger</strong> dans le tableau ci-dessous, modifiez et renvoyez.</small></div>
+      <div><strong>${retournees.length} réquisition(s) retournée(s) à corriger</strong><br>
+      <small>Le comptable a retourné votre réquisition. Cliquez sur <strong>Corriger</strong> dans le tableau ci-dessous, modifiez et renvoyez.</small></div>
     </div>`;
   }
   document.getElementById('notif-panel').innerHTML = html;
@@ -916,9 +808,9 @@ function renderMyReports() {
     const statut = r.statut || 'en_attente';
     const labels = {
       en_attente: '<i class="bi bi-hourglass-split me-1"></i>En attente',
-      retournee:  '<i class="bi bi-arrow-return-left me-1"></i>\u00c0 corriger',
-      activee:    '<i class="bi bi-lightning-fill me-1"></i>Mission autoris\u00e9e',
-      realisee:   '<i class="bi bi-check-circle-fill me-1"></i>Mission termin\u00e9e'
+      retournee:  '<i class="bi bi-arrow-return-left me-1"></i>À corriger',
+      activee:    '<i class="bi bi-lightning-fill me-1"></i>Mission autorisée',
+      realisee:   '<i class="bi bi-check-circle-fill me-1"></i>Mission terminée'
     };
     const canEdit = statut === 'retournee';
     return `
@@ -936,16 +828,70 @@ function renderMyReports() {
   }).join('');
 }
 
-function editReport(id) {
+async function editReport(id) {
   const r = MY_REPORTS_CACHE.find((x) => x.id === id);
   if (!r) return;
   document.getElementById('report-id-edit').value = r.id;
   document.getElementById('f-province').value = r.province;
+  await loadTerritoiresForProvince(r.province);
   document.getElementById('f-trimestre').value = r.trimestre || 'T1';
   document.getElementById('f-annee').value = r.annee || new Date().getFullYear();
+
+  const missions = r.missions || [];
+  const premiere = missions[0];
+  document.getElementById('f-objet').value = premiere?.nature || premiere?.objectif || '';
+  document.getElementById('f-territoire').value = premiere?.territoire_name || '';
+
   document.getElementById('mission-rows').innerHTML = '';
-  (r.missions || []).forEach((m) => addMissionRow(m));
-  if (!(r.missions || []).length) addMissionRow();
+  missions.forEach((m) => {
+    let gid = m.group_id;
+    if (!gid) gid = newGroupId();
+    rowCounter += 1;
+    const rid = `row-${rowCounter}`;
+    const wrap = document.createElement('div');
+    wrap.className = 'mission-row';
+    wrap.id = rid;
+    wrap.dataset.group = gid;
+    wrap.innerHTML = `
+      <button type="button" class="btn btn-sm btn-outline-danger remove-row-btn" onclick="removeMissionRow('${rid}')" title="Retirer ce missionnaire"><i class="bi bi-x-lg"></i></button>
+      <div class="mission-row-title mb-2"><span>Missionnaire</span><span class="group-badge-slot"></span></div>
+      <div class="row g-2">
+        <div class="col-md-4"><label class="form-label-sm">Nom et prénom</label><input type="text" class="form-control form-control-sm f-nom" value="${esc(m.missionnaire_nom)}"></div>
+        <div class="col-md-4"><label class="form-label-sm">Fonction / Grade</label><input type="text" class="form-control form-control-sm f-titre" value="${esc(m.missionnaire_titre)}"></div>
+        <div class="col-md-4"><label class="form-label-sm">Entité / Service</label><input type="text" class="form-control form-control-sm f-entite" value="${esc(m.missionnaire_entite)}"></div>
+        <div class="col-md-3"><label class="form-label-sm">Date de départ</label><input type="date" class="form-control form-control-sm f-date-debut" value="${m.date_debut || ''}" onchange="onDateChange('${rid}')"></div>
+        <div class="col-md-3"><label class="form-label-sm">Date de retour</label><input type="date" class="form-control form-control-sm f-date-fin" value="${m.date_fin || ''}" onchange="onDateChange('${rid}')"></div>
+        <div class="col-md-3">
+          <label class="form-label-sm">Barème (lieu de mission)</label>
+          <select class="form-select form-select-sm f-lieu" onchange="onLieuChange('${rid}')">
+            <option value="dans_province" ${(m.taux_per_diem||0) < 200 ? 'selected' : ''}>Dans la province (100 $/nuit)</option>
+            <option value="hors_province" ${(m.taux_per_diem||0) >= 200 ? 'selected' : ''}>Hors province (200 $/nuit)</option>
+          </select>
+        </div>
+        <div class="col-md-3"><label class="form-label-sm">Nuitées</label><input type="number" min="0" class="form-control form-control-sm f-nuitees" value="${m.nuitees||0}" readonly style="background:#f5f5f5"></div>
+        <div class="col-md-3"><label class="form-label-sm">Taux/nuit (USD)</label><input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="${m.taux_per_diem||100}" onchange="recalcRow('${rid}'); onGroupFieldChange('${rid}')"></div>
+        <div class="col-md-3"><label class="form-label-sm">Autres frais (USD)</label><input type="number" min="0" step="0.01" class="form-control form-control-sm f-autres" value="${m.autres_frais_usd||0}" onchange="recalcRow('${rid}')"></div>
+        <div class="col-md-3">
+          <label class="form-label-sm">Avance versée</label>
+          <div class="input-group input-group-sm">
+            <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="${m.avance_usd||0}" onchange="recalcRow('${rid}')">
+            <button type="button" class="btn btn-outline-secondary" onclick="setAvance80('${rid}')" tabindex="-1">80%</button>
+          </div>
+        </div>
+      </div>
+      <div class="mt-2 small text-muted">
+        Montant per diem : <strong class="row-montant">0,00</strong> USD ·
+        Total : <strong class="row-total">0,00</strong> USD ·
+        Avance : <strong class="row-avance text-success">0,00</strong> USD ·
+        Solde : <strong class="row-solde text-warning">0,00</strong> USD
+      </div>
+    `;
+    document.getElementById('mission-rows').appendChild(wrap);
+    recalcRow(rid);
+  });
+  if (!missions.length) addMissionRow();
+  renderGroupBadges();
+
   document.getElementById('submit-btn').innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Renvoyer le rapport corrigé';
   showToast('Rapport chargé pour correction. Modifiez puis renvoyez-le.');
   window.scrollTo({ top: 0, behavior: 'smooth' });

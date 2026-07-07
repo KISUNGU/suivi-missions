@@ -1788,14 +1788,15 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
                               const parts = [m.territoire_label||m.territoire_name, m.secteur_label||m.secteur_name].filter(Boolean);
                               return escapeHtml(parts.join(' / ')) || '—';
                             })();
-                            const accompagnateursHtml = ((m.participants_list || [])
-                              .map((p) => [p.nom, p.titre].filter(Boolean).join(' — '))
+                            const accompagnateursHtml = (rm
+                              .filter((other) => other !== m)
+                              .map((p) => [p.missionnaire_nom, p.missionnaire_titre].filter(Boolean).join(' — '))
                               .filter(Boolean)
                               .map((s) => escapeHtml(s))
                               .join('<br>')) || '<span class="text-muted">—</span>';
                             return `<tr>
                             <td>${escapeHtml(m.numero||'—')}</td>
-                            <td class="small fw-semibold">${escapeHtml(resolveMissionnaireName(report))}</td>
+                            <td class="small fw-semibold">${escapeHtml(m.missionnaire_nom || resolveMissionnaireName(report))}</td>
                             <td class="small">${accompagnateursHtml}</td>
                             <td>${escapeHtml(m.nature||'—')}</td>
                             <td class="small">${escapeHtml(m.objectif||'—')}</td>
@@ -2009,50 +2010,47 @@ function _accompNames(rm) {
   const seen = new Set();
   const names = [];
   (rm || []).forEach((m) => {
+    const label = [m.missionnaire_nom, m.missionnaire_titre].filter(Boolean).join(' — ');
+    if (label && !seen.has(label)) { seen.add(label); names.push(label); }
     (m.participants_list || []).forEach((p) => {
-      const label = [p.nom, p.titre].filter(Boolean).join(' — ');
-      if (label && !seen.has(label)) { seen.add(label); names.push(label); }
+      const plabel = [p.nom, p.titre].filter(Boolean).join(' — ');
+      if (plabel && !seen.has(plabel)) { seen.add(plabel); names.push(plabel); }
     });
   });
   return names;
 }
 
-function buildBordereauHtml(report) {
-  const rm = report.missions || [];
-  const nom      = resolveMissionnaireName(report);
-  const accompNames = _accompNames(rm);
+// Construit le contenu (une page) du bordereau pour UN missionnaire donné.
+function buildBordereauPageHtml(report, m, rm, isLast) {
+  const nom = m.missionnaire_nom || resolveMissionnaireName(report);
+  const selfLabel = [m.missionnaire_nom, m.missionnaire_titre].filter(Boolean).join(' — ');
+  const accompNames = _accompNames(rm).filter((n) => n !== selfLabel);
   const accompRow = accompNames.length
     ? `<tr><td class="nb" style="vertical-align:top"><strong>Accompagné de&nbsp;:</strong></td><td class="nb" style="font-size:8pt">${escapeHtml(accompNames.join('; '))}</td></tr>`
     : '';
   const province = report.meta?.province_label || report.meta?.province || '';
-  const annee    = report.meta?.annee || new Date().getFullYear();
   const num      = report.liquidation_number || '___/____';
   const dateActiv  = _docDate(report.activated_at);
-  const dateDepart = _docDate(rm[0]?.date_debut);
-  const dateRetour = _docDate(rm[rm.length-1]?.date_fin);
-  const objet = rm.map(m => m.nature||'').filter(Boolean).join('; ') || '';
+  const dateDepart = _docDate(m.date_debut);
+  const dateRetour = _docDate(m.date_fin);
+  const objet = m.nature || '';
 
-  const totMontant = rm.reduce((s,m)=>s+Number(m.montant_usd||0),0);
-  const totAutres  = rm.reduce((s,m)=>s+Number(m.autres_frais_usd||0),0);
-  const totGeneral = rm.reduce((s,m)=>s+Number(m.total_usd||0),0);
-  const avance     = rm.reduce((s,m)=>s+Number(m.avance_usd||0),0);
-  const solde      = rm.reduce((s,m)=>s+Number(m.solde_usd||0),0);
+  const totMontant = Number(m.montant_usd||0);
+  const totAutres  = Number(m.autres_frais_usd||0);
+  const totGeneral = Number(m.total_usd||0);
+  const avance     = Number(m.avance_usd||0);
+  const solde      = Number(m.solde_usd||0);
 
+  const lbl = escapeHtml(m.territoire_label || m.territoire_name || '—');
   let lieuRows = '<tr><td>Jours de voyage</td><td class="tc"></td><td class="tc"></td><td class="tr"></td></tr>';
-  rm.forEach(m => {
-    const lieux = (m.lieux && m.lieux.length) ? m.lieux : [{territoire_label:m.territoire_label,territoire_name:m.territoire_name}];
-    lieux.forEach(l => {
-      const lbl = escapeHtml(l.territoire_label||l.territoire_name||'—');
-      lieuRows += `<tr><td>${lbl}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tr">${_docFmt(m.montant_usd)}</td></tr>`;
-    });
-  });
-  for (let i = 0; i < Math.max(0, 5-rm.length); i++) lieuRows += '<tr><td>&nbsp;</td><td></td><td></td><td></td></tr>';
+  lieuRows += `<tr><td>${lbl}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tr">${_docFmt(m.montant_usd)}</td></tr>`;
+  for (let i = 0; i < 4; i++) lieuRows += '<tr><td>&nbsp;</td><td></td><td></td><td></td></tr>';
 
   const autresRows = totAutres > 0
     ? `<tr><td>Autres frais</td><td class="tr" colspan="3">${_docFmt(totAutres)}</td></tr>`
     : '<tr><td>Frais de transport participants</td><td colspan="3"></td></tr><tr><td>&nbsp;</td><td colspan="3"></td></tr>';
 
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bordereau N° ${escapeHtml(num)}</title>${_baseStyle()}</head><body>
+  return `<div class="bordereau-page"${isLast ? '' : ' style="page-break-after:always"'}>
 <div style="text-align:center;font-size:9pt;line-height:1.5;margin-bottom:8px">
   République Démocratique du Congo &nbsp;•&nbsp; MINISTÈRE DE L'AGRICULTURE<br>
   <strong>PROGRAMME NATIONAL DE DÉVELOPPEMENT AGRICOLE &laquo;PNDA&raquo;</strong><br>
@@ -2063,8 +2061,8 @@ function buildBordereauHtml(report) {
   <td class="nb" style="width:50%;vertical-align:top">
     <table style="border:none"><tr><td class="nb"><strong>Nom&nbsp;:</strong></td><td class="nb"><span class="fline">${escapeHtml(nom)}</span></td></tr>
     ${accompRow}
-    <tr><td class="nb"><strong>Fonction&nbsp;:</strong></td><td class="nb"><span class="fline">&nbsp;</span></td></tr>
-    <tr><td class="nb"><strong>Service&nbsp;:</strong></td><td class="nb"><span class="fline">&nbsp;</span></td></tr>
+    <tr><td class="nb"><strong>Fonction&nbsp;:</strong></td><td class="nb"><span class="fline">${escapeHtml(m.missionnaire_titre || '')}</span></td></tr>
+    <tr><td class="nb"><strong>Service&nbsp;:</strong></td><td class="nb"><span class="fline">${escapeHtml(m.missionnaire_entite || '')}</span></td></tr>
     <tr><td class="nb"><strong>Date OM&nbsp;:</strong></td><td class="nb"><span class="fline">${escapeHtml(dateActiv)}</span></td></tr>
     <tr><td class="nb"><strong>N° OM&nbsp;:</strong></td><td class="nb"><span class="fline">&nbsp;</span></td></tr></table>
   </td>
@@ -2100,6 +2098,19 @@ function buildBordereauHtml(report) {
     <td class="nb">Nom&nbsp;: <strong>${escapeHtml(nom)}</strong></td><td class="nb"></td>
   </tr></table>
 </div>
+</div>`;
+}
+
+// Assemble le bordereau complet : une page par missionnaire (chef de mission
+// et personnes accompagnées), imprimées à la suite dans une seule fenêtre.
+function buildBordereauHtml(report) {
+  const rm = (report.missions || []);
+  const num = report.liquidation_number || '___/____';
+  const pages = rm.length
+    ? rm.map((m, i) => buildBordereauPageHtml(report, m, rm, i === rm.length - 1)).join('')
+    : buildBordereauPageHtml(report, {}, [], true);
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bordereau N° ${escapeHtml(num)}</title>${_baseStyle()}</head><body>
+${pages}
 </body></html>`;
 }
 
@@ -2579,7 +2590,6 @@ function buildMissionExportRows(reports) {
   const rows = [];
   reports.forEach((report) => {
     const missions = report.missions || [];
-    const rapporteur = resolveMissionnaireName(report);
     missions.forEach((m) => {
       const lieux = (m.lieux && m.lieux.length)
         ? m.lieux
@@ -2587,12 +2597,13 @@ function buildMissionExportRows(reports) {
       const territoires = lieux
         .map((l) => [l.territoire_label || l.territoire_name, l.secteur_label || l.secteur_name].filter(Boolean).join(' / '))
         .filter(Boolean).join('; ') || '—';
-      const accompagnateurs = (m.participants_list || [])
-        .map((p) => [p.nom, p.titre].filter(Boolean).join(' — '))
+      const accompagnateurs = missions
+        .filter((other) => other !== m)
+        .map((p) => [p.missionnaire_nom, p.missionnaire_titre].filter(Boolean).join(' — '))
         .filter(Boolean).join('; ') || '—';
       rows.push({
         province: getReportProvinceLabel(report) || '—',
-        missionnaire: rapporteur,
+        missionnaire: m.missionnaire_nom || resolveMissionnaireName(report),
         accompagnateurs,
         trimestre: report.meta?.trimestre || '—',
         annee: report.meta?.annee || '',
