@@ -2042,13 +2042,14 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
   const solde      = Number(m.solde_usd||0);
 
   const lbl = escapeHtml(m.territoire_label || m.territoire_name || '—');
-  let lieuRows = '<tr><td>Jours de voyage</td><td class="tc"></td><td class="tc"></td><td class="tr"></td></tr>';
-  lieuRows += `<tr><td>${lbl}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tr">${_docFmt(m.montant_usd)}</td></tr>`;
-  for (let i = 0; i < 4; i++) lieuRows += '<tr><td>&nbsp;</td><td></td><td></td><td></td></tr>';
+  const lieuRows = `<tr><td>${lbl}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tr">${_docFmt(m.montant_usd)}</td></tr>`;
 
-  const autresRows = totAutres > 0
-    ? `<tr><td>Autres frais</td><td class="tr" colspan="3">${_docFmt(totAutres)}</td></tr>`
-    : '<tr><td>Frais de transport participants</td><td colspan="3"></td></tr><tr><td>&nbsp;</td><td colspan="3"></td></tr>';
+  const detailsList = Array.isArray(m.autres_frais_details) && m.autres_frais_details.length
+    ? m.autres_frais_details.filter((d) => (d.libelle || '').trim() || Number(d.montant || 0) > 0)
+    : (totAutres > 0 ? [{ libelle: 'Autres frais', montant: totAutres }] : []);
+  const autresRows = detailsList.length
+    ? detailsList.map((d) => `<tr><td>${escapeHtml(d.libelle || 'Frais')}</td><td class="tr" colspan="3">${_docFmt(d.montant)}</td></tr>`).join('')
+    : '<tr><td colspan="4" class="tc">Aucun frais à justifier</td></tr>';
 
   return `<div class="bordereau-page"${isLast ? '' : ' style="page-break-after:always"'}>
 <div style="text-align:center;font-size:9pt;line-height:1.5;margin-bottom:8px">
@@ -2063,8 +2064,7 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
     ${accompRow}
     <tr><td class="nb"><strong>Fonction&nbsp;:</strong></td><td class="nb"><span class="fline">${escapeHtml(m.missionnaire_titre || '')}</span></td></tr>
     <tr><td class="nb"><strong>Service&nbsp;:</strong></td><td class="nb"><span class="fline">${escapeHtml(m.missionnaire_entite || '')}</span></td></tr>
-    <tr><td class="nb"><strong>Date OM&nbsp;:</strong></td><td class="nb"><span class="fline">${escapeHtml(dateActiv)}</span></td></tr>
-    <tr><td class="nb"><strong>N° OM&nbsp;:</strong></td><td class="nb"><span class="fline">&nbsp;</span></td></tr></table>
+    <tr><td class="nb"><strong>Date OM&nbsp;:</strong></td><td class="nb"><span class="fline">${escapeHtml(dateActiv)}</span></td></tr></table>
   </td>
   <td class="nb" style="width:50%;vertical-align:top;padding-left:10px">
     <table style="border:none"><tr><td class="nb"><strong>Destination&nbsp;:</strong></td><td class="nb"><span class="fline">${escapeHtml(province)}</span></td></tr>
@@ -2073,10 +2073,9 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
     <tr><td class="nb" style="padding-left:10px">Retour&nbsp;:</td><td class="nb"><span class="fline">${escapeHtml(dateRetour)}</span></td></tr></table>
   </td>
 </tr></table>
-<p style="margin:3px 0"><strong>Objet de la mission&nbsp;:</strong> <span style="border-bottom:1px solid #000;display:inline-block;min-width:280px">${escapeHtml(objet)}</span></p>
-<p style="margin:3px 0 5px"><strong>Déroulement&nbsp;:</strong> &nbsp; 1) Nombre de jours de déplacement&nbsp;: <span class="fline" style="min-width:60px">&nbsp;</span></p>
+<p style="margin:3px 0 8px"><strong>Objet de la mission&nbsp;:</strong> <span style="border-bottom:1px solid #000;display:inline-block;min-width:280px">${escapeHtml(objet)}</span></p>
 <table>
-  <thead><tr><th>Montant</th><th>Nuitées</th><th>Taux</th><th>Prévus</th><th style="width:6%">CU</th></tr></thead>
+  <thead><tr><th>Montant</th><th>Nuitées</th><th>Taux</th><th>Prévus</th><th style="width:6%">FM</th></tr></thead>
   <tbody>
     <tr><td class="bg bold" colspan="5">Frais de mission</td></tr>
     ${lieuRows}
@@ -2085,8 +2084,8 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
     ${autresRows}
     <tr class="bold bg"><td colspan="4">Total frais à justifier</td><td class="tr">${_docFmt(totAutres)}</td></tr>
     <tr class="bold bg"><td colspan="4">Montant total</td><td class="tr">${_docFmt(totGeneral)}</td></tr>
-    <tr><td colspan="4">À payer : 80% Perdiem + 100% frais à justifier</td><td class="tr bold">${_docFmt(avance)}</td></tr>
-    <tr><td colspan="4">Solde à payer retour de la mission (20% perdiem)</td><td class="tr">${_docFmt(solde)}</td></tr>
+    <tr><td colspan="4"> Avance versée</td><td class="tr bold">${_docFmt(avance)}</td></tr>
+    <tr><td colspan="4">Solde à payer au retour de la mission</td><td class="tr">${_docFmt(solde)}</td></tr>
   </tbody>
 </table>
 <div style="border:1px solid #000;padding:6px;margin-top:8px;font-size:9pt">
