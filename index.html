@@ -2114,50 +2114,38 @@ ${pages}
 </body></html>`;
 }
 
-function buildJustificationMissionHtml(report) {
-  const rm = report.missions || [];
-  const nom = resolveMissionnaireName(report);
-  const accompNames = _accompNames(rm);
+// Construit une page "Avis sur justificatifs provision" (annexe détaillée)
+// pour UN missionnaire donné — même principe qu'une page de bordereau.
+function buildJustificationMissionPageHtml(report, m, rm, isLast) {
   const province = (report.meta?.province_label || report.meta?.province || '').toUpperCase();
-  const objet = rm.map(m=>m.nature||'').filter(Boolean).join('; ') || '';
-  const dateDepart = _docDate(rm[0]?.date_debut);
-  const dateRetour = _docDate(rm[rm.length-1]?.date_fin);
+  const objet = m.nature || '';
+  const dateDepart = _docDate(m.date_debut);
+  const dateRetour = _docDate(m.date_fin);
   const num = report.fld_number || report.liquidation_number || '___/___/____';
+  const nomM = m.missionnaire_nom || resolveMissionnaireName(report);
+  const selfLabel = [m.missionnaire_nom, m.missionnaire_titre].filter(Boolean).join(' — ');
+  const accompNames = _accompNames(rm).filter((n) => n !== selfLabel);
 
-  const totPrevus  = rm.reduce((s,m)=>s+Number(m.montant_usd||0),0);
-  const totPaye    = rm.reduce((s,m)=>s+Number(m.avance_usd||0),0);
-  const totRealise = rm.reduce((s,m)=>s+Number(m.total_usd||0),0);
-  const totEcart   = totRealise - totPaye;
+  const prev  = Number(m.montant_usd || 0);
+  const paye  = Number(m.avance_usd || 0);
+  const real  = Number(m.total_usd || 0);
+  const ecart = real - paye;
 
-  let rows = '';
-  rm.forEach(m => {
-    const lieux = (m.lieux&&m.lieux.length)?m.lieux:[{territoire_label:m.territoire_label,territoire_name:m.territoire_name}];
-    rows += `<tr><td>Jour de voyage</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tc">1</td><td class="tc">1</td><td class="tc">${m.participants||1}</td><td class="tr"></td><td class="tr"></td><td class="tr"></td><td class="tr"></td></tr>`;
-    lieux.forEach(l => {
-      const lbl  = escapeHtml(l.territoire_label||l.territoire_name||'—');
-      const prev = Number(m.montant_usd||0), paye = Number(m.avance_usd||0), real = Number(m.total_usd||0);
-      rows += `<tr><td>${lbl}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${m.participants||1}</td><td class="tr">${_docFmt(prev)}</td><td class="tr">${_docFmt(paye)}</td><td class="tr">${_docFmt(real)}</td><td class="tr">${_docFmt(real-paye)}</td></tr>`;
-    });
-  });
+  const lbl = escapeHtml(m.territoire_label || m.territoire_name || '—');
+  const rows = `<tr><td>Jour de voyage</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tc">1</td><td class="tc">1</td><td class="tc">1</td><td class="tr"></td><td class="tr"></td><td class="tr"></td><td class="tr"></td></tr>
+    <tr><td>${lbl}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${m.nuitees||0}</td><td class="tc">1</td><td class="tr">${_docFmt(prev)}</td><td class="tr">${_docFmt(paye)}</td><td class="tr">${_docFmt(real)}</td><td class="tr">${_docFmt(ecart)}</td></tr>`;
 
-  // Frais à justifier (transport local, communication, etc.) : construits à
-  // partir des éléments réellement saisis par le missionnaire (autres_frais_details),
-  // au lieu d'une liste fixe de libellés vides.
-  const fjItems = [];
-  rm.forEach((m) => {
-    (Array.isArray(m.autres_frais_details) ? m.autres_frais_details : []).forEach((d) => {
-      if ((d.libelle || '').trim() || Number(d.montant || 0) > 0) fjItems.push(d);
-    });
-  });
+  const fjItems = (Array.isArray(m.autres_frais_details) ? m.autres_frais_details : [])
+    .filter((d) => (d.libelle || '').trim() || Number(d.montant || 0) > 0);
   const totFJ = fjItems.reduce((s, d) => s + Number(d.montant || 0), 0);
   const fjRows = fjItems.length
     ? fjItems.map((d) => `<tr><td>${escapeHtml(d.libelle || 'Frais')}</td><td colspan="6"></td><td class="tr">${_docFmt(d.montant)}</td><td></td></tr>`).join('')
     : '<tr><td colspan="9" class="tc">Aucun frais à justifier</td></tr>';
 
-  const totJustifieRealise = totRealise + totFJ;
-  const totJustifieEcart   = totJustifieRealise - totPaye;
+  const totJustifieRealise = real + totFJ;
+  const totJustifieEcart   = totJustifieRealise - paye;
 
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Avis sur justificatifs provision</title>${_baseStyle()}</head><body>
+  return `<div class="justif-page"${isLast ? '' : ' style="page-break-after:always"'}>
 <div style="text-align:center;font-size:9pt;line-height:1.5;margin-bottom:8px">
   République Démocratique du Congo &nbsp;•&nbsp; MINISTÈRE DE L'AGRICULTURE<br>
   <strong>PROGRAMME NATIONAL DE DÉVELOPPEMENT AGRICOLE &laquo;PNDA&raquo;</strong><br>
@@ -2165,7 +2153,7 @@ function buildJustificationMissionHtml(report) {
 </div>
 <h1>AVIS SUR JUSTIFICATIFS PROVISION N° ${escapeHtml(num)}</h1>
 <p style="margin:3px 0"><strong>Justification sur la mission</strong>&nbsp;: ${escapeHtml(objet)}</p>
-<p style="margin:3px 0 10px">Monsieur <strong>${escapeHtml(nom)}</strong>${accompNames.length ? ' — Accompagné de : <em>' + escapeHtml(accompNames.join('; ')) + '</em>' : ''}</p>
+<p style="margin:3px 0 10px">Monsieur <strong>${escapeHtml(nomM)}</strong>${accompNames.length ? ' — Accompagné de : <em>' + escapeHtml(accompNames.join('; ')) + '</em>' : ''}</p>
 <table>
   <thead>
     <tr>
@@ -2184,30 +2172,45 @@ function buildJustificationMissionHtml(report) {
     <tr><td>Date départ</td><td class="tc" colspan="8">${escapeHtml(dateDepart)}</td></tr>
     <tr><td>Date retour</td><td class="tc" colspan="8">${escapeHtml(dateRetour)}</td></tr>
     ${rows}
-    <tr class="bold bg"><td colspan="5">S/Total 1</td><td class="tr">${_docFmt(totPrevus)}</td><td class="tr">${_docFmt(totPaye)}</td><td class="tr">${_docFmt(totRealise)}</td><td class="tr">${_docFmt(totEcart)}</td></tr>
     <tr><td class="bold" colspan="9">FRAIS À JUSTIFIER (TRANSPORT LOCAL, ETC.)</td></tr>
     ${fjRows}
     <tr class="bold bg"><td colspan="8">S/Total 2</td><td class="tr">${_docFmt(totFJ)}</td></tr>
-    <tr class="bold bg"><td colspan="5">Montant total justifier</td><td class="tr">${_docFmt(totPrevus)}</td><td class="tr">${_docFmt(totPaye)}</td><td class="tr">${_docFmt(totJustifieRealise)}</td><td class="tr">${_docFmt(totJustifieEcart)}</td></tr>
+    <tr class="bold bg"><td colspan="5">Montant total justifier</td><td class="tr">${_docFmt(prev)}</td><td class="tr">${_docFmt(paye)}</td><td class="tr">${_docFmt(totJustifieRealise)}</td><td class="tr">${_docFmt(totJustifieEcart)}</td></tr>
   </tbody>
 </table>
+</div>`;
+}
+
+// Assemble l'annexe complète : une page par missionnaire, imprimées à la
+// suite dans une seule fenêtre (même principe que buildBordereauHtml).
+function buildJustificationMissionHtml(report) {
+  const rm = report.missions || [];
+  const num = report.fld_number || report.liquidation_number || '___/___/____';
+  const pages = rm.length
+    ? rm.map((m, i) => buildJustificationMissionPageHtml(report, m, rm, i === rm.length - 1)).join('')
+    : buildJustificationMissionPageHtml(report, {}, [], true);
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Avis sur justificatifs provision N° ${escapeHtml(num)}</title>${_baseStyle()}</head><body>
+${pages}
 </body></html>`;
 }
 
-function buildAvisJustificatifsHtml(report) {
-  const rm = report.missions || [];
-  const nom      = resolveMissionnaireName(report);
-  const accompNames = _accompNames(rm);
+// Construit une page "AVIS SUR JUSTIFICATIFS PROVISION" (notice officielle,
+// avec signatures) pour UN missionnaire donné — mêmes montants que sur son
+// propre bordereau de liquidation.
+function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
+  const nom      = m.missionnaire_nom || resolveMissionnaireName(report);
+  const selfLabel = [m.missionnaire_nom, m.missionnaire_titre].filter(Boolean).join(' — ');
+  const accompNames = _accompNames(rm).filter((n) => n !== selfLabel);
   const province = report.meta?.province_label || report.meta?.province || '';
   const num      = report.fld_number || '___/___/____';
   const dateJustif = _docDate(report.justification_at);
-  const motif    = rm.map(m=>m.nature||'').filter(Boolean).join('; ') || '';
+  const motif    = m.nature || '';
 
-  const totProvision = rm.reduce((s,m)=>s+Number(m.avance_usd||0),0);
-  const totJustifie  = rm.reduce((s,m)=>s+Number(m.total_usd||0),0);
-  const solde        = rm.reduce((s,m)=>s+Number(m.solde_usd||0),0);
+  const totProvision = Number(m.avance_usd || 0);
+  const totJustifie  = Number(m.total_usd || 0);
+  const solde        = Number(m.solde_usd || 0);
 
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Avis FLD ${escapeHtml(num)}</title>${_baseStyle()}</head><body>
+  return `<div class="avis-page"${isLast ? '' : ' style="page-break-after:always"'}>
 <div style="text-align:center;font-size:9pt;line-height:1.6;margin-bottom:10px">
   Programme National de Développement Agricole<br>
   Administration &amp; Finances &mdash; Comptabilité
@@ -2216,7 +2219,7 @@ function buildAvisJustificatifsHtml(report) {
 <table style="border:none;margin:10px 0">
   <tr><td class="nb" style="width:45%;padding:3px 0"><strong>JUSTIFICATIFS PRÉSENTÉS PAR&nbsp;:</strong></td><td class="nb">${escapeHtml(nom)}</td></tr>
   ${accompNames.length ? `<tr><td class="nb" style="padding:3px 0"><strong>ACCOMPAGNÉ DE&nbsp;:</strong></td><td class="nb" style="font-size:8pt">${escapeHtml(accompNames.join('; '))}</td></tr>` : ''}
-  <tr><td class="nb" style="padding:3px 0"><strong>FONCTION&nbsp;:</strong></td><td class="nb"><span class="fline" style="min-width:200px">&nbsp;</span></td></tr>
+  <tr><td class="nb" style="padding:3px 0"><strong>FONCTION&nbsp;:</strong></td><td class="nb"><span class="fline" style="min-width:200px">${escapeHtml(m.missionnaire_titre || '')}</span></td></tr>
   <tr><td class="nb" style="padding:3px 0"><strong>DIRECTION&nbsp;:</strong></td><td class="nb"><span class="fline">${escapeHtml(province)}</span></td></tr>
   <tr><td class="nb" style="padding:3px 0"><strong>MOTIF&nbsp;:</strong></td><td class="nb"><span style="border-bottom:1px solid #000;display:inline-block;min-width:260px">${escapeHtml(motif)}</span></td></tr>
   <tr><td class="nb" style="padding:3px 0"><strong>FINANCEMENT&nbsp;:</strong></td><td class="nb">PNDA</td></tr>
@@ -2241,6 +2244,19 @@ function buildAvisJustificatifsHtml(report) {
     <p style="margin:3px 0"><strong>Signature du RAF</strong></p>
   </div>
 </div>
+</div>`;
+}
+
+// Assemble l'avis complet : une page par missionnaire, imprimées à la suite
+// dans une seule fenêtre (même principe que buildBordereauHtml).
+function buildAvisJustificatifsHtml(report) {
+  const rm = report.missions || [];
+  const num = report.fld_number || '___/___/____';
+  const pages = rm.length
+    ? rm.map((m, i) => buildAvisJustificatifsPageHtml(report, m, rm, i === rm.length - 1)).join('')
+    : buildAvisJustificatifsPageHtml(report, {}, [], true);
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Avis FLD ${escapeHtml(num)}</title>${_baseStyle()}</head><body>
+${pages}
 </body></html>`;
 }
 
