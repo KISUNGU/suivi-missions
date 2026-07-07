@@ -2084,8 +2084,9 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
     ${autresRows}
     <tr class="bold bg"><td colspan="4">Total frais à justifier</td><td class="tr">${_docFmt(totAutres)}</td></tr>
     <tr class="bold bg"><td colspan="4">Montant total</td><td class="tr">${_docFmt(totGeneral)}</td></tr>
-    <tr><td colspan="4"> Avance versée</td><td class="tr bold">${_docFmt(avance)}</td></tr>
+    <tr><td colspan="4"> Avance versée (80% FM)</td><td class="tr bold">${_docFmt(avance)}</td></tr>
     <tr><td colspan="4">Solde à payer au retour de la mission</td><td class="tr">${_docFmt(solde)}</td></tr>
+    <tr class="bold bg"><td colspan="4">Total perçu (FM + FJ)</td><td class="tr">${_docFmt(avance + totAutres)}</td></tr>
   </tbody>
 </table>
 <div style="border:1px solid #000;padding:6px;margin-top:8px;font-size:9pt">
@@ -2519,7 +2520,7 @@ function recalcEditRow(idx) {
   const autres  = Number(body.querySelector(`.edit-autres[data-idx="${idx}"]`).value  || 0);
   const avance  = Number(body.querySelector(`.edit-avance[data-idx="${idx}"]`).value  || 0);
   const montant = nuitees * taux;
-  const solde   = montant + autres - avance;
+  const solde   = montant - avance;
   const montantEl = document.getElementById(`em-montant-${idx}`);
   const soldeEl   = document.getElementById(`em-solde-${idx}`);
   if (montantEl) montantEl.textContent = formatCurrency(montant);
@@ -2545,7 +2546,7 @@ async function saveEditedReport() {
     const total   = montant + autres;
     return { ...m, nuitees, taux_per_diem: taux, montant_usd: montant,
              autres_frais_usd: autres, total_usd: total,
-             avance_usd: avance, solde_usd: total - avance, observation: obs };
+             avance_usd: avance, solde_usd: montant - avance, observation: obs };
   });
 
   const btn = document.getElementById('saveEditReportBtn');

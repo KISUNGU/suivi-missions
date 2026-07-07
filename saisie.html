@@ -201,8 +201,9 @@
         <div>Montant per diem : <span class="val" id="tot-montant">0,00</span> USD</div>
         <div>Autres frais : <span class="val" id="tot-autres">0,00</span> USD</div>
         <div>Total général : <span class="val" id="tot-total">0,00</span> USD</div>
-        <div>Avance (80%) : <span class="val" id="tot-avance">0,00</span> USD</div>
-        <div>Solde (20%) : <span class="val" id="tot-solde">0,00</span> USD</div>
+        <div>Avance (80% FM) : <span class="val" id="tot-avance">0,00</span> USD</div>
+        <div>Solde (20% FM) : <span class="val" id="tot-solde">0,00</span> USD</div>
+        <div>Total perçu (FM+FJ) : <span class="val" id="tot-percu">0,00</span> USD</div>
       </div>
     </div>
   </div>
@@ -520,8 +521,9 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
     <div class="mt-2 small text-muted">
       Montant per diem : <strong class="row-montant">0,00</strong> USD ·
       Total : <strong class="row-total">0,00</strong> USD ·
-      Avance : <strong class="row-avance text-success">0,00</strong> USD ·
-      Solde : <strong class="row-solde text-warning">0,00</strong> USD
+      Avance (80% FM) : <strong class="row-avance text-success">0,00</strong> USD ·
+      Solde (20% FM) : <strong class="row-solde text-warning">0,00</strong> USD ·
+      Total perçu (FM+FJ) : <strong class="row-percu">0,00</strong> USD
     </div>
   `;
   document.getElementById('mission-rows').appendChild(wrap);
@@ -614,11 +616,17 @@ function recalcRow(rowId) {
   const avance = Number(row.querySelector('.f-avance').value || 0);
   const montant = nuitees * taux;
   const total   = montant + autres;
-  const solde   = total - avance;
+  // Le solde ne concerne que le reliquat du Frais de Mission (FM) : l'avance
+  // (80% FM) plus les Frais à Justifier (FJ, remboursés à 100%) forment le
+  // "Total perçu" versé au départ ; seul le solde des 20% FM reste à payer.
+  const solde   = montant - avance;
+  const percu   = avance + autres;
   row.querySelector('.row-montant').textContent = fmtCur(montant);
   row.querySelector('.row-total').textContent   = fmtCur(total);
   row.querySelector('.row-avance').textContent  = fmtCur(avance);
   row.querySelector('.row-solde').textContent   = fmtCur(solde);
+  const percuEl = row.querySelector('.row-percu');
+  if (percuEl) percuEl.textContent = fmtCur(percu);
   recalcTotals();
 }
 
@@ -627,14 +635,16 @@ function setAvance80(rowId) {
   if (!row) return;
   const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
   const taux    = Number(row.querySelector('.f-taux').value   || 0);
-  const autres  = Number(row.querySelector('.f-autres').value || 0);
-  const total   = nuitees * taux + autres;
-  row.querySelector('.f-avance').value = (total * 0.8).toFixed(2);
+  const montant = nuitees * taux;
+  // L'avance ne porte que sur le Frais de Mission (FM), pas sur les Frais à
+  // Justifier (FJ) qui sont remboursés séparément à 100% sur justificatifs.
+  row.querySelector('.f-avance').value = (montant * 0.8).toFixed(2);
   recalcRow(rowId);
 }
 
 function recalcTotals() {
   let totMontant = 0, totAutres = 0, totTotal = 0, totAvance = 0, totSolde = 0;
+  let totPercu = 0;
   document.querySelectorAll('.mission-row').forEach(row => {
     const nuitees = Number(row.querySelector('.f-nuitees')?.value || 0);
     const taux    = Number(row.querySelector('.f-taux')?.value    || 0);
@@ -646,13 +656,16 @@ function recalcTotals() {
     totAutres  += autres;
     totTotal   += total;
     totAvance  += avance;
-    totSolde   += total - avance;
+    totSolde   += montant - avance;
+    totPercu   += avance + autres;
   });
   document.getElementById('tot-montant').textContent = fmtCur(totMontant);
   document.getElementById('tot-autres').textContent  = fmtCur(totAutres);
   document.getElementById('tot-total').textContent   = fmtCur(totTotal);
   document.getElementById('tot-avance').textContent  = fmtCur(totAvance);
   document.getElementById('tot-solde').textContent   = fmtCur(totSolde);
+  const totPercuEl = document.getElementById('tot-percu');
+  if (totPercuEl) totPercuEl.textContent = fmtCur(totPercu);
 }
 
 function collectMissions() {
@@ -691,7 +704,7 @@ function collectMissions() {
       autres_frais_details: autresItems,
       total_usd: total,
       avance_usd: avance,
-      solde_usd: total - avance,
+      solde_usd: montant - avance,
       section: null, observation: null,
       lieux: null, secteurs: null, parcours: null, participants: 1
     };
@@ -938,8 +951,9 @@ async function editReport(id) {
       <div class="mt-2 small text-muted">
         Montant per diem : <strong class="row-montant">0,00</strong> USD ·
         Total : <strong class="row-total">0,00</strong> USD ·
-        Avance : <strong class="row-avance text-success">0,00</strong> USD ·
-        Solde : <strong class="row-solde text-warning">0,00</strong> USD
+        Avance (80% FM) : <strong class="row-avance text-success">0,00</strong> USD ·
+        Solde (20% FM) : <strong class="row-solde text-warning">0,00</strong> USD ·
+        Total perçu (FM+FJ) : <strong class="row-percu">0,00</strong> USD
       </div>
     `;
     document.getElementById('mission-rows').appendChild(wrap);
