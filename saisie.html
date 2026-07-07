@@ -580,7 +580,7 @@ function onDateChange(rowId) {
   const fin   = row.querySelector('.f-date-fin').value;
   if (debut && fin) {
     const diffDays = Math.round((new Date(fin) - new Date(debut)) / 86400000);
-    row.querySelector('.f-nuitees').value = Math.max(0, diffDays - 1);
+    row.querySelector('.f-nuitees').value = Math.max(0, diffDays);
   }
   setAvance80(rowId);
   onGroupFieldChange(rowId);
