@@ -278,10 +278,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.103.0/dist/umd/supabase.js"></script>
 <script src="supabase_config.js"></script>
 <script src="auth-shared.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.103.0/dist/umd/supabase.js"></script>
-<script src="supabase_config.js"></script>
-<script src="auth-shared.js"></script>
 <script>
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -295,6 +291,7 @@ function fmtCur(v) { return new Intl.NumberFormat('fr-FR', { minimumFractionDigi
 let SESSION = null;
 let TERRITOIRES = [];
 let PROVINCES_ALLOWED = [];
+let MY_REPORTS_CACHE = [];
 let rowCounter = 0;
 let groupCounter = 0;
 const GROUP_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -454,7 +451,7 @@ function addMissionRow(opts) {
   createMissionRow(opts);
 }
 
-function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
+function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission } = {}) {
   rowCounter += 1;
   const id = `row-${rowCounter}`;
   groupId = groupId || newGroupId();
@@ -463,16 +460,97 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
   wrap.className = 'mission-row';
   wrap.id = id;
   wrap.dataset.group = groupId;
-  wrap.innerHTML = `...` ; // (le HTML de la ligne reste inchangé - je l'ai omis ici pour la lisibilité, mais garde-le tel quel)
+  wrap.innerHTML = `
+    <button type="button" class="btn btn-sm btn-outline-danger remove-row-btn" onclick="removeMissionRow('${id}')" title="Retirer ce missionnaire"><i class="bi bi-x-lg"></i></button>
+    <div class="mission-row-title"><i class="bi bi-person-badge"></i>Missionnaire<span class="group-badge-slot"></span></div>
+    <div class="row g-2 mt-1">
+      <div class="col-md-4">
+        <label class="form-label-sm">Nom complet</label>
+        <input type="text" class="form-control form-control-sm f-nom" placeholder="Nom et postnom">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label-sm">Fonction / Titre</label>
+        <input type="text" class="form-control form-control-sm f-titre" placeholder="Ex. : Chef de bureau">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label-sm">Service / Entité</label>
+        <input type="text" class="form-control form-control-sm f-entite" placeholder="Ex. : PNDA">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label-sm">Date de départ</label>
+        <input type="date" class="form-control form-control-sm f-date-debut" onchange="onDateChange('${id}')">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label-sm">Date de retour</label>
+        <input type="date" class="form-control form-control-sm f-date-fin" onchange="onDateChange('${id}')">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label-sm">Nuitées</label>
+        <input type="number" min="0" class="form-control form-control-sm f-nuitees" readonly onchange="setAvance80('${id}'); onGroupFieldChange('${id}')">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label-sm">Taux per diem (USD)</label>
+        <input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="0" onchange="setAvance80('${id}'); onGroupFieldChange('${id}')">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label-sm">Avance versée</label>
+        <div class="input-group input-group-sm">
+          <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="0" onchange="recalcRow('${id}')">
+          <button type="button" class="btn btn-outline-secondary" onclick="setAvance80('${id}')" title="Recalculer à 80% du FM">80%</button>
+        </div>
+      </div>
+    </div>
+    <div class="autres-frais-box border rounded p-2 mt-2">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="form-label-sm mb-0">Frais à justifier (transport local, communication, etc.)</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addAutresFraisItem('${id}')"><i class="bi bi-plus-lg"></i> Ajouter</button>
+      </div>
+      <div class="autres-frais-items"></div>
+      <input type="hidden" class="f-autres" value="0">
+    </div>
+    <div class="row g-2 mt-2">
+      <div class="col-md-12">
+        <label class="form-label-sm">Observation <span class="text-muted fw-normal">(facultatif)</span></label>
+        <input type="text" class="form-control form-control-sm f-observation" placeholder="Remarque éventuelle">
+      </div>
+    </div>
+    <div class="d-flex flex-wrap gap-3 mt-2" style="font-size:0.82rem">
+      <div>FM : <strong class="row-montant">0,00</strong></div>
+      <div>FJ : <strong class="row-autres-sum">0,00</strong></div>
+      <div>Total (FM+FJ) : <strong class="row-total">0,00</strong></div>
+      <div>Avance (80% FM) : <strong class="row-avance">0,00</strong></div>
+      <div>Solde (20% FM) : <strong class="row-solde">0,00</strong></div>
+      <div>Perçu (Avance+FJ) : <strong class="row-percu">0,00</strong></div>
+    </div>
+  `;
 
   document.getElementById('mission-rows').appendChild(wrap);
 
   if (prefillNom) wrap.querySelector('.f-nom').value = prefillNom;
   if (copyFromGroupId) copyGroupFieldsInto(wrap, copyFromGroupId);
 
-  addAutresFraisItem(id);
+  if (prefillMission) {
+    const m = prefillMission;
+    wrap.querySelector('.f-nom').value = m.missionnaire_nom || '';
+    wrap.querySelector('.f-titre').value = m.missionnaire_titre || '';
+    wrap.querySelector('.f-entite').value = m.missionnaire_entite || '';
+    wrap.querySelector('.f-date-debut').value = m.date_debut || '';
+    wrap.querySelector('.f-date-fin').value = m.date_fin || '';
+    wrap.querySelector('.f-nuitees').value = m.nuitees || 0;
+    wrap.querySelector('.f-taux').value = m.taux_per_diem || 0;
+    wrap.querySelector('.f-avance').value = m.avance_usd || 0;
+    wrap.querySelector('.f-observation').value = m.observation || '';
 
-  // Correction principale : calcul forcé
+    const details = Array.isArray(m.autres_frais_details) && m.autres_frais_details.length
+      ? m.autres_frais_details
+      : (Number(m.autres_frais_usd || 0) > 0 ? [{ libelle: 'Autres frais', montant: m.autres_frais_usd }] : []);
+    if (details.length) details.forEach((d) => addAutresFraisItem(id, d.libelle, d.montant));
+    else addAutresFraisItem(id);
+  } else {
+    addAutresFraisItem(id);
+  }
+
+  // Calcul forcé (garantit l'avance à 80% même si les champs sont déjà remplis)
   setTimeout(() => {
     setAvance80(id);
   }, 10);
@@ -624,44 +702,260 @@ function onDateChange(rowId) {
 }
 
 // ─── COLLECT & SOUMISSION ─────────────────────────────────────────────────────
-function collectMissions() { /* reste identique */ }
+function collectMissions() {
+  const objet = document.getElementById('f-objet').value.trim();
+  const territoireName = document.getElementById('f-territoire').value;
+  const territoire = TERRITOIRES.find((t) => t.name === territoireName);
 
-function findDuplicateNamesInGroups() { /* reste identique */ }
+  const groups = existingGroups();
+  const letterByGid = {};
+  groups.forEach((g, i) => { letterByGid[g.gid] = GROUP_LETTERS[i] || String(i + 1); });
 
-function showFormError(msg) { /* reste identique */ }
+  const missions = [];
+  let numero = 0;
+  document.querySelectorAll('.mission-row').forEach((row) => {
+    numero += 1;
+    const nom    = row.querySelector('.f-nom').value.trim();
+    const titre  = row.querySelector('.f-titre').value.trim();
+    const entite = row.querySelector('.f-entite').value.trim();
+    const dateDebut = row.querySelector('.f-date-debut').value;
+    const dateFin    = row.querySelector('.f-date-fin').value;
+    const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
+    const taux    = Number(row.querySelector('.f-taux').value || 0);
+    const fm      = Math.round(nuitees * taux * 100) / 100;
+    const avance  = Number(row.querySelector('.f-avance').value || 0);
+    const observation = row.querySelector('.f-observation')?.value.trim() || '';
 
-function resetForm() { /* reste identique */ }
+    const details = Array.from(row.querySelectorAll('.autres-frais-item')).map((item) => ({
+      libelle: item.querySelector('.f-item-libelle').value.trim(),
+      montant: Number(item.querySelector('.f-item-montant').value || 0)
+    })).filter((d) => d.libelle || d.montant);
+    const fj = details.reduce((s, d) => s + Number(d.montant || 0), 0);
+    const total = fm + fj;
+    const solde = fm - avance;
 
-async function submitReport() { /* reste identique */ }
+    missions.push({
+      numero,
+      group_id: row.dataset.group,
+      groupe_label: letterByGid[row.dataset.group] || null,
+      missionnaire_nom: nom,
+      missionnaire_titre: titre,
+      missionnaire_entite: entite,
+      nature: objet,
+      objectif: objet,
+      territoire_name: territoire?.name || territoireName || '',
+      territoire_label: territoire?.label || territoireName || '',
+      date_debut: dateDebut,
+      date_fin: dateFin,
+      nuitees,
+      taux_per_diem: taux,
+      montant_usd: fm,
+      autres_frais_usd: fj,
+      autres_frais_details: details,
+      total_usd: total,
+      avance_usd: avance,
+      solde_usd: solde,
+      observation
+    });
+  });
 
-async function loadMyReports() { /* reste identique */ }
+  return missions;
+}
 
-function renderNotifications() { /* reste identique */ }
+function findDuplicateNamesInGroups(missions) {
+  const seen = {};
+  const dups = [];
+  missions.forEach((m) => {
+    const nom = (m.missionnaire_nom || '').trim().toLowerCase();
+    if (!nom) return;
+    const key = m.group_id + '::' + nom;
+    if (seen[key]) {
+      if (!dups.includes(m.missionnaire_nom)) dups.push(m.missionnaire_nom);
+    } else {
+      seen[key] = true;
+    }
+  });
+  return dups;
+}
 
-function renderMyReports() { /* reste identique */ }
+function showFormError(msg) {
+  const el = document.getElementById('form-alert');
+  if (!msg) { el.classList.add('d-none'); el.textContent = ''; return; }
+  el.textContent = msg;
+  el.classList.remove('d-none');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function resetForm() {
+  showFormError('');
+  document.getElementById('report-id-edit').value = '';
+  document.getElementById('f-objet').value = '';
+  document.getElementById('f-territoire').value = '';
+  document.getElementById('f-trimestre').value = 'T1';
+  document.getElementById('f-annee').value = new Date().getFullYear();
+  document.getElementById('mission-rows').innerHTML = '';
+  rowCounter = 0;
+  groupCounter = 0;
+  addMissionRow();
+  document.getElementById('submit-btn').innerHTML = '<i class="bi bi-send-fill me-1"></i>Soumettre le rapport';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function submitReport() {
+  showFormError('');
+
+  const objet = document.getElementById('f-objet').value.trim();
+  const territoire = document.getElementById('f-territoire').value;
+  const trimestre = document.getElementById('f-trimestre').value;
+  const annee = parseInt(document.getElementById('f-annee').value) || new Date().getFullYear();
+  const typedProvince = document.getElementById('f-province').value.trim();
+
+  if (!objet) { showFormError("Veuillez renseigner l'objet de la mission."); return; }
+  if (!territoire) { showFormError('Veuillez choisir un territoire.'); return; }
+
+  const provinceMatch = matchProvince(typedProvince);
+  if (!provinceMatch) { showFormError('Province invalide : veuillez sélectionner une province de la liste proposée.'); return; }
+
+  const missions = collectMissions();
+  if (!missions.length) { showFormError('Veuillez ajouter au moins un missionnaire.'); return; }
+  for (const m of missions) {
+    if (!m.missionnaire_nom) { showFormError('Veuillez renseigner le nom de chaque missionnaire.'); return; }
+    if (!m.date_debut || !m.date_fin) { showFormError('Veuillez renseigner les dates de mission pour chaque missionnaire.'); return; }
+  }
+  const dups = findDuplicateNamesInGroups(missions);
+  if (dups.length) { showFormError('Nom(s) en double dans un même groupe : ' + dups.join(', ') + '.'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  try {
+    const editId = document.getElementById('report-id-edit').value;
+    const rapporteur = SESSION.displayName || SESSION.user;
+
+    if (editId) {
+      const { error } = await db.from('reports').update({
+        province: provinceMatch.name,
+        province_label: provinceMatch.label || provinceMatch.name,
+        province_code: provinceMatch.code || null,
+        trimestre, annee,
+        missions,
+        statut: 'en_attente',
+        returned_by: null,
+        returned_at: null
+      }).eq('id', editId);
+      if (error) throw error;
+      showToast('✓ Rapport corrigé et renvoyé.');
+    } else {
+      const { data: seq, error: seqErr } = await db.rpc('next_report_seq', { p_province: provinceMatch.name });
+      if (seqErr) throw seqErr;
+      const id = (crypto.randomUUID ? crypto.randomUUID() : 'r-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+      const { error } = await db.from('reports').insert({
+        id,
+        province: provinceMatch.name,
+        province_label: provinceMatch.label || provinceMatch.name,
+        province_code: provinceMatch.code || null,
+        trimestre, annee,
+        rapporteur,
+        rapporteur_role: SESSION.role,
+        seq_number: seq,
+        missions,
+        statut: 'en_attente',
+        meta: { seq_number: seq }
+      });
+      if (error) throw error;
+      showToast('✓ Rapport soumis avec succès.');
+    }
+
+    resetForm();
+    await loadMyReports();
+  } catch (err) {
+    console.error(err);
+    showFormError('Erreur lors de la soumission : ' + (err.message || err));
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function loadMyReports() {
+  const rapporteur = SESSION.displayName || SESSION.user;
+  const { data, error } = await db.from('reports').select('*').eq('rapporteur', rapporteur).order('saved_at', { ascending: false }).limit(200);
+  if (error) { console.error('Erreur chargement mes rapports:', error); return; }
+  MY_REPORTS_CACHE = data || [];
+  renderNotifications();
+  renderMyReports();
+}
+
+function renderNotifications() {
+  const counts = { en_attente: 0, activee: 0, realisee: 0, retournee: 0 };
+  MY_REPORTS_CACHE.forEach((r) => {
+    const st = r.statut || 'en_attente';
+    if (counts[st] !== undefined) counts[st] += 1;
+  });
+  Object.keys(counts).forEach((st) => {
+    const badge = document.getElementById('badge-' + st.replace('_', '-'));
+    if (!badge) return;
+    badge.textContent = counts[st];
+    badge.classList.toggle('d-none', counts[st] === 0);
+  });
+
+  const panel = document.getElementById('notif-panel');
+  if (counts.retournee > 0) {
+    panel.innerHTML = `<div class="alert alert-danger d-flex align-items-center gap-2 mb-0">
+      <i class="bi bi-arrow-return-left fs-5"></i>
+      <div>${counts.retournee} rapport(s) retourné(s) pour correction — consultez « Mes rapports » ci-dessous.</div>
+    </div>`;
+  } else {
+    panel.innerHTML = '';
+  }
+}
+
+function renderMyReports() {
+  const tbl = document.getElementById('tbl-my-reports');
+  if (!MY_REPORTS_CACHE.length) {
+    tbl.innerHTML = '<tr><td colspan="7" class="empty-state">Aucun rapport pour le moment.</td></tr>';
+    return;
+  }
+  tbl.innerHTML = MY_REPORTS_CACHE.map((r, i) => {
+    const missions = r.missions || [];
+    const noms = missions.map((m) => m.missionnaire_nom).filter(Boolean).join(', ') || '—';
+    const total = missions.reduce((s, m) => s + Number(m.total_usd || 0), 0);
+    const st = r.statut || 'en_attente';
+    const date = r.saved_at ? new Date(r.saved_at).toLocaleDateString('fr-FR') : '—';
+    const correctBtn = st === 'retournee'
+      ? `<button class="btn btn-sm btn-outline-danger" onclick="editReport('${r.id}')" title="Corriger et renvoyer"><i class="bi bi-pencil-square"></i> Corriger</button>`
+      : '';
+    return `<tr>
+      <td>${r.seq_number || (i + 1)}</td>
+      <td>${date}</td>
+      <td>${esc(r.trimestre || '')}</td>
+      <td>${esc(noms)}</td>
+      <td>${fmtCur(total)}</td>
+      <td><span class="statut-badge ${st}">${esc(st)}</span></td>
+      <td>${correctBtn}</td>
+    </tr>`;
+  }).join('');
+}
 
 async function editReport(id) {
   const r = MY_REPORTS_CACHE.find((x) => x.id === id);
   if (!r) return;
-  // ... (code existant jusqu'à la création des lignes)
+
+  document.getElementById('report-id-edit').value = r.id;
+  document.getElementById('f-province').value = r.province_label || r.province || '';
+  document.getElementById('f-territoire').value = (r.missions && r.missions[0]?.territoire_name) || '';
+  document.getElementById('f-objet').value = (r.missions && r.missions[0]?.nature) || '';
+  document.getElementById('f-trimestre').value = r.trimestre || 'T1';
+  document.getElementById('f-annee').value = r.annee || new Date().getFullYear();
 
   document.getElementById('mission-rows').innerHTML = '';
   rowCounter = 0;
   groupCounter = 0;
 
   const missions = r.missions || [];
+  const groupIdMap = {};
   missions.forEach((m) => {
-    // ... création du wrap (identique)
-
-    const details = Array.isArray(m.autres_frais_details) && m.autres_frais_details.length
-      ? m.autres_frais_details
-      : (Number(m.autres_frais_usd || 0) > 0 ? [{ libelle: 'Autres frais', montant: m.autres_frais_usd }] : []);
-
-    if (details.length) details.forEach((d) => addAutresFraisItem(rid, d.libelle, d.montant));
-    else addAutresFraisItem(rid);
-
-    // Correction : recalcul forcé
-    setTimeout(() => setAvance80(rid), 10);
+    const origGid = m.group_id || 'g0';
+    if (!groupIdMap[origGid]) groupIdMap[origGid] = newGroupId();
+    createMissionRow({ groupId: groupIdMap[origGid], prefillMission: m });
   });
 
   if (!missions.length) addMissionRow();

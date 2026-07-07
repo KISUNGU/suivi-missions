@@ -2122,6 +2122,7 @@ function buildJustificationMissionHtml(report) {
   const objet = rm.map(m=>m.nature||'').filter(Boolean).join('; ') || '';
   const dateDepart = _docDate(rm[0]?.date_debut);
   const dateRetour = _docDate(rm[rm.length-1]?.date_fin);
+  const num = report.fld_number || report.liquidation_number || '___/___/____';
 
   const totPrevus  = rm.reduce((s,m)=>s+Number(m.montant_usd||0),0);
   const totPaye    = rm.reduce((s,m)=>s+Number(m.avance_usd||0),0);
@@ -2138,10 +2139,31 @@ function buildJustificationMissionHtml(report) {
       rows += `<tr><td>${lbl}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${m.participants||1}</td><td class="tr">${_docFmt(prev)}</td><td class="tr">${_docFmt(paye)}</td><td class="tr">${_docFmt(real)}</td><td class="tr">${_docFmt(real-paye)}</td></tr>`;
     });
   });
-  for (let i=0;i<3;i++) rows += '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
 
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Justification mission</title>${_baseStyle()}</head><body>
-<p style="font-size:13pt;font-weight:bold;margin:0">PNDA</p>
+  // Frais à justifier (transport local, communication, etc.) : construits à
+  // partir des éléments réellement saisis par le missionnaire (autres_frais_details),
+  // au lieu d'une liste fixe de libellés vides.
+  const fjItems = [];
+  rm.forEach((m) => {
+    (Array.isArray(m.autres_frais_details) ? m.autres_frais_details : []).forEach((d) => {
+      if ((d.libelle || '').trim() || Number(d.montant || 0) > 0) fjItems.push(d);
+    });
+  });
+  const totFJ = fjItems.reduce((s, d) => s + Number(d.montant || 0), 0);
+  const fjRows = fjItems.length
+    ? fjItems.map((d) => `<tr><td>${escapeHtml(d.libelle || 'Frais')}</td><td colspan="6"></td><td class="tr">${_docFmt(d.montant)}</td><td></td></tr>`).join('')
+    : '<tr><td colspan="9" class="tc">Aucun frais à justifier</td></tr>';
+
+  const totJustifieRealise = totRealise + totFJ;
+  const totJustifieEcart   = totJustifieRealise - totPaye;
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Avis sur justificatifs provision</title>${_baseStyle()}</head><body>
+<div style="text-align:center;font-size:9pt;line-height:1.5;margin-bottom:8px">
+  République Démocratique du Congo &nbsp;•&nbsp; MINISTÈRE DE L'AGRICULTURE<br>
+  <strong>PROGRAMME NATIONAL DE DÉVELOPPEMENT AGRICOLE &laquo;PNDA&raquo;</strong><br>
+  Unité Nationale de Coordination du Projet
+</div>
+<h1>AVIS SUR JUSTIFICATIFS PROVISION N° ${escapeHtml(num)}</h1>
 <p style="margin:3px 0"><strong>Justification sur la mission</strong>&nbsp;: ${escapeHtml(objet)}</p>
 <p style="margin:3px 0 10px">Monsieur <strong>${escapeHtml(nom)}</strong>${accompNames.length ? ' — Accompagné de : <em>' + escapeHtml(accompNames.join('; ')) + '</em>' : ''}</p>
 <table>
@@ -2163,14 +2185,10 @@ function buildJustificationMissionHtml(report) {
     <tr><td>Date retour</td><td class="tc" colspan="8">${escapeHtml(dateRetour)}</td></tr>
     ${rows}
     <tr class="bold bg"><td colspan="5">S/Total 1</td><td class="tr">${_docFmt(totPrevus)}</td><td class="tr">${_docFmt(totPaye)}</td><td class="tr">${_docFmt(totRealise)}</td><td class="tr">${_docFmt(totEcart)}</td></tr>
-    <tr><td class="bold" colspan="9">TRANSPORT LOCAL</td></tr>
-    <tr><td>Provision à justifier</td><td colspan="2">carburant</td><td colspan="6"></td></tr>
-    <tr><td></td><td colspan="2">go pass</td><td colspan="6"></td></tr>
-    <tr><td></td><td colspan="2">billet</td><td colspan="6"></td></tr>
-    <tr><td></td><td colspan="2">Taxe prov</td><td colspan="6"></td></tr>
-    <tr><td></td><td colspan="2">transport</td><td colspan="6"></td></tr>
-    <tr class="bold bg"><td colspan="5">S/Total 2</td><td colspan="4"></td></tr>
-    <tr class="bold bg"><td colspan="5">Montant total justifier</td><td class="tr">${_docFmt(totPrevus)}</td><td class="tr">${_docFmt(totPaye)}</td><td class="tr">${_docFmt(totRealise)}</td><td class="tr">${_docFmt(totEcart)}</td></tr>
+    <tr><td class="bold" colspan="9">FRAIS À JUSTIFIER (TRANSPORT LOCAL, ETC.)</td></tr>
+    ${fjRows}
+    <tr class="bold bg"><td colspan="8">S/Total 2</td><td class="tr">${_docFmt(totFJ)}</td></tr>
+    <tr class="bold bg"><td colspan="5">Montant total justifier</td><td class="tr">${_docFmt(totPrevus)}</td><td class="tr">${_docFmt(totPaye)}</td><td class="tr">${_docFmt(totJustifieRealise)}</td><td class="tr">${_docFmt(totJustifieEcart)}</td></tr>
   </tbody>
 </table>
 </body></html>`;
