@@ -80,6 +80,7 @@
   .user-dropdown-btn { background: none; border: none; color: inherit; text-align: right; line-height: 1.3; }
   .user-dropdown-btn:hover, .user-dropdown-btn:focus { background: none; border: none; color: inherit; box-shadow: none; }
   .empty-state { text-align: center; padding: 30px; color: #8b968d; }
+  .autres-frais-box { background: #f8faf8; }
 </style>
 </head>
 <body>
@@ -198,12 +199,12 @@
     <div class="card-body">
       <div id="mission-rows"></div>
       <div class="totals-strip d-flex flex-wrap gap-4 mt-2">
-        <div>Montant per diem : <span class="val" id="tot-montant">0,00</span> USD</div>
-        <div>Autres frais : <span class="val" id="tot-autres">0,00</span> USD</div>
-        <div>Total général : <span class="val" id="tot-total">0,00</span> USD</div>
-        <div>Avance (80% FM) : <span class="val" id="tot-avance">0,00</span> USD</div>
-        <div>Solde (20% FM) : <span class="val" id="tot-solde">0,00</span> USD</div>
-        <div>Total perçu (FM+FJ) : <span class="val" id="tot-percu">0,00</span> USD</div>
+        <div>Montant per diem (FM) : <span class="val" id="tot-montant">0,00</span> USD</div>
+        <div>Total frais à justifier (FJ) : <span class="val" id="tot-autres">0,00</span> USD</div>
+        <div>Montant total : <span class="val" id="tot-total">0,00</span> USD</div>
+        <div>Avance versée (80% FM) : <span class="val" id="tot-avance">0,00</span> USD</div>
+        <div>Solde à payer au retour : <span class="val" id="tot-solde">0,00</span> USD</div>
+        <div>Total perçu (FM + FJ) : <span class="val" id="tot-percu">0,00</span> USD</div>
       </div>
     </div>
   </div>
@@ -317,7 +318,6 @@ async function initialize() {
   await loadAllTerritoires();
   await loadMyReports();
 
-  // Rafraîchissement automatique toutes les 30 secondes
   setInterval(async () => { await loadMyReports(); }, 30000);
 
   addMissionRow();
@@ -340,9 +340,6 @@ function getSelectedProvince() {
   return document.getElementById('f-province').value.trim() || PROVINCES_ALLOWED[0]?.name || '';
 }
 
-// Fait correspondre le texte tapé (libre) à une province connue de la liste
-// autorisée, en ignorant la casse/les espaces, afin que le rapport reste bien
-// visible du comptable (dont le filtre est une comparaison exacte en base).
 function matchProvince(typed) {
   const norm = (s) => String(s || '').trim().toLowerCase();
   const t = norm(typed);
@@ -360,7 +357,7 @@ async function loadAllTerritoires() {
   sel.value = TERRITOIRES.some((t) => t.name === current) ? current : '';
 }
 
-// ─── GROUPES (missionnaires partageant les mêmes dates / lieu / taux) ─────────
+// ─── GROUPES ──────────────────────────────────────────────────────────────────
 function newGroupId() { groupCounter += 1; return `g${groupCounter}`; }
 
 function existingGroups() {
@@ -492,7 +489,7 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
         <input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="100" onchange="recalcRow('${id}'); onGroupFieldChange('${id}')">
       </div>
       <div class="col-md-3">
-        <label class="form-label-sm">Avance versée <span class="text-success small fw-normal">· 80% recommandé</span></label>
+        <label class="form-label-sm">Avance versée <span class="text-success small fw-normal">· 80% FM</span></label>
         <div class="input-group input-group-sm">
           <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="0" onchange="recalcRow('${id}')">
           <button type="button" class="btn btn-outline-secondary" onclick="setAvance80('${id}')" tabindex="-1" title="Appliquer 80% du per diem">80%</button>
@@ -500,7 +497,7 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
       </div>
       <div class="col-md-3">
         <label class="form-label-sm">&nbsp;</label>
-        <div class="small text-muted pt-1">Solde (20%) calculé automatiquement</div>
+        <div class="small text-muted pt-1">Solde calculé automatiquement</div>
       </div>
     </div>
     <div class="row g-2 mt-1">
@@ -512,15 +509,16 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
           </div>
           <div class="autres-frais-items"></div>
           <div class="text-end small mt-1">
-            Total autres frais : <strong class="f-autres-total">0,00</strong> USD
+            Total frais à justifier : <strong class="f-autres-total">0,00</strong> USD
             <input type="hidden" class="f-autres" value="0">
           </div>
         </div>
       </div>
     </div>
     <div class="mt-2 small text-muted">
-      Montant per diem : <strong class="row-montant">0,00</strong> USD ·
-      Total : <strong class="row-total">0,00</strong> USD ·
+      Frais de mission (FM) : <strong class="row-montant">0,00</strong> USD ·
+      Frais à justifier (FJ) : <strong class="row-autres-sum">0,00</strong> USD ·
+      Montant total : <strong class="row-total">0,00</strong> USD ·
       Avance (80% FM) : <strong class="row-avance text-success">0,00</strong> USD ·
       Solde (20% FM) : <strong class="row-solde text-warning">0,00</strong> USD ·
       Total perçu (FM+FJ) : <strong class="row-percu">0,00</strong> USD
@@ -535,7 +533,7 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
   wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// ─── AUTRES FRAIS À JUSTIFIER (libellé + montant, par missionnaire) ───────────
+// ─── AUTRES FRAIS À JUSTIFIER ──────────────────────────────────────────────────
 function addAutresFraisItem(rowId, libelle = '', montant = 0) {
   const row = document.getElementById(rowId);
   if (!row) return;
@@ -601,32 +599,55 @@ function onDateChange(rowId) {
   onGroupFieldChange(rowId);
 }
 
+// ─── CALCULS CORRIGÉS ──────────────────────────────────────────────────────────
 function recalcRow(rowId) {
   const row = document.getElementById(rowId);
   if (!row) return;
-  const itemsTotal = Array.from(row.querySelectorAll('.f-item-montant')).reduce((s, el) => s + Number(el.value || 0), 0);
-  const autresInput = row.querySelector('.f-autres');
-  if (autresInput) autresInput.value = itemsTotal;
-  const totalEl = row.querySelector('.f-autres-total');
-  if (totalEl) totalEl.textContent = fmtCur(itemsTotal);
 
+  // 1. Calcul des Frais à Justifier (FJ) = somme des éléments
+  const fj = Array.from(row.querySelectorAll('.f-item-montant')).reduce((s, el) => s + Number(el.value || 0), 0);
+  const autresInput = row.querySelector('.f-autres');
+  if (autresInput) autresInput.value = fj;
+  const totalEl = row.querySelector('.f-autres-total');
+  if (totalEl) totalEl.textContent = fmtCur(fj);
+
+  // 2. Calcul des Frais de Mission (FM) = nuitées × taux
   const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
   const taux = Number(row.querySelector('.f-taux').value || 0);
-  const autres = itemsTotal;
+  const fm = nuitees * taux;
+
+  // 3. Avance = 80% du FM (Frais de Mission uniquement)
+  //    L'utilisateur peut la modifier manuellement
   const avance = Number(row.querySelector('.f-avance').value || 0);
-  const montant = nuitees * taux;
-  const total   = montant + autres;
-  // Le solde ne concerne que le reliquat du Frais de Mission (FM) : l'avance
-  // (80% FM) plus les Frais à Justifier (FJ, remboursés à 100%) forment le
-  // "Total perçu" versé au départ ; seul le solde des 20% FM reste à payer.
-  const solde   = montant - avance;
-  const percu   = avance + autres;
-  row.querySelector('.row-montant').textContent = fmtCur(montant);
-  row.querySelector('.row-total').textContent   = fmtCur(total);
-  row.querySelector('.row-avance').textContent  = fmtCur(avance);
-  row.querySelector('.row-solde').textContent   = fmtCur(solde);
-  const percuEl = row.querySelector('.row-percu');
-  if (percuEl) percuEl.textContent = fmtCur(percu);
+
+  // 4. Montant total = FM + FJ
+  const total = fm + fj;
+
+  // 5. Solde = FM - Avance (le solde restant à payer sur les Frais de Mission)
+  const solde = fm - avance;
+
+  // 6. Total perçu = Avance + FJ (ce que le missionnaire a déjà reçu)
+  const percu = avance + fj;
+
+  // Mise à jour des affichages
+  const rowMontant = row.querySelector('.row-montant');
+  if (rowMontant) rowMontant.textContent = fmtCur(fm);
+
+  const rowAutres = row.querySelector('.row-autres-sum');
+  if (rowAutres) rowAutres.textContent = fmtCur(fj);
+
+  const rowTotal = row.querySelector('.row-total');
+  if (rowTotal) rowTotal.textContent = fmtCur(total);
+
+  const rowAvance = row.querySelector('.row-avance');
+  if (rowAvance) rowAvance.textContent = fmtCur(avance);
+
+  const rowSolde = row.querySelector('.row-solde');
+  if (rowSolde) rowSolde.textContent = fmtCur(solde);
+
+  const rowPercu = row.querySelector('.row-percu');
+  if (rowPercu) rowPercu.textContent = fmtCur(percu);
+
   recalcTotals();
 }
 
@@ -634,38 +655,38 @@ function setAvance80(rowId) {
   const row = document.getElementById(rowId);
   if (!row) return;
   const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
-  const taux    = Number(row.querySelector('.f-taux').value   || 0);
-  const montant = nuitees * taux;
-  // L'avance ne porte que sur le Frais de Mission (FM), pas sur les Frais à
-  // Justifier (FJ) qui sont remboursés séparément à 100% sur justificatifs.
-  row.querySelector('.f-avance').value = (montant * 0.8).toFixed(2);
+  const taux = Number(row.querySelector('.f-taux').value || 0);
+  const fm = nuitees * taux;
+  // Avance = 80% du Frais de Mission (FM) uniquement
+  row.querySelector('.f-avance').value = (fm * 0.8).toFixed(2);
   recalcRow(rowId);
 }
 
 function recalcTotals() {
-  let totMontant = 0, totAutres = 0, totTotal = 0, totAvance = 0, totSolde = 0;
-  let totPercu = 0;
+  let totFM = 0, totFJ = 0, totTotal = 0, totAvance = 0, totSolde = 0, totPercu = 0;
+
   document.querySelectorAll('.mission-row').forEach(row => {
     const nuitees = Number(row.querySelector('.f-nuitees')?.value || 0);
-    const taux    = Number(row.querySelector('.f-taux')?.value    || 0);
-    const autres  = Number(row.querySelector('.f-autres')?.value  || 0);
-    const avance  = Number(row.querySelector('.f-avance')?.value  || 0);
-    const montant = nuitees * taux;
-    const total   = montant + autres;
-    totMontant += montant;
-    totAutres  += autres;
-    totTotal   += total;
-    totAvance  += avance;
-    totSolde   += montant - avance;
-    totPercu   += avance + autres;
+    const taux = Number(row.querySelector('.f-taux')?.value || 0);
+    const fj = Number(row.querySelector('.f-autres')?.value || 0);
+    const avance = Number(row.querySelector('.f-avance')?.value || 0);
+    const fm = nuitees * taux;
+    const total = fm + fj;
+
+    totFM += fm;
+    totFJ += fj;
+    totTotal += total;
+    totAvance += avance;
+    totSolde += fm - avance;
+    totPercu += avance + fj;
   });
-  document.getElementById('tot-montant').textContent = fmtCur(totMontant);
-  document.getElementById('tot-autres').textContent  = fmtCur(totAutres);
-  document.getElementById('tot-total').textContent   = fmtCur(totTotal);
-  document.getElementById('tot-avance').textContent  = fmtCur(totAvance);
-  document.getElementById('tot-solde').textContent   = fmtCur(totSolde);
-  const totPercuEl = document.getElementById('tot-percu');
-  if (totPercuEl) totPercuEl.textContent = fmtCur(totPercu);
+
+  document.getElementById('tot-montant').textContent = fmtCur(totFM);
+  document.getElementById('tot-autres').textContent = fmtCur(totFJ);
+  document.getElementById('tot-total').textContent = fmtCur(totTotal);
+  document.getElementById('tot-avance').textContent = fmtCur(totAvance);
+  document.getElementById('tot-solde').textContent = fmtCur(totSolde);
+  document.getElementById('tot-percu').textContent = fmtCur(totPercu);
 }
 
 function collectMissions() {
@@ -682,10 +703,11 @@ function collectMissions() {
       libelle: it.querySelector('.f-item-libelle').value.trim(),
       montant: Number(it.querySelector('.f-item-montant').value || 0)
     })).filter((it) => it.libelle || it.montant);
-    const autres = autresItems.reduce((s, it) => s + it.montant, 0);
+    const fj = autresItems.reduce((s, it) => s + it.montant, 0);
     const avance = Number(row.querySelector('.f-avance').value || 0);
-    const montant = nuitees * taux;
-    const total = montant + autres;
+    const fm = nuitees * taux;
+    const total = fm + fj;
+
     return {
       numero: String(idx + 1),
       group_id: row.dataset.group || null,
@@ -698,15 +720,21 @@ function collectMissions() {
       territoire_label: terrLabel,
       date_debut: row.querySelector('.f-date-debut').value || null,
       date_fin: row.querySelector('.f-date-fin').value || null,
-      nuitees, taux_per_diem: taux,
-      montant_usd: montant,
-      autres_frais_usd: autres,
+      nuitees,
+      taux_per_diem: taux,
+      montant_usd: fm,           // Frais de Mission (FM)
+      autres_frais_usd: fj,      // Frais à Justifier (FJ)
       autres_frais_details: autresItems,
-      total_usd: total,
-      avance_usd: avance,
-      solde_usd: montant - avance,
-      section: null, observation: null,
-      lieux: null, secteurs: null, parcours: null, participants: 1
+      total_usd: total,          // FM + FJ
+      avance_usd: avance,        // 80% du FM (modifiable)
+      solde_usd: fm - avance,    // FM - Avance
+      percu_usd: avance + fj,    // Avance + FJ
+      section: null,
+      observation: null,
+      lieux: null,
+      secteurs: null,
+      parcours: null,
+      participants: 1
     };
   }).filter((m) => m.missionnaire_nom);
 }
@@ -922,7 +950,7 @@ async function editReport(id) {
         <div class="col-md-3"><label class="form-label-sm">Nuitées</label><input type="number" min="0" class="form-control form-control-sm f-nuitees" value="${m.nuitees||0}" readonly style="background:#f5f5f5"></div>
         <div class="col-md-3"><label class="form-label-sm">Taux/nuit (USD)</label><input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="${m.taux_per_diem||100}" onchange="recalcRow('${rid}'); onGroupFieldChange('${rid}')"></div>
         <div class="col-md-3">
-          <label class="form-label-sm">Avance versée <span class="text-success small fw-normal">· 80% FM recommandé</span></label>
+          <label class="form-label-sm">Avance versée <span class="text-success small fw-normal">· 80% FM</span></label>
           <div class="input-group input-group-sm">
             <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="${m.avance_usd||0}" onchange="recalcRow('${rid}')">
             <button type="button" class="btn btn-outline-secondary" onclick="setAvance80('${rid}')" tabindex="-1">80%</button>
@@ -930,7 +958,7 @@ async function editReport(id) {
         </div>
         <div class="col-md-3">
           <label class="form-label-sm">&nbsp;</label>
-          <div class="small text-muted pt-1">Solde (20%) calculé automatiquement</div>
+          <div class="small text-muted pt-1">Solde calculé automatiquement</div>
         </div>
       </div>
       <div class="row g-2 mt-1">
@@ -942,15 +970,16 @@ async function editReport(id) {
             </div>
             <div class="autres-frais-items"></div>
             <div class="text-end small mt-1">
-              Total autres frais : <strong class="f-autres-total">0,00</strong> USD
+              Total frais à justifier : <strong class="f-autres-total">0,00</strong> USD
               <input type="hidden" class="f-autres" value="0">
             </div>
           </div>
         </div>
       </div>
       <div class="mt-2 small text-muted">
-        Montant per diem : <strong class="row-montant">0,00</strong> USD ·
-        Total : <strong class="row-total">0,00</strong> USD ·
+        Frais de mission (FM) : <strong class="row-montant">0,00</strong> USD ·
+        Frais à justifier (FJ) : <strong class="row-autres-sum">0,00</strong> USD ·
+        Montant total : <strong class="row-total">0,00</strong> USD ·
         Avance (80% FM) : <strong class="row-avance text-success">0,00</strong> USD ·
         Solde (20% FM) : <strong class="row-solde text-warning">0,00</strong> USD ·
         Total perçu (FM+FJ) : <strong class="row-percu">0,00</strong> USD
@@ -962,9 +991,6 @@ async function editReport(id) {
       : (Number(m.autres_frais_usd || 0) > 0 ? [{ libelle: 'Autres frais', montant: m.autres_frais_usd }] : []);
     if (details.length) details.forEach((d) => addAutresFraisItem(rid, d.libelle, d.montant));
     else addAutresFraisItem(rid);
-    // Recalcule l'avance selon la règle actuelle (80% du FM) plutôt que de
-    // garder telle quelle une valeur potentiellement enregistrée avec une
-    // ancienne formule (ex. 80% du total FM+FJ) — évite un solde incohérent.
     setAvance80(rid);
   });
   if (!missions.length) addMissionRow();
