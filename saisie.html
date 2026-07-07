@@ -955,67 +955,104 @@ function generateAvisJustificatifsPDF(reportId) {
 
   const { jsPDF } = window.jspdf;
   const province = report.province_label || report.province || '';
+  const dateActuelle = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   report.missions.forEach((m, index) => {
     const doc = new jsPDF('p', 'mm', 'a4');
     const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    let y = 20;
 
+    // --- En-tête ---
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
-    doc.text('PROGRAMME NATIONAL DE DÉVELOPPEMENT AGRICOLE « PNDA »', pageWidth / 2, 20, { align: 'center' });
-
+    doc.text('Programme National de Développement Agricole', pageWidth / 2, y, { align: 'center' });
+    y += 8;
     doc.setFontSize(12);
-    doc.text('AVIS SUR JUSTIFICATIFS PROVISION', pageWidth / 2, 28, { align: 'center' });
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.text(`N° ${report.fld_number || report.liquidation_number || report.seq_number || '—'}  —  Missionnaire ${index + 1}/${report.missions.length}`, pageWidth / 2, 35, { align: 'center' });
-
-    doc.line(20, 42, 190, 42);
-
-    let y = 55;
+    doc.text('Administration de Finances', pageWidth / 2, y, { align: 'center' });
+    y += 8;
     doc.setFontSize(11);
-    doc.text(`Justificatifs présentés par : ${m.missionnaire_nom || ''}`, 20, y); y += 8;
-    doc.text(`Fonction : ${m.missionnaire_titre || ''}`, 20, y); y += 8;
-    doc.text(`Direction : ${province}`, 20, y); y += 8;
-    doc.text(`Motif : ${m.nature || 'Mission'}`, 20, y); y += 12;
+    doc.text('Compagnie', pageWidth / 2, y, { align: 'center' });
+    y += 8;
+    doc.setFontSize(10);
+    doc.text(dateActuelle, pageWidth / 2, y, { align: 'center' });
+    y += 10;
 
-    // Montants (même convention que le bordereau de liquidation) :
-    // FM = frais de mission (nuitées × taux) ; FJ = frais à justifier (autres frais) ;
-    // avance_usd = 80% FM déjà versée ; solde_usd = 20% FM restant à verser au retour.
-    const fm     = Number(m.montant_usd || 0);
-    const fj     = Number(m.autres_frais_usd || 0);
-    const avance = Number(m.avance_usd || 0);
-    const solde  = Number(m.solde_usd || 0);
+    // --- Ligne de séparation ---
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 8;
+
+    // --- Titre ---
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    const titre = `AVIS SUR JUSTIFICATIFS PROVISION N° FLD ${report.seq_number || '---'}/${new Date().getFullYear()}`;
+    doc.text(titre, pageWidth / 2, y, { align: 'center' });
+    y += 12;
+
+    // --- Informations mission ---
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+
+    // Nom du missionnaire
+    doc.text(`Nom & Signature`, margin, y);
+    doc.text(`COMPTABLE`, pageWidth / 2, y);
+    doc.text(`SEMA MALATA`, pageWidth - margin, y, { align: 'right' });
+    y += 7;
+
+    // A REMBOURSER A
+    doc.text(`A REMBOURSER A :`, margin, y);
+    doc.text(`${m.missionnaire_nom || ''}`, pageWidth - margin, y, { align: 'right' });
+    y += 7;
+
+    // Avis du Comptable
+    doc.text(`Avis du Comptable`, margin, y);
+    const fj = Number(m.autres_frais_usd || 0);
+    doc.text(`Justificatifs valables pour montant :`, pageWidth / 2, y);
+    doc.text(`${fmtCur(fj)}`, pageWidth - margin, y, { align: 'right' });
+    y += 7;
+
+    // Montant des justificatifs présentés
+    doc.text(`MONTANT DES JUSTIFICATIFS PRESENTES :`, margin, y);
+    doc.text(`${fmtCur(fj)}`, pageWidth - margin, y, { align: 'right' });
+    y += 7;
+
+    // Montant de la provision restant à justifier
+    const solde = Number(m.solde_usd || 0);
+    doc.text(`MONTANT DE LA PROVISION RESTANT A JUSTIFIER :`, margin, y);
+    doc.text(`${fmtCur(solde)}`, pageWidth - margin, y, { align: 'right' });
+    y += 10;
+
+    // --- FINANCEMENT / PROJET / DIRECTION / MISSION ---
+    doc.setFont('helvetica', 'bold');
+    doc.text(`FINANCEMENT :`, margin, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`PNDA`, margin + 50, y);
+    y += 7;
 
     doc.setFont('helvetica', 'bold');
-    doc.text('Montant de la provision (avance versée, 80% FM) :', 20, y);
-    doc.text(fmtCur(avance), 190, y, { align: 'right' }); y += 10;
-
-    doc.text('Montant des justificatifs présentés (FJ) :', 20, y);
-    doc.text(fmtCur(fj), 190, y, { align: 'right' }); y += 10;
-
-    doc.setTextColor(180, 0, 0);
-    doc.text('Solde (20% FM) restant à verser au missionnaire :', 20, y);
-    doc.text(fmtCur(solde), 190, y, { align: 'right' }); y += 20;
-
-    doc.setTextColor(0);
-    doc.rect(20, y, 170, 22);
+    doc.text(`PROJET :`, margin, y);
     doc.setFont('helvetica', 'normal');
-    doc.text('Avis du Comptable — Justificatifs valables pour :', 25, y + 8);
+    doc.text(`${m.missionnaire_nom || ''}`, margin + 50, y);
+    y += 7;
+
     doc.setFont('helvetica', 'bold');
-    doc.text(fmtCur(fj), 185, y + 13, { align: 'right' });
-
-    y += 30;
-    doc.rect(20, y, 170, 20);
-    doc.text('À REMBOURSER À :', 25, y + 12);
-    doc.text(fmtCur(solde), 185, y + 12, { align: 'right' });
-
-    y += 45;
+    doc.text(`DIRECTION :`, margin, y);
     doc.setFont('helvetica', 'normal');
-    doc.text('Nom & Signature du Comptable :', 25, y);
-    doc.text(`Date : ${new Date().toLocaleDateString('fr-FR')}`, 25, y + 18);
-    doc.text('Signature du RAF :', 120, y);
+    doc.text(`${province}`, margin + 50, y);
+    y += 7;
 
+    doc.setFont('helvetica', 'bold');
+    doc.text(`MISSION :`, margin, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${m.nature || 'Mission'}`, margin + 50, y);
+    y += 12;
+
+    // --- Signature ---
+    doc.text(`Nom & Signature`, margin, y);
+    doc.text(`COMPTABLE`, pageWidth / 2, y);
+    doc.text(`SEMA MALATA`, pageWidth - margin, y, { align: 'right' });
+
+    // --- Enregistrement du PDF ---
     const safeName = (m.missionnaire_nom || 'missionnaire').replace(/[^a-zA-Z0-9]/g, '_');
     doc.save(`Avis_Justificatifs_${safeName}.pdf`);
   });
