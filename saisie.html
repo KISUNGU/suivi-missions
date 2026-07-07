@@ -486,7 +486,7 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
       </div>
       <div class="col-md-3">
         <label class="form-label-sm">Taux/nuit (USD)</label>
-        <input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="100" onchange="recalcRow('${id}'); onGroupFieldChange('${id}')">
+        <input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="100" onchange="setAvance80('${id}'); onGroupFieldChange('${id}')">
       </div>
       <div class="col-md-3">
         <label class="form-label-sm">Avance versée <span class="text-success small fw-normal">· 80% FM</span></label>
@@ -528,9 +528,10 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom } = {}) {
   if (prefillNom) wrap.querySelector('.f-nom').value = prefillNom;
   if (copyFromGroupId) copyGroupFieldsInto(wrap, copyFromGroupId);
   addAutresFraisItem(id);
-  // CORRECTION : Appliquer le calcul à la ligne créée
-  recalcRow(id);
-  if (copyFromGroupId) setAvance80(id);
+  // Applique le calcul d'avance (80% FM) à TOUTE nouvelle ligne, pas
+  // seulement celles copiées depuis un groupe — même principe que pour le
+  // 2e missionnaire (setAvance80 recalcule aussi montant/solde/perçu).
+  setAvance80(id);
   renderGroupBadges();
   wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
@@ -585,7 +586,7 @@ function onGroupFieldChange(rowId) {
       const dstEl = other.querySelector('.' + cls);
       if (srcEl && dstEl) dstEl.value = srcEl.value;
     });
-    recalcRow(other.id);
+    setAvance80(other.id);
   });
 }
 
@@ -597,7 +598,7 @@ function onDateChange(rowId) {
     const diffDays = Math.round((new Date(fin) - new Date(debut)) / 86400000);
     row.querySelector('.f-nuitees').value = Math.max(0, diffDays);
   }
-  recalcRow(rowId);
+  setAvance80(rowId);
   onGroupFieldChange(rowId);
 }
 
@@ -954,7 +955,7 @@ async function editReport(id) {
         <div class="col-md-3"><label class="form-label-sm">Date de départ</label><input type="date" class="form-control form-control-sm f-date-debut" value="${m.date_debut || ''}" onchange="onDateChange('${rid}')"></div>
         <div class="col-md-3"><label class="form-label-sm">Date de retour</label><input type="date" class="form-control form-control-sm f-date-fin" value="${m.date_fin || ''}" onchange="onDateChange('${rid}')"></div>
         <div class="col-md-3"><label class="form-label-sm">Nuitées</label><input type="number" min="0" class="form-control form-control-sm f-nuitees" value="${m.nuitees||0}" readonly style="background:#f5f5f5"></div>
-        <div class="col-md-3"><label class="form-label-sm">Taux/nuit (USD)</label><input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="${m.taux_per_diem||100}" onchange="recalcRow('${rid}'); onGroupFieldChange('${rid}')"></div>
+        <div class="col-md-3"><label class="form-label-sm">Taux/nuit (USD)</label><input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="${m.taux_per_diem||100}" onchange="setAvance80('${rid}'); onGroupFieldChange('${rid}')"></div>
         <div class="col-md-3">
           <label class="form-label-sm">Avance versée <span class="text-success small fw-normal">· 80% FM</span></label>
           <div class="input-group input-group-sm">
@@ -997,7 +998,10 @@ async function editReport(id) {
       : (Number(m.autres_frais_usd || 0) > 0 ? [{ libelle: 'Autres frais', montant: m.autres_frais_usd }] : []);
     if (details.length) details.forEach((d) => addAutresFraisItem(rid, d.libelle, d.montant));
     else addAutresFraisItem(rid);
-    recalcRow(rid);
+    // Recalcule l'avance selon la règle actuelle (80% du FM) plutôt que de
+    // garder telle quelle une valeur potentiellement enregistrée avec une
+    // ancienne formule — même principe que pour toute nouvelle ligne.
+    setAvance80(rid);
   });
   if (!missions.length) addMissionRow();
   renderGroupBadges();
