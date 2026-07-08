@@ -163,8 +163,9 @@
           <datalist id="province-datalist"></datalist>
         </div>
         <div class="col-md-3">
-          <label class="form-label-sm">Territoire <span class="text-muted fw-normal">(aléatoire)</span></label>
-          <select class="form-select form-select-sm" id="f-territoire"><option value="">— Territoire —</option></select>
+          <label class="form-label-sm">Territoire <span class="text-muted fw-normal">(facultatif)</span></label>
+          <input type="text" class="form-control form-control-sm" id="f-territoire" placeholder="Ex. : Bulungu" list="territoire-datalist" autocomplete="off">
+          <datalist id="territoire-datalist"></datalist>
         </div>
         <div class="col-md-6">
           <label class="form-label-sm">Objet de la mission</label>
@@ -353,11 +354,8 @@ function matchProvince(typed) {
 async function loadAllTerritoires() {
   const { data } = await db.from('territoires').select('*').order('name');
   TERRITOIRES = data || [];
-  const sel = document.getElementById('f-territoire');
-  const current = sel.value;
-  sel.innerHTML = '<option value="">— Territoire —</option>' +
-    TERRITOIRES.map((t) => `<option value="${esc(t.name)}">${esc(t.label)}</option>`).join('');
-  sel.value = TERRITOIRES.some((t) => t.name === current) ? current : '';
+  const datalist = document.getElementById('territoire-datalist');
+  if (datalist) datalist.innerHTML = TERRITOIRES.map((t) => `<option value="${esc(t.label || t.name)}">`).join('');
 }
 
 // ─── GROUPES ──────────────────────────────────────────────────────────────────
@@ -705,8 +703,9 @@ function onDateChange(rowId) {
 // ─── COLLECT & SOUMISSION ─────────────────────────────────────────────────────
 function collectMissions() {
   const objet = document.getElementById('f-objet').value.trim();
-  const territoireName = document.getElementById('f-territoire').value;
-  const territoire = TERRITOIRES.find((t) => t.name === territoireName);
+  const territoireName = document.getElementById('f-territoire').value.trim();
+  const territoireNorm = territoireName.toLowerCase();
+  const territoire = TERRITOIRES.find((t) => (t.name || '').toLowerCase() === territoireNorm || (t.label || '').toLowerCase() === territoireNorm);
 
   const groups = existingGroups();
   const letterByGid = {};
