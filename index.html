@@ -1132,8 +1132,6 @@ function openDashboard(user) {
   if (rnseBadge) rnseBadge.classList.toggle('d-none', session?.role !== 'super_admin');
   const backLink = document.getElementById('nav-back-superadmin');
   if (backLink) backLink.classList.toggle('d-none', session?.role !== 'super_admin');
-  const saisieLink = document.getElementById('nav-saisie-link');
-  if (saisieLink) saisieLink.classList.toggle('d-none', session?.role === 'admin');
   importedReports = getPersistedImportedReports();
   hydrateSignatory();
 }

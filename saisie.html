@@ -305,7 +305,7 @@ function logoutUser() { PndaAuth.logout(db); }
 initialize();
 
 async function initialize() {
-  SESSION = await PndaAuth.hydrateSession(db, ['province', 'comptable', 'super_admin']);
+  SESSION = await PndaAuth.hydrateSession(db, ['province', 'comptable', 'admin', 'super_admin']);
   if (!SESSION) return;
 
   document.getElementById('session-user').textContent = (SESSION.displayName || SESSION.user).toUpperCase();
