@@ -877,6 +877,23 @@
   </div>
 </div>
 
+<!-- ░░ MODALE AVIS JUSTIFICATIFS (revue avant impression) ░░ -->
+<div class="modal fade" id="avisReviewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header" style="background:var(--pnda-green);color:#fff;border-bottom:2px solid var(--pnda-gold)">
+        <h5 class="modal-title"><i class="bi bi-clipboard-check-fill me-2"></i>Avis sur justificatifs provision</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="avisReviewBody"></div>
+      <div class="modal-footer border-0 gap-2">
+        <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Annuler</button>
+        <button class="btn btn-info btn-sm" id="avisReviewAcceptBtn"><i class="bi bi-check2-circle me-1"></i>Accepter l'avis &amp; imprimer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ░░ SCRIPTS ░░ -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.103.0/dist/umd/supabase.js"></script>
@@ -1757,7 +1774,7 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
                     ${(st === 'en_attente' || st === 'activee') ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="event.stopPropagation();updateReportStatut('${rid}','retournee')" title="Retourner pour correction"><i class="bi bi-arrow-return-left"></i></button>` : ''}
                     ${st === 'activee' ? `<button class="btn btn-sm btn-outline-secondary me-1" onclick="event.stopPropagation();updateReportStatut('${rid}','realisee')" title="Marquer réalisée"><i class="bi bi-flag-fill"></i></button>` : ''}
                     ${st === 'realisee' ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="event.stopPropagation();updateReportStatut('${rid}','activee')" title="Remettre en Activée"><i class="bi bi-arrow-counterclockwise"></i></button>` : ''}
-                    ${st === 'realisee' && !report.justification_at ? `<button class="btn btn-sm btn-outline-info me-1" onclick="event.stopPropagation();cloturerJustificatifs('${rid}')" title="Enregistrer les justificatifs (délai 48h)"><i class="bi bi-clipboard-check-fill"></i></button>` : ''}
+                    ${st === 'realisee' && !report.justification_at ? `<button class="btn btn-sm btn-outline-info me-1" onclick="event.stopPropagation();openAvisReviewModal('${rid}')" title="Remplir docs de justification (délai 48h)"><i class="bi bi-clipboard-check-fill"></i></button>` : ''}
                     ${st === 'realisee' && report.justification_at && !report.solde_paye_at ? `<button class="btn btn-sm btn-outline-success me-1" onclick="event.stopPropagation();enregistrerSolde('${rid}')" title="Confirmer le versement du solde 20%"><i class="bi bi-cash-coin"></i></button>` : ''}
                     ${rid ? `<button class="btn btn-sm btn-outline-primary me-1" onclick="event.stopPropagation();editReport('${rid}')" title="Modifier le rapport"><i class="bi bi-pencil-fill"></i></button>` : ''}
                     ${report.liquidation_number ? `<button class="btn btn-sm btn-outline-dark me-1" onclick="event.stopPropagation();reprintBordereau('${rid}')" title="Bordereau N°\u00a0${escapeHtml(report.liquidation_number)}"><i class="bi bi-file-earmark-text"></i></button>` : ''}
@@ -2292,9 +2309,21 @@ function renderJustificationBlock(report, rm) {
     + '</div>';
 }
 
-async function cloturerJustificatifs(reportId) {
+// ─── AVIS SUR JUSTIFICATIFS : modale de revue avant impression ────────────────
+const _avisReviewModal = new bootstrap.Modal(document.getElementById('avisReviewModal'));
+let _avisReviewOkCallback = null;
+document.getElementById('avisReviewAcceptBtn').addEventListener('click', () => {
+  if (_avisReviewOkCallback) _avisReviewOkCallback();
+});
+
+// Ouvre la modale d'avis (favorable / sous réserve) permettant au comptable
+// de vérifier — et au besoin corriger — les montants justifiés avant que les
+// documents imprimables ne soient générés.
+function openAvisReviewModal(reportId) {
   const report = REPORTS_CACHE.find((r) => r.id === reportId);
-  const rm = report?.missions || [];
+  if (!report) return;
+  const rm = report.missions || [];
+
   let latestDateFin = null;
   rm.forEach((m) => {
     if (m.date_fin) {
@@ -2311,35 +2340,89 @@ async function cloturerJustificatifs(reportId) {
         ? '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Dans les délais (avant le ' + fmtDtH(deadline48h) + ')</span>'
         : '<span class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>Hors délai — échéance était le ' + fmtDtH(deadline48h) + '</span>')
     : '';
-  askConfirm(
-    'Confirmer la réception des justificatifs ?' + (delaiInfo ? '<br><small class="mt-1">' + delaiInfo + '</small>' : ''),
-    async () => {
-      try {
-        const session = getSession();
-        const now2 = new Date();
-        const month = String(now2.getMonth() + 1).padStart(2, '0');
-        const year  = now2.getFullYear();
-        const nowIso = now2.toISOString();
-        let fldNumber = report.fld_number;
-        if (!fldNumber) {
-          const { data: fldSeq, error: fldErr } = await db.rpc('next_fld_seq', { p_year: year, p_month: parseInt(month) });
-          if (fldErr) throw fldErr;
-          fldNumber = 'FLD ' + String(fldSeq).padStart(3, '0') + '/' + month + '/' + year;
-        }
-        const { error } = await db.from('reports').update({
-          justification_at: nowIso,
-          justification_by: session?.user?.email || session?.user || null,
-          fld_number: fldNumber
-        }).eq('id', reportId);
-        if (error) throw error;
-        showToast('✓ Justificatifs enregistrés — ' + fldNumber);
-        await refreshDashboard();
-        const updated = { ...report, justification_at: nowIso, fld_number: fldNumber };
-        openPrintWindow(buildAvisJustificatifsHtml(updated));
-      } catch (e) { console.error(e); showToast('Erreur lors de l\'enregistrement.'); }
-    },
-    'Justificatifs reçus', 'Enregistrer', 'btn-info'
-  );
+
+  const rows = rm.map((m, i) => {
+    const nom = m.missionnaire_nom || resolveMissionnaireName(report);
+    return `<div class="border rounded p-2 mb-2">
+      <div class="fw-bold small mb-1">${escapeHtml(nom)}${m.missionnaire_titre ? ' — ' + escapeHtml(m.missionnaire_titre) : ''}</div>
+      <div class="row g-2">
+        <div class="col-6">
+          <label class="form-label small mb-0 text-muted">Provision (USD)</label>
+          <input class="form-control form-control-sm" value="${_docFmt(m.avance_usd)}" disabled>
+        </div>
+        <div class="col-6">
+          <label class="form-label small mb-0 text-muted">Montant justifié (USD)</label>
+          <input type="number" step="0.01" class="form-control form-control-sm avis-justifie-input" data-idx="${i}" value="${Number(m.total_usd || 0)}">
+        </div>
+      </div>
+      <div class="row g-2 mt-1">
+        <div class="col-6">
+          <label class="form-label small mb-0 text-muted">Avis du Comptable</label>
+          <select class="form-select form-select-sm avis-decision-select" data-idx="${i}">
+            <option value="favorable" selected>Favorable</option>
+            <option value="reserve">Sous réserve</option>
+          </select>
+        </div>
+        <div class="col-6">
+          <label class="form-label small mb-0 text-muted">A rembourser (USD)</label>
+          <input class="form-control form-control-sm" value="${_docFmt(m.solde_usd)}" disabled>
+        </div>
+      </div>
+    </div>`;
+  }).join('') || '<p class="text-muted small">Aucune mission.</p>';
+
+  document.getElementById('avisReviewBody').innerHTML = `
+    ${delaiInfo ? '<p class="small mb-3">' + delaiInfo + '</p>' : ''}
+    <p class="small text-muted mb-2">Vérifiez — et corrigez si besoin — les montants justifiés ci-dessous. L'acceptation de l'avis génère le document imprimable pour chaque missionnaire.</p>
+    ${rows}
+  `;
+
+  _avisReviewOkCallback = () => finalizeJustificatifs(reportId);
+  _avisReviewModal.show();
+}
+
+// Enregistre l'avis (favorable/sous réserve) et les montants éventuellement
+// corrigés, puis ouvre l'impression de l'avis pour chaque missionnaire.
+async function finalizeJustificatifs(reportId) {
+  const report = REPORTS_CACHE.find((r) => r.id === reportId);
+  if (!report) return;
+  const rm = report.missions || [];
+
+  const editedMissions = rm.map((m, i) => {
+    const input = document.querySelector(`.avis-justifie-input[data-idx="${i}"]`);
+    const select = document.querySelector(`.avis-decision-select[data-idx="${i}"]`);
+    return {
+      ...m,
+      total_usd: input ? Number(input.value || 0) : Number(m.total_usd || 0),
+      avis_comptable: select ? select.value : 'favorable'
+    };
+  });
+
+  try {
+    const session = getSession();
+    const now2 = new Date();
+    const month = String(now2.getMonth() + 1).padStart(2, '0');
+    const year  = now2.getFullYear();
+    const nowIso = now2.toISOString();
+    let fldNumber = report.fld_number;
+    if (!fldNumber) {
+      const { data: fldSeq, error: fldErr } = await db.rpc('next_fld_seq', { p_year: year, p_month: parseInt(month) });
+      if (fldErr) throw fldErr;
+      fldNumber = 'FLD ' + String(fldSeq).padStart(3, '0') + '/' + month + '/' + year;
+    }
+    const { error } = await db.from('reports').update({
+      justification_at: nowIso,
+      justification_by: session?.user?.email || session?.user || null,
+      fld_number: fldNumber,
+      missions: editedMissions
+    }).eq('id', reportId);
+    if (error) throw error;
+    _avisReviewModal.hide();
+    showToast('✓ Avis accepté — justificatifs enregistrés — ' + fldNumber);
+    await refreshDashboard();
+    const updated = { ...report, justification_at: nowIso, fld_number: fldNumber, missions: editedMissions };
+    openPrintWindow(buildAvisJustificatifsHtml(updated));
+  } catch (e) { console.error(e); showToast('Erreur lors de l\'enregistrement.'); }
 }
 
 async function enregistrerSolde(reportId) {
