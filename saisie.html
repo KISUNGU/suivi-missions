@@ -950,12 +950,11 @@ function generateAvisJustificatifsPDF(reportId) {
   }
 
   if (!window.jspdf || !window.jspdf.jsPDF) {
-    showToast("Bibliothèque PDF indisponible (jsPDF non chargé).");
+    showToast("Bibliothèque PDF indisponible (jsPDF non chargée).");
     return;
   }
 
   const { jsPDF } = window.jspdf;
-  const province = report.province_label || report.province || "";
   const dateActuelle = new Date().toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "2-digit",
@@ -1013,111 +1012,65 @@ function generateAvisJustificatifsPDF(reportId) {
     y += 12;
 
     // ─────────────────────────────────────────────
-    // INFORMATIONS MISSIONNAIRE
+    // INFORMATIONS
     // ─────────────────────────────────────────────
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
 
-    doc.text(`Justification sur la mission : ${m.nature || "Mission"}`, margin, y);
+    doc.text(`Justificatifs présentés par : ${m.missionnaire_nom || ""}`, margin, y);
     y += 7;
 
-    doc.text(`Missionnaire : ${m.missionnaire_nom || ""}`, margin, y);
+    doc.text(`Fonction : ${m.fonction || ""}`, margin, y);
     y += 7;
 
-    doc.text(`Accompagné de : ${m.accompagne || ""}`, margin, y);
+    doc.text(`Direction : ${m.direction || ""}`, margin, y);
+    y += 7;
+
+    doc.text(`Motif : ${m.motif || m.nature || ""}`, margin, y);
+    y += 7;
+
+    doc.text(`Financement : PNDA`, margin, y);
     y += 10;
 
-    // ─────────────────────────────────────────────
-    // TABLEAU PRINCIPAL (MISSION A KWILU)
-    // ─────────────────────────────────────────────
-    doc.autoTable({
-      startY: y,
-      head: [
-        [
-          "MISSION A KWILU",
-          "TAUX",
-          "Jours prévus",
-          "Jours réalisés",
-          "Pers.",
-          "Per diem prévus",
-          "Montant payé",
-          "Réalisés",
-          "Écart",
-        ],
-      ],
-      body: [
-        [
-          "Jour de voyage",
-          fmtCur(m.taux || 141),
-          m.jours_prevus_voyage || 1,
-          m.jours_realises_voyage || 1,
-          1,
-          "",
-          "",
-          "",
-          "",
-        ],
-        [
-          "Luiza",
-          fmtCur(m.taux || 141),
-          m.jours_prevus || 4,
-          m.jours_realises || 4,
-          1,
-          fmtCur(m.per_diem_prevus || 564),
-          fmtCur(m.montant_paye || 0),
-          fmtCur(m.realises || 0),
-          fmtCur(m.ecart || 0),
-        ],
-      ],
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [230, 230, 230] },
-    });
+    // Montants
+    doc.text(`Montant de la provision à justifier : ${fmtCur(m.provision || 0)}`, margin, y);
+    y += 7;
 
-    y = doc.lastAutoTable.finalY + 10;
+    doc.text(`Montant des justificatifs présentés : ${fmtCur(m.justificatifs || 0)}`, margin, y);
+    y += 12;
 
     // ─────────────────────────────────────────────
-    // FRAIS À JUSTIFIER
+    // AVIS
     // ─────────────────────────────────────────────
     doc.setFont("helvetica", "bold");
-    doc.text("FRAIS À JUSTIFIER (TRANSPORT LOCAL, ETC.)", margin, y);
-    y += 5;
-
-    doc.autoTable({
-      startY: y,
-      head: [["Libellé", "Montant"]],
-      body: [
-        ["Carburant", fmtCur(m.frais?.carburant || 0)],
-        ["Pelle", fmtCur(m.frais?.pelle || 0)],
-        ["Manutention", fmtCur(m.frais?.manutention || 0)],
-        ["Sous-total", fmtCur(m.frais_total || 0)],
-      ],
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [240, 240, 240] },
-    });
-
-    y = doc.lastAutoTable.finalY + 10;
-
-    // ─────────────────────────────────────────────
-    // MONTANT TOTAL JUSTIFIER
-    // ─────────────────────────────────────────────
-    doc.setFont("helvetica", "bold");
-    doc.text("Montant total justifier :", margin, y);
+    doc.text("Avis", margin, y);
+    y += 8;
 
     doc.setFont("helvetica", "normal");
-    doc.text(fmtCur(m.per_diem_prevus || 0), margin + 60, y);
-    doc.text(fmtCur(m.montant_paye || 0), margin + 100, y);
-    doc.text(fmtCur(m.realises_total || 0), margin + 140, y);
-    doc.text(fmtCur(m.ecart_total || 0), margin + 180, y);
+    doc.text("Avis du Comptable", margin, y);
+    y += 7;
 
-    y += 15;
+    doc.text(
+      `Justificatifs valables pour montant : ${fmtCur(m.justificatifs_valides || 0)}`,
+      margin,
+      y
+    );
+    y += 7;
+
+    doc.text(`A rembourser à : ${m.missionnaire_nom || ""}`, margin, y);
+    y += 12;
 
     // ─────────────────────────────────────────────
-    // SIGNATURES
+    // CORRESPONDANCE
     // ─────────────────────────────────────────────
     doc.setFont("helvetica", "bold");
-    doc.text("Nom & Signature RAF", margin, y);
-    doc.text("Nom & Signature Comptable", pageWidth / 2, y);
-    doc.text("Nom & Signature Missionnaire", pageWidth - margin, y, {
+    doc.text("Correspondance", margin, y);
+    y += 12;
+
+    // Signatures
+    doc.setFont("helvetica", "normal");
+    doc.text("Nom & Signature", margin, y);
+    doc.text("Signature du Resp. Financier", pageWidth - margin, y, {
       align: "right",
     });
 
