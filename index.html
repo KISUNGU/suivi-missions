@@ -2003,6 +2003,11 @@ th{background:#e8e8e8;text-align:center}
 .nb{border:none!important} .tc{text-align:center} .tr{text-align:right} .bold{font-weight:bold}
 .bg{background:#f0f0f0} .fline{display:inline-block;border-bottom:1px solid #000;min-width:120px}
 .sig-line{border-bottom:1px solid #000;height:48px;margin:5px auto;width:130px}
+.avis-field{display:flex;gap:8px;margin:6px 0;font-size:10.5pt}
+.avis-field .avis-label{font-weight:bold;min-width:200px}
+.avis-field .avis-value{flex:1;border-bottom:1px solid #000;min-height:14px}
+.avis-amount-row{display:flex;justify-content:space-between;align-items:center;max-width:440px;margin:10px 0;font-size:10.5pt}
+.avis-box{border:2px solid #000;padding:4px 12px;min-width:110px;text-align:right;font-weight:bold}
 @page{size:A4;margin:1.5cm} @media print{body{padding:0}}</style>`;
 }
 
@@ -2114,96 +2119,13 @@ ${pages}
 </body></html>`;
 }
 
-// Construit une page "Avis sur justificatifs provision" (annexe détaillée)
-// pour UN missionnaire donné — même principe qu'une page de bordereau.
-function buildJustificationMissionPageHtml(report, m, rm, isLast) {
-  const province = (report.meta?.province_label || report.meta?.province || '').toUpperCase();
-  const objet = m.nature || '';
-  const dateDepart = _docDate(m.date_debut);
-  const dateRetour = _docDate(m.date_fin);
-  const num = report.fld_number || report.liquidation_number || '___/___/____';
-  const nomM = m.missionnaire_nom || resolveMissionnaireName(report);
-  const selfLabel = [m.missionnaire_nom, m.missionnaire_titre].filter(Boolean).join(' — ');
-  const accompNames = _accompNames(rm).filter((n) => n !== selfLabel);
-
-  const prev  = Number(m.montant_usd || 0);
-  const paye  = Number(m.avance_usd || 0);
-  const real  = Number(m.total_usd || 0);
-  const ecart = real - paye;
-
-  const lbl = escapeHtml(m.territoire_label || m.territoire_name || '—');
-  const rows = `<tr><td>Jour de voyage</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tc">1</td><td class="tc">1</td><td class="tc">1</td><td class="tr"></td><td class="tr"></td><td class="tr"></td><td class="tr"></td></tr>
-    <tr><td>${lbl}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${m.nuitees||0}</td><td class="tc">1</td><td class="tr">${_docFmt(prev)}</td><td class="tr">${_docFmt(paye)}</td><td class="tr">${_docFmt(real)}</td><td class="tr">${_docFmt(ecart)}</td></tr>`;
-
-  const fjItems = (Array.isArray(m.autres_frais_details) ? m.autres_frais_details : [])
-    .filter((d) => (d.libelle || '').trim() || Number(d.montant || 0) > 0);
-  const totFJ = fjItems.reduce((s, d) => s + Number(d.montant || 0), 0);
-  const fjRows = fjItems.length
-    ? fjItems.map((d) => `<tr><td>${escapeHtml(d.libelle || 'Frais')}</td><td colspan="6"></td><td class="tr">${_docFmt(d.montant)}</td><td></td></tr>`).join('')
-    : '<tr><td colspan="9" class="tc">Aucun frais à justifier</td></tr>';
-
-  const totJustifieRealise = real + totFJ;
-  const totJustifieEcart   = totJustifieRealise - paye;
-
-  return `<div class="justif-page"${isLast ? '' : ' style="page-break-after:always"'}>
-<div style="text-align:center;font-size:9pt;line-height:1.5;margin-bottom:8px">
-  République Démocratique du Congo &nbsp;•&nbsp; MINISTÈRE DE L'AGRICULTURE<br>
-  <strong>PROGRAMME NATIONAL DE DÉVELOPPEMENT AGRICOLE &laquo;PNDA&raquo;</strong><br>
-  Unité Nationale de Coordination du Projet
-</div>
-<h1>AVIS SUR JUSTIFICATIFS PROVISION N° ${escapeHtml(num)}</h1>
-<p style="margin:3px 0"><strong>Justification sur la mission</strong>&nbsp;: ${escapeHtml(objet)}</p>
-<p style="margin:3px 0 10px">Monsieur <strong>${escapeHtml(nomM)}</strong>${accompNames.length ? ' — Accompagné de : <em>' + escapeHtml(accompNames.join('; ')) + '</em>' : ''}</p>
-<table>
-  <thead>
-    <tr>
-      <th rowspan="2" style="width:18%">MISSION A<br>${escapeHtml(province)}</th>
-      <th rowspan="2">TAUX</th>
-      <th colspan="2">NBRE DE JOURS</th>
-      <th rowspan="2">NBRE<br>PERS.</th>
-      <th rowspan="2">PER DIEM<br>PRÉVUS</th>
-      <th rowspan="2">MONTANT<br>PAYÉ</th>
-      <th rowspan="2">RÉALISÉS</th>
-      <th rowspan="2">ÉCART</th>
-    </tr>
-    <tr><th>PRÉVUS</th><th>RÉALISÉS</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>Date départ</td><td class="tc" colspan="8">${escapeHtml(dateDepart)}</td></tr>
-    <tr><td>Date retour</td><td class="tc" colspan="8">${escapeHtml(dateRetour)}</td></tr>
-    ${rows}
-    <tr><td class="bold" colspan="9">FRAIS À JUSTIFIER (TRANSPORT LOCAL, ETC.)</td></tr>
-    ${fjRows}
-    <tr class="bold bg"><td colspan="8">S/Total 2</td><td class="tr">${_docFmt(totFJ)}</td></tr>
-    <tr class="bold bg"><td colspan="5">Montant total justifier</td><td class="tr">${_docFmt(prev)}</td><td class="tr">${_docFmt(paye)}</td><td class="tr">${_docFmt(totJustifieRealise)}</td><td class="tr">${_docFmt(totJustifieEcart)}</td></tr>
-  </tbody>
-</table>
-</div>`;
-}
-
-// Assemble l'annexe complète : une page par missionnaire, imprimées à la
-// suite dans une seule fenêtre (même principe que buildBordereauHtml).
-function buildJustificationMissionHtml(report) {
-  const rm = report.missions || [];
-  const num = report.fld_number || report.liquidation_number || '___/___/____';
-  const pages = rm.length
-    ? rm.map((m, i) => buildJustificationMissionPageHtml(report, m, rm, i === rm.length - 1)).join('')
-    : buildJustificationMissionPageHtml(report, {}, [], true);
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Avis sur justificatifs provision N° ${escapeHtml(num)}</title>${_baseStyle()}</head><body>
-${pages}
-</body></html>`;
-}
-
-// Construit une page "AVIS SUR JUSTIFICATIFS PROVISION" (notice officielle,
-// avec signatures) pour UN missionnaire donné — mêmes montants que sur son
+// Construit une page "AVIS SUR JUSTIFICATIFS PROVISION" (formulaire simple,
+// sans tableau) pour UN missionnaire donné — mêmes montants que sur son
 // propre bordereau de liquidation.
 function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   const nom      = m.missionnaire_nom || resolveMissionnaireName(report);
-  const selfLabel = [m.missionnaire_nom, m.missionnaire_titre].filter(Boolean).join(' — ');
-  const accompNames = _accompNames(rm).filter((n) => n !== selfLabel);
   const province = report.meta?.province_label || report.meta?.province || '';
   const num      = report.fld_number || '___/___/____';
-  const dateJustif = _docDate(report.justification_at);
   const motif    = m.nature || '';
 
   const totProvision = Number(m.avance_usd || 0);
@@ -2211,37 +2133,35 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   const solde        = Number(m.solde_usd || 0);
 
   return `<div class="avis-page"${isLast ? '' : ' style="page-break-after:always"'}>
-<div style="text-align:center;font-size:9pt;line-height:1.6;margin-bottom:10px">
-  Programme National de Développement Agricole<br>
-  Administration &amp; Finances &mdash; Comptabilité
-</div>
 <h1>AVIS SUR JUSTIFICATIFS PROVISION N° ${escapeHtml(num)}</h1>
-<table style="border:none;margin:10px 0">
-  <tr><td class="nb" style="width:45%;padding:3px 0"><strong>JUSTIFICATIFS PRÉSENTÉS PAR&nbsp;:</strong></td><td class="nb">${escapeHtml(nom)}</td></tr>
-  ${accompNames.length ? `<tr><td class="nb" style="padding:3px 0"><strong>ACCOMPAGNÉ DE&nbsp;:</strong></td><td class="nb" style="font-size:8pt">${escapeHtml(accompNames.join('; '))}</td></tr>` : ''}
-  <tr><td class="nb" style="padding:3px 0"><strong>FONCTION&nbsp;:</strong></td><td class="nb"><span class="fline" style="min-width:200px">${escapeHtml(m.missionnaire_titre || '')}</span></td></tr>
-  <tr><td class="nb" style="padding:3px 0"><strong>DIRECTION&nbsp;:</strong></td><td class="nb"><span class="fline">${escapeHtml(province)}</span></td></tr>
-  <tr><td class="nb" style="padding:3px 0"><strong>MOTIF&nbsp;:</strong></td><td class="nb"><span style="border-bottom:1px solid #000;display:inline-block;min-width:260px">${escapeHtml(motif)}</span></td></tr>
-  <tr><td class="nb" style="padding:3px 0"><strong>FINANCEMENT&nbsp;:</strong></td><td class="nb">PNDA</td></tr>
-</table>
-<table style="margin:10px 0;width:85%">
-  <tr><td style="padding:4px"><strong>MONTANT DE LA PROVISION RESTANT A JUSTIFIER&nbsp;:</strong></td><td class="tr bold" style="border:2px solid #000;padding:4px 8px;min-width:110px">${_docFmt(totProvision)}</td></tr>
-  <tr><td style="padding:4px"><strong>MONTANT DES JUSTIFICATIFS PRÉSENTÉS&nbsp;:</strong></td><td class="tr bold" style="border:2px solid #000;padding:4px 8px">${_docFmt(totJustifie)}</td></tr>
-</table>
-<div style="border-left:3px solid #000;padding:6px 10px;margin:10px 0">
-  <p style="margin:4px 0"><strong>AVIS du Comptable</strong></p>
-  <p style="margin:4px 0">Justificatifs valables pour[montant]&nbsp;: <span style="border:2px solid #000;display:inline-block;min-width:100px;text-align:right;padding:2px 6px">${_docFmt(totJustifie)}</span></p>
-  <p style="margin:4px 0"><strong>À REMBOURSER A&nbsp;:</strong> ${escapeHtml(nom)} &nbsp;&nbsp; <span style="border:2px solid #000;display:inline-block;min-width:100px;text-align:right;padding:2px 6px">${_docFmt(solde)}</span></p>
-</div>
-<div style="display:flex;justify-content:space-between;margin-top:30px">
-  <div style="text-align:center;min-width:140px">
+
+<div class="avis-field"><span class="avis-label">Justificatifs présentés par&nbsp;:</span><span class="avis-value">${escapeHtml(nom)}</span></div>
+<div class="avis-field"><span class="avis-label">Fonction&nbsp;:</span><span class="avis-value">${escapeHtml(m.missionnaire_titre || '')}</span></div>
+<div class="avis-field"><span class="avis-label">Direction&nbsp;:</span><span class="avis-value">${escapeHtml(province)}</span></div>
+<div class="avis-field"><span class="avis-label">Motif&nbsp;:</span><span class="avis-value">${escapeHtml(motif)}</span></div>
+<div class="avis-field"><span class="avis-label">Financement&nbsp;:</span><span class="avis-value">PNDA</span></div>
+
+<div class="avis-amount-row"><span>Montant de la provision à justifier&nbsp;:</span><span class="avis-box">${_docFmt(totProvision)}</span></div>
+<div class="avis-amount-row"><span>Montant des justificatifs présentés&nbsp;:</span><span class="avis-box">${_docFmt(totJustifie)}</span></div>
+
+<hr style="border:none;border-top:1px solid #000;margin:18px 0">
+
+<p style="margin:4px 0"><strong>Avis</strong></p>
+<p style="margin:4px 0"><strong>Avis du Comptable</strong></p>
+<div class="avis-amount-row"><span>Justificatifs valables pour (montant)&nbsp;:</span><span class="avis-box">${_docFmt(totJustifie)}</span></div>
+<div class="avis-amount-row"><span>A rembourser à&nbsp;:</span><span class="avis-box">${_docFmt(solde)}</span></div>
+<p style="margin:6px 0 0">${escapeHtml(nom)}</p>
+
+<p style="margin:26px 0 4px"><em>Correspondance</em></p>
+
+<div style="display:flex;justify-content:space-between;margin-top:20px">
+  <div style="text-align:center;min-width:160px">
     <div class="sig-line"></div>
-    <p style="margin:3px 0"><strong>Nom &amp; Signature<br>COMPTABLE</strong></p>
-    <p style="margin:3px 0">Date&nbsp;: ${escapeHtml(dateJustif)}</p>
+    <p style="margin:3px 0"><strong>Nom &amp; Signature</strong></p>
   </div>
-  <div style="text-align:center;min-width:140px">
+  <div style="text-align:center;min-width:160px">
     <div class="sig-line"></div>
-    <p style="margin:3px 0"><strong>Signature du RAF</strong></p>
+    <p style="margin:3px 0"><strong>Signature du Resp. Financier</strong></p>
   </div>
 </div>
 </div>`;
@@ -2312,8 +2232,7 @@ function reprintBordereau(reportId) {
 function reprintJustificationDocs(reportId) {
   const report = REPORTS_CACHE.find(r => r.id === reportId);
   if (!report) return;
-  openPrintWindow(buildJustificationMissionHtml(report));
-  setTimeout(() => openPrintWindow(buildAvisJustificatifsHtml(report)), 800);
+  openPrintWindow(buildAvisJustificatifsHtml(report));
 }
 
 // ── JUSTIFICATIFS / CLÔTURE ──────────────────────────────────────────────
@@ -2416,8 +2335,7 @@ async function cloturerJustificatifs(reportId) {
         showToast('✓ Justificatifs enregistrés — ' + fldNumber);
         await refreshDashboard();
         const updated = { ...report, justification_at: nowIso, fld_number: fldNumber };
-        openPrintWindow(buildJustificationMissionHtml(updated));
-        setTimeout(() => openPrintWindow(buildAvisJustificatifsHtml(updated)), 800);
+        openPrintWindow(buildAvisJustificatifsHtml(updated));
       } catch (e) { console.error(e); showToast('Erreur lors de l\'enregistrement.'); }
     },
     'Justificatifs reçus', 'Enregistrer', 'btn-info'
