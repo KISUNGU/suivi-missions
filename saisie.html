@@ -335,8 +335,6 @@ async function loadProvincesAllowed() {
     allowed = allowed.filter((p) => SESSION.provinces.includes(p.name));
   }
   PROVINCES_ALLOWED = allowed;
-  const input = document.getElementById('f-province');
-  if (!input.value) input.value = allowed[0]?.label || allowed[0]?.name || '';
   const datalist = document.getElementById('province-datalist');
   if (datalist) datalist.innerHTML = allowed.map((p) => `<option value="${esc(p.label || p.name)}">`).join('');
 }
@@ -808,13 +806,11 @@ async function submitReport() {
   showFormError('');
 
   const objet = document.getElementById('f-objet').value.trim();
-  const territoire = document.getElementById('f-territoire').value;
   const trimestre = document.getElementById('f-trimestre').value;
   const annee = parseInt(document.getElementById('f-annee').value) || new Date().getFullYear();
   const typedProvince = document.getElementById('f-province').value.trim();
 
   if (!objet) { showFormError("Veuillez renseigner l'objet de la mission."); return; }
-  if (!territoire) { showFormError('Veuillez choisir un territoire.'); return; }
 
   const provinceMatch = matchProvince(typedProvince);
   if (!provinceMatch) { showFormError('Province invalide : veuillez sélectionner une province de la liste proposée.'); return; }
