@@ -1656,10 +1656,17 @@ function buildGeneralPanel(reports = getFilteredReports()) {
   panel.innerHTML = `
     <div class="panel-grid">
       <div class="card">
-        <div class="card-header py-3"><h6><i class="bi bi-bar-chart me-2"></i>Consolidation par province</h6></div>
+        <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h6 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Consolidation par province</h6>
+          <div class="d-flex gap-1">
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="printHtmlTable('table-consolidation-province','Consolidation par province')" title="Imprimer"><i class="bi bi-printer-fill"></i></button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="shareHtmlTable('table-consolidation-province','Consolidation par province')" title="Partager"><i class="bi bi-share-fill"></i></button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportHtmlTableToCSV('table-consolidation-province','Consolidation_par_province.csv')" title="Exporter"><i class="bi bi-download"></i></button>
+          </div>
+        </div>
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover table-sm mb-0">
+            <table class="table table-hover table-sm mb-0" id="table-consolidation-province">
               <thead><tr><th>Province</th><th>Rapports</th><th>Missions</th><th>Montant</th><th>Autres frais</th><th>Total USD</th><th>Solde USD</th></tr></thead>
               <tbody>${provinceRows.length ? provinceRows.map((row) => `
                 <tr><td>${escapeHtml(row.label)}</td><td>${row.reports}</td><td>${row.missions}</td>
@@ -1673,10 +1680,17 @@ function buildGeneralPanel(reports = getFilteredReports()) {
         </div>
       </div>
       <div class="card">
-        <div class="card-header py-3"><h6><i class="bi bi-clock-history me-2"></i>Derniers rapports</h6></div>
+        <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Derniers rapports</h6>
+          <div class="d-flex gap-1">
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="printHtmlTable('table-derniers-rapports','Derniers rapports')" title="Imprimer"><i class="bi bi-printer-fill"></i></button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="shareHtmlTable('table-derniers-rapports','Derniers rapports')" title="Partager"><i class="bi bi-share-fill"></i></button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportHtmlTableToCSV('table-derniers-rapports','Derniers_rapports.csv')" title="Exporter"><i class="bi bi-download"></i></button>
+          </div>
+        </div>
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover table-sm mb-0">
+            <table class="table table-hover table-sm mb-0" id="table-derniers-rapports">
               <thead>
                 <tr>
                   <th>Date</th>
@@ -3005,6 +3019,66 @@ function formatDate(value) {
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ─── ACTIONS TABLEAU (Imprimer / Partager / Exporter) ─────────────────────────
+function tableRowsToArray(tableId) {
+  const table = document.getElementById(tableId);
+  if (!table) return [];
+  return Array.from(table.querySelectorAll('tr')).map((tr) =>
+    Array.from(tr.querySelectorAll('th,td')).map((cell) => cell.textContent.trim().replace(/\s+/g, ' '))
+  );
+}
+
+function printHtmlTable(tableId, title) {
+  const table = document.getElementById(tableId);
+  if (!table) { showToast('Tableau introuvable.'); return; }
+  const w = window.open('', '_blank', 'width=1000,height=700,scrollbars=yes');
+  if (!w) { showToast('⚠ Autorisez les pop-ups pour imprimer.'); return; }
+  w.document.write(`<!DOCTYPE html><html><head><title>${escapeHtml(title)}</title>
+    <style>
+      body{font-family:Arial,sans-serif;padding:20px;color:#000}
+      h4{text-align:center;margin-bottom:16px}
+      table{border-collapse:collapse;width:100%;font-size:12px}
+      th,td{border:1px solid #333;padding:5px 8px}
+      th{background:#eee;text-align:left}
+      @page{size:A4 landscape;margin:1.2cm}
+    </style></head><body>
+    <h4>${escapeHtml(title)}</h4>
+    ${table.outerHTML}
+    </body></html>`);
+  w.document.close();
+  setTimeout(() => { w.focus(); w.print(); }, 400);
+}
+
+async function shareHtmlTable(tableId, title) {
+  const rows = tableRowsToArray(tableId);
+  if (!rows.length) { showToast('Aucune donnée à partager.'); return; }
+  const text = [title, '═'.repeat(title.length), ...rows.map((r) => r.join(' | '))].join('\n');
+  if (navigator.share) {
+    try { await navigator.share({ title, text }); return; } catch (_) { /* annulé ou non supporté */ }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('✓ Tableau copié dans le presse-papiers.');
+  } catch (_) {
+    showToast('Copie impossible : vérifiez les permissions du navigateur.');
+  }
+}
+
+function exportHtmlTableToCSV(tableId, filename) {
+  const rows = tableRowsToArray(tableId);
+  if (!rows.length) { showToast('Aucune donnée à exporter.'); return; }
+  const csv = rows.map((r) => r.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(';')).join('\r\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 </script>
 </body>
