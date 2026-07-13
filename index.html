@@ -1865,7 +1865,7 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
                             <td class="text-end">${formatCurrency(Number(m.avance_usd||0))}</td>
                             <td class="text-end">${formatCurrency(Number(m.solde_usd||0))}</td>
                             <td>${escapeHtml(m.section||'—')}</td>
-                            <td class="small">${escapeHtml(m.observation||'')}</td>
+                            <td class="small">${escapeHtml(buildObservationText(m))}</td>
                           </tr>`; }).join('')}</tbody>
                         </table>
                       </div>
@@ -2939,7 +2939,7 @@ function buildProvinceSheetRows(province, signatory = {}, reportsSource = getFil
       { value: Number(m.total_usd || 0), type: 'Number', style: 'currency' },
       { value: Number(m.avance_usd || 0), type: 'Number', style: 'currency' },
       { value: Number(m.solde_usd || 0), type: 'Number', style: 'currency' },
-      { value: m.observation || '', style: 'text' }
+      { value: buildObservationText(m), style: 'text' }
     ]),
     [], ...buildSignatureRows(signatory, 18)
   ];
@@ -2974,7 +2974,7 @@ function buildAllMissionsSheetRows(signatory = {}, reports = getFilteredReports(
       { value: Number(m.avance_usd || 0), type: 'Number', style: 'currency' },
       { value: Number(m.solde_usd || 0), type: 'Number', style: 'currency' },
       { value: getStatusLabel(m.__report.statut || 'activee').replace(/[⏳⚡✓↩]/g, '').trim(), style: 'text' },
-      { value: m.observation || '', style: 'text' }
+      { value: buildObservationText(m), style: 'text' }
     ]),
     [], ...buildSignatureRows(signatory, 22)
   ];
@@ -3033,6 +3033,17 @@ function xmlEscape(value) {
 // ─── UTILITIES ────────────────────────────────────────────────────────────────
 function formatCurrency(value) {
   return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
+}
+
+// Combine les libellés des "frais à justifier" (réunions, transport local, etc.)
+// saisis pour la mission avec la remarque libre, pour affichage dans la colonne
+// "Observation" (tableau comptable + exports Excel/CSV).
+function buildObservationText(m) {
+  const details = Array.isArray(m.autres_frais_details)
+    ? m.autres_frais_details.filter((d) => (d.libelle || '').trim() || Number(d.montant || 0) > 0)
+    : [];
+  const detailsText = details.map((d) => `${d.libelle || 'Frais'} (${formatCurrency(Number(d.montant || 0))})`).join(' ; ');
+  return [detailsText, (m.observation || '').trim()].filter(Boolean).join(' — ');
 }
 
 function formatDate(value) {
