@@ -159,13 +159,15 @@
       <div class="row g-3">
         <div class="col-md-3" id="province-select-wrap">
           <label class="form-label-sm">Province</label>
-          <input type="text" class="form-control form-control-sm" id="f-province" placeholder="Ex. : Kwilu" list="province-datalist" autocomplete="off">
-          <datalist id="province-datalist"></datalist>
+          <select class="form-select form-select-sm" id="f-province">
+            <option value="" disabled selected>-- Sélectionner --</option>
+          </select>
         </div>
         <div class="col-md-3">
           <label class="form-label-sm">Territoire <span class="text-muted fw-normal">(facultatif)</span></label>
-          <input type="text" class="form-control form-control-sm" id="f-territoire" placeholder="Ex. : Bulungu" list="territoire-datalist" autocomplete="off">
-          <datalist id="territoire-datalist"></datalist>
+          <select class="form-select form-select-sm" id="f-territoire">
+            <option value="">-- Aucun --</option>
+          </select>
         </div>
         <div class="col-md-6">
           <label class="form-label-sm">Objet de la mission</label>
@@ -336,8 +338,11 @@ async function loadProvincesAllowed() {
     allowed = allowed.filter((p) => SESSION.provinces.includes(p.name));
   }
   PROVINCES_ALLOWED = allowed;
-  const datalist = document.getElementById('province-datalist');
-  if (datalist) datalist.innerHTML = allowed.map((p) => `<option value="${esc(p.label || p.name)}">`).join('');
+  const select = document.getElementById('f-province');
+  if (select) {
+    select.innerHTML = '<option value="" disabled selected>-- Sélectionner --</option>' +
+      allowed.map((p) => `<option value="${esc(p.name)}">${esc(p.label || p.name)}</option>`).join('');
+  }
 }
 
 function getSelectedProvince() {
@@ -354,8 +359,11 @@ function matchProvince(typed) {
 async function loadAllTerritoires() {
   const { data } = await db.from('territoires').select('*').order('name');
   TERRITOIRES = data || [];
-  const datalist = document.getElementById('territoire-datalist');
-  if (datalist) datalist.innerHTML = TERRITOIRES.map((t) => `<option value="${esc(t.label || t.name)}">`).join('');
+  const select = document.getElementById('f-territoire');
+  if (select) {
+    select.innerHTML = '<option value="">-- Aucun --</option>' +
+      TERRITOIRES.map((t) => `<option value="${esc(t.name)}">${esc(t.label || t.name)}</option>`).join('');
+  }
 }
 
 // ─── GROUPES ──────────────────────────────────────────────────────────────────
@@ -1087,7 +1095,7 @@ async function editReport(id) {
   if (!r) return;
 
   document.getElementById('report-id-edit').value = r.id;
-  document.getElementById('f-province').value = r.province_label || r.province || '';
+  document.getElementById('f-province').value = r.province || '';
   document.getElementById('f-territoire').value = (r.missions && r.missions[0]?.territoire_name) || '';
   document.getElementById('f-objet').value = (r.missions && r.missions[0]?.nature) || '';
   document.getElementById('f-trimestre').value = r.trimestre || 'T1';
