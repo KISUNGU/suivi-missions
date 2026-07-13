@@ -22,7 +22,28 @@
 --
 -- À exécuter après migration_v10_supabase_auth.sql (et migration_v19) dans
 -- l'éditeur SQL Supabase.
+--
+-- NOTE : ce script recrée aussi (via create or replace) les fonctions
+-- utilitaires current_profile_role/current_profile_provinces/is_super_admin
+-- normalement déjà créées par migration_v10, au cas où ce projet Supabase ne
+-- les aurait pas (erreur "function public.is_super_admin() n'existe pas").
+-- Recréer une fonction déjà existante et identique est sans danger.
 -- ════════════════════════════════════════════════════════════════════════════
+
+create or replace function public.current_profile_role()
+returns text language sql security definer set search_path = public stable as $$
+  select role from public.profiles where id = auth.uid()
+$$;
+
+create or replace function public.current_profile_provinces()
+returns text[] language sql security definer set search_path = public stable as $$
+  select provinces from public.profiles where id = auth.uid()
+$$;
+
+create or replace function public.is_super_admin()
+returns boolean language sql security definer set search_path = public stable as $$
+  select exists(select 1 from public.profiles where id = auth.uid() and role = 'super_admin')
+$$;
 
 create or replace function public.has_province_access(p_province text)
 returns boolean language sql security definer set search_path = public stable as $$
