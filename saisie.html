@@ -159,15 +159,17 @@
       <div class="row g-3">
         <div class="col-md-3" id="province-select-wrap">
           <label class="form-label-sm">Province</label>
-          <select class="form-select form-select-sm" id="f-province">
+          <select class="form-select form-select-sm" id="f-province" onchange="onProvinceChange()">
             <option value="" disabled selected>-- Sélectionner --</option>
           </select>
+          <input type="text" class="form-control form-control-sm mt-2 d-none" id="f-province-autre" placeholder="Précisez la province" autocomplete="off">
         </div>
         <div class="col-md-3">
           <label class="form-label-sm">Territoire <span class="text-muted fw-normal">(facultatif)</span></label>
           <select class="form-select form-select-sm" id="f-territoire">
             <option value="">-- Aucun --</option>
           </select>
+          <input type="text" class="form-control form-control-sm mt-2 d-none" id="f-territoire-autre" placeholder="Précisez le territoire" autocomplete="off">
         </div>
         <div class="col-md-6">
           <label class="form-label-sm">Objet de la mission</label>
@@ -331,17 +333,26 @@ async function initialize() {
 }
 
 // ─── Provinces & Territoires ─────────────────────────────────────────────────
+const CORE_PROVINCES = ['UN', 'Kwilu', 'Kasaï', 'Kasaï Central'];
+const PROVINCE_LABEL_OVERRIDES = { UN: 'Kinshasa' };
+const AUTRE_VALUE = '__autre__';
+
 async function loadProvincesAllowed() {
   const { data: allProvinces } = await db.from('provinces').select('*').order('code');
   let allowed = allProvinces || [];
   if (SESSION.role !== 'super_admin' && Array.isArray(SESSION.provinces) && SESSION.provinces.length) {
     allowed = allowed.filter((p) => SESSION.provinces.includes(p.name));
   }
-  PROVINCES_ALLOWED = allowed;
+  // Seules les 4 provinces de référence sont proposées telles quelles, dans un ordre fixe.
+  const core = CORE_PROVINCES
+    .map((name) => allowed.find((p) => p.name === name))
+    .filter(Boolean);
+  PROVINCES_ALLOWED = core;
   const select = document.getElementById('f-province');
   if (select) {
     select.innerHTML = '<option value="" disabled selected>-- Sélectionner --</option>' +
-      allowed.map((p) => `<option value="${esc(p.name)}">${esc(p.label || p.name)}</option>`).join('');
+      core.map((p) => `<option value="${esc(p.name)}">${esc(PROVINCE_LABEL_OVERRIDES[p.name] || p.label || p.name)}</option>`).join('') +
+      `<option value="${AUTRE_VALUE}">Autre</option>`;
   }
 }
 
@@ -356,14 +367,42 @@ function matchProvince(typed) {
   return PROVINCES_ALLOWED.find((p) => norm(p.name) === t || norm(p.label) === t) || null;
 }
 
+function isProvinceAutre() {
+  return document.getElementById('f-province').value === AUTRE_VALUE;
+}
+
+function fillTerritoireSelect(provinceName) {
+  const select = document.getElementById('f-territoire');
+  if (!select) return;
+  const list = TERRITOIRES.filter((t) => t.province_name === provinceName);
+  select.innerHTML = '<option value="">-- Aucun --</option>' +
+    list.map((t) => `<option value="${esc(t.name)}">${esc(t.label || t.name)}</option>`).join('');
+}
+
+function onProvinceChange() {
+  const val = document.getElementById('f-province').value;
+  const provinceAutre = document.getElementById('f-province-autre');
+  const terrSelect = document.getElementById('f-territoire');
+  const terrAutre = document.getElementById('f-territoire-autre');
+
+  if (val === AUTRE_VALUE) {
+    provinceAutre.classList.remove('d-none');
+    terrSelect.classList.add('d-none');
+    terrSelect.innerHTML = '<option value="">-- Aucun --</option>';
+    terrAutre.classList.remove('d-none');
+  } else {
+    provinceAutre.classList.add('d-none');
+    provinceAutre.value = '';
+    terrAutre.classList.add('d-none');
+    terrAutre.value = '';
+    terrSelect.classList.remove('d-none');
+    fillTerritoireSelect(val);
+  }
+}
+
 async function loadAllTerritoires() {
   const { data } = await db.from('territoires').select('*').order('name');
   TERRITOIRES = data || [];
-  const select = document.getElementById('f-territoire');
-  if (select) {
-    select.innerHTML = '<option value="">-- Aucun --</option>' +
-      TERRITOIRES.map((t) => `<option value="${esc(t.name)}">${esc(t.label || t.name)}</option>`).join('');
-  }
 }
 
 // ─── GROUPES ──────────────────────────────────────────────────────────────────
@@ -711,7 +750,9 @@ function onDateChange(rowId) {
 // ─── COLLECT & SOUMISSION ─────────────────────────────────────────────────────
 function collectMissions() {
   const objet = document.getElementById('f-objet').value.trim();
-  const territoireName = document.getElementById('f-territoire').value.trim();
+  const territoireName = (isProvinceAutre()
+    ? document.getElementById('f-territoire-autre').value
+    : document.getElementById('f-territoire').value).trim();
   const territoireNorm = territoireName.toLowerCase();
   const territoire = TERRITOIRES.find((t) => (t.name || '').toLowerCase() === territoireNorm || (t.label || '').toLowerCase() === territoireNorm);
 
@@ -798,7 +839,11 @@ function resetForm() {
   showFormError('');
   document.getElementById('report-id-edit').value = '';
   document.getElementById('f-objet').value = '';
-  document.getElementById('f-territoire').value = '';
+  if (isProvinceAutre()) {
+    document.getElementById('f-territoire-autre').value = '';
+  } else {
+    document.getElementById('f-territoire').value = '';
+  }
   document.getElementById('f-trimestre').value = 'T1';
   document.getElementById('f-annee').value = new Date().getFullYear();
   document.getElementById('mission-rows').innerHTML = '';
@@ -815,12 +860,19 @@ async function submitReport() {
   const objet = document.getElementById('f-objet').value.trim();
   const trimestre = document.getElementById('f-trimestre').value;
   const annee = parseInt(document.getElementById('f-annee').value) || new Date().getFullYear();
-  const typedProvince = document.getElementById('f-province').value.trim();
 
   if (!objet) { showFormError("Veuillez renseigner l'objet de la mission."); return; }
 
-  const provinceMatch = matchProvince(typedProvince);
-  if (!provinceMatch) { showFormError('Province invalide : veuillez sélectionner une province de la liste proposée.'); return; }
+  let provinceMatch;
+  if (isProvinceAutre()) {
+    const typedProvince = document.getElementById('f-province-autre').value.trim();
+    if (!typedProvince) { showFormError('Veuillez préciser le nom de la province.'); return; }
+    provinceMatch = { name: typedProvince, label: typedProvince, code: null };
+  } else {
+    const typedProvince = document.getElementById('f-province').value.trim();
+    provinceMatch = matchProvince(typedProvince);
+    if (!provinceMatch) { showFormError('Province invalide : veuillez sélectionner une province de la liste proposée.'); return; }
+  }
 
   const missions = collectMissions();
   if (!missions.length) { showFormError('Veuillez ajouter au moins un missionnaire.'); return; }
@@ -1095,8 +1147,21 @@ async function editReport(id) {
   if (!r) return;
 
   document.getElementById('report-id-edit').value = r.id;
-  document.getElementById('f-province').value = r.province || '';
-  document.getElementById('f-territoire').value = (r.missions && r.missions[0]?.territoire_name) || '';
+  const provinceSelect = document.getElementById('f-province');
+  const isCoreProvince = Array.from(provinceSelect.options).some((o) => o.value === r.province);
+  const territoireName = (r.missions && r.missions[0]?.territoire_name) || '';
+  if (isCoreProvince) {
+    provinceSelect.value = r.province || '';
+  } else {
+    provinceSelect.value = AUTRE_VALUE;
+    document.getElementById('f-province-autre').value = r.province_label || r.province || '';
+  }
+  onProvinceChange();
+  if (isCoreProvince) {
+    document.getElementById('f-territoire').value = territoireName;
+  } else {
+    document.getElementById('f-territoire-autre').value = territoireName;
+  }
   document.getElementById('f-objet').value = (r.missions && r.missions[0]?.nature) || '';
   document.getElementById('f-trimestre').value = r.trimestre || 'T1';
   document.getElementById('f-annee').value = r.annee || new Date().getFullYear();
