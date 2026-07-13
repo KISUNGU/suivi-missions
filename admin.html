@@ -940,6 +940,15 @@ function getAdminProvinces(session) {
   return REFERENCE.provinces;
 }
 
+function isUncpComptableSession(session) {
+  return session?.role === 'comptable' && Array.isArray(session?.provinces) && session.provinces.includes('UN');
+}
+
+function isRafOrRnseReport(report) {
+  const rapporteurRole = report.meta?.role;
+  return rapporteurRole === 'admin' || rapporteurRole === 'super_admin';
+}
+
 function buildTabs() {
   const tabs = document.getElementById('tabs');
   tabs.innerHTML = '';
@@ -1182,7 +1191,10 @@ function getFilteredReports() {
     const reportDate = getReportDateValue(report);
     const reportStatut = report.statut || 'activee';
     
-    if (selectedProvince && provinceName !== selectedProvince) return false;
+    if (selectedProvince && provinceName !== selectedProvince) {
+      const bypass = selectedProvince === 'UN' && isUncpComptableSession(getSession()) && isRafOrRnseReport(report);
+      if (!bypass) return false;
+    }
     if (rapporteurFilter && !reporteur.includes(rapporteurFilter)) return false;
     if (startDate && reportDate && reportDate < startDate) return false;
     if (endDate && reportDate && reportDate > endDate) return false;
@@ -1271,7 +1283,14 @@ async function getStoredReports() {
     if (session?.role !== 'super_admin') {
       const userProvs = session?.provinces;
       if (Array.isArray(userProvs) && userProvs.length) {
-        query = query.in('province', userProvs);
+        if (session?.role === 'comptable' && userProvs.includes('UN')) {
+          // Le compte UNCP voit aussi les rapports élaborés par le RAF (admin)
+          // et le RNSE (super_admin), quelle que soit la province choisie.
+          const provList = userProvs.map((p) => `"${p}"`).join(',');
+          query = query.or(`province.in.(${provList}),rapporteur_role.in.(admin,super_admin)`);
+        } else {
+          query = query.in('province', userProvs);
+        }
       }
       // provinces NULL/vide (ex: admin, comptes UNCP historiques) => pas de filtre
       // supplémentaire côté client ; les RLS Supabase bornent déjà l'accès réel.
@@ -1488,7 +1507,12 @@ function buildGeneralPanel(reports = getFilteredReports()) {
 function buildProvincePanel(province, reportsSource = getFilteredReports()) {
   const session = getSession();
   const isSuperAdmin = session?.role === 'super_admin';
-  const reports = reportsSource.filter((report) => getReportProvinceName(report) === province.name);
+  const isUncpComptable = isUncpComptableSession(session);
+  const reports = reportsSource.filter((report) => {
+    if (getReportProvinceName(report) === province.name) return true;
+    if (province.name === 'UN' && isUncpComptable) return isRafOrRnseReport(report);
+    return false;
+  });
   const missions = reports.flatMap((report) => report.missions || []);
   const totalMontant = missions.reduce((s, m) => s + Number(m.montant_usd || 0), 0);
   const totalAutres  = missions.reduce((s, m) => s + Number(m.autres_frais_usd || 0), 0);
