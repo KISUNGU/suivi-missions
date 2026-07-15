@@ -2353,6 +2353,33 @@ document.getElementById('avisReviewAcceptBtn').addEventListener('click', () => {
   if (_avisReviewOkCallback) _avisReviewOkCallback();
 });
 
+// Retourne la liste détaillée des "frais à justifier" d'une mission (libellé +
+// montant déclaré). Si aucun détail n'a été saisi mais qu'un total existe (ex.
+// anciens rapports), on reconstitue une ligne unique "Autres frais" — même
+// logique que pour l'impression du bordereau/avis.
+function resolveAutresFraisDetails(m) {
+  const totAutres = Number(m.autres_frais_usd || 0);
+  return Array.isArray(m.autres_frais_details) && m.autres_frais_details.length
+    ? m.autres_frais_details.filter((d) => (d.libelle || '').trim() || Number(d.montant || 0) > 0)
+    : (totAutres > 0 ? [{ libelle: 'Autres frais', montant: totAutres }] : []);
+}
+
+// Recalcule le "Montant justifié" d'une mission à partir du montant de
+// mission (fixe) + la somme des frais à justifier retenus : pour chaque
+// ligne, si la case est cochée le montant déclaré est pris tel quel, sinon
+// c'est le montant corrigé saisi par le comptable qui est utilisé.
+function recalcAvisMontantJustifie(missionIdx, montantFixe) {
+  const items = document.querySelectorAll(`.avis-frais-check[data-idx="${missionIdx}"]`);
+  let sumFrais = 0;
+  items.forEach((chk) => {
+    const itemIdx = chk.dataset.itemIdx;
+    const amountInput = document.querySelector(`.avis-frais-montant[data-idx="${missionIdx}"][data-item-idx="${itemIdx}"]`);
+    sumFrais += Number(amountInput?.value || 0);
+  });
+  const totalInput = document.querySelector(`.avis-justifie-input[data-idx="${missionIdx}"]`);
+  if (totalInput) totalInput.value = (Number(montantFixe || 0) + sumFrais).toFixed(2);
+}
+
 // Ouvre la modale d'avis (favorable / sous réserve) permettant au comptable
 // de vérifier — et au besoin corriger — les montants justifiés avant que les
 // documents imprimables ne soient générés.
@@ -2380,6 +2407,15 @@ function openAvisReviewModal(reportId) {
 
   const rows = rm.map((m, i) => {
     const nom = m.missionnaire_nom || resolveMissionnaireName(report);
+    const details = resolveAutresFraisDetails(m);
+    const fraisRowsHtml = details.length
+      ? details.map((d, j) => `
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <input type="checkbox" class="form-check-input avis-frais-check" data-idx="${i}" data-item-idx="${j}" checked>
+          <span class="small flex-grow-1">${escapeHtml(d.libelle || 'Frais')}</span>
+          <input type="number" step="0.01" class="form-control form-control-sm avis-frais-montant" style="max-width:110px" data-idx="${i}" data-item-idx="${j}" value="${Number(d.montant || 0)}" disabled>
+        </div>`).join('')
+      : '<p class="small text-muted mb-1">Aucun frais à justifier.</p>';
     return `<div class="border rounded p-2 mb-2">
       <div class="fw-bold small mb-1">${escapeHtml(nom)}${m.missionnaire_titre ? ' — ' + escapeHtml(m.missionnaire_titre) : ''}</div>
       <div class="row g-2">
@@ -2389,8 +2425,12 @@ function openAvisReviewModal(reportId) {
         </div>
         <div class="col-6">
           <label class="form-label small mb-0 text-muted">Montant justifié (USD)</label>
-          <input type="number" step="0.01" class="form-control form-control-sm avis-justifie-input" data-idx="${i}" value="${Number(m.total_usd || 0)}">
+          <input type="number" step="0.01" class="form-control form-control-sm avis-justifie-input" data-idx="${i}" data-montant-fixe="${Number(m.montant_usd || 0)}" value="${Number(m.total_usd || 0)}" disabled>
         </div>
+      </div>
+      <div class="mt-2">
+        <label class="form-label small mb-1 text-muted">Frais à justifier — cocher pour valider le montant déclaré, décocher pour corriger</label>
+        ${fraisRowsHtml}
       </div>
       <div class="row g-2 mt-1">
         <div class="col-6">
@@ -2414,6 +2454,26 @@ function openAvisReviewModal(reportId) {
     ${rows}
   `;
 
+  // Cocher/décocher une ligne de frais active/désactive son champ montant
+  // (corrigible uniquement quand décochée) et recalcule le total justifié.
+  document.querySelectorAll('.avis-frais-check').forEach((chk) => {
+    chk.addEventListener('change', () => {
+      const idx = chk.dataset.idx;
+      const itemIdx = chk.dataset.itemIdx;
+      const amountInput = document.querySelector(`.avis-frais-montant[data-idx="${idx}"][data-item-idx="${itemIdx}"]`);
+      if (amountInput) amountInput.disabled = chk.checked;
+      const totalInput = document.querySelector(`.avis-justifie-input[data-idx="${idx}"]`);
+      recalcAvisMontantJustifie(idx, totalInput?.dataset.montantFixe);
+    });
+  });
+  document.querySelectorAll('.avis-frais-montant').forEach((inp) => {
+    inp.addEventListener('input', () => {
+      const idx = inp.dataset.idx;
+      const totalInput = document.querySelector(`.avis-justifie-input[data-idx="${idx}"]`);
+      recalcAvisMontantJustifie(idx, totalInput?.dataset.montantFixe);
+    });
+  });
+
   _avisReviewOkCallback = () => finalizeJustificatifs(reportId);
   _avisReviewModal.show();
 }
@@ -2426,11 +2486,21 @@ async function finalizeJustificatifs(reportId) {
   const rm = report.missions || [];
 
   const editedMissions = rm.map((m, i) => {
-    const input = document.querySelector(`.avis-justifie-input[data-idx="${i}"]`);
     const select = document.querySelector(`.avis-decision-select[data-idx="${i}"]`);
+    const details = resolveAutresFraisDetails(m);
+    const finalDetails = details.map((d, j) => {
+      const chk = document.querySelector(`.avis-frais-check[data-idx="${i}"][data-item-idx="${j}"]`);
+      const amountInput = document.querySelector(`.avis-frais-montant[data-idx="${i}"][data-item-idx="${j}"]`);
+      const montant = chk && !chk.checked ? Number(amountInput?.value || 0) : Number(d.montant || 0);
+      return { libelle: d.libelle || 'Frais', montant };
+    });
+    const autresFraisUsd = finalDetails.reduce((s, d) => s + Number(d.montant || 0), 0);
+    const montantUsd = Number(m.montant_usd || 0);
     return {
       ...m,
-      total_usd: input ? Number(input.value || 0) : Number(m.total_usd || 0),
+      autres_frais_details: finalDetails,
+      autres_frais_usd: autresFraisUsd,
+      total_usd: montantUsd + autresFraisUsd,
       avis_comptable: select ? select.value : 'favorable'
     };
   });
