@@ -539,6 +539,10 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
         <input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="0" onchange="setAvance80('${id}'); onGroupFieldChange('${id}')">
       </div>
       <div class="col-md-2">
+        <label class="form-label-sm">Frais du jour de voyage (USD)</label>
+        <input type="number" min="0" step="0.01" class="form-control form-control-sm f-frais-voyage" value="0" onchange="setAvance80('${id}'); onGroupFieldChange('${id}')">
+      </div>
+      <div class="col-md-2">
         <label class="form-label-sm">Avance versée</label>
         <div class="input-group input-group-sm">
           <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="0" onchange="recalcRow('${id}')">
@@ -584,6 +588,7 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
     wrap.querySelector('.f-date-fin').value = m.date_fin || '';
     wrap.querySelector('.f-nuitees').value = m.nuitees || 0;
     wrap.querySelector('.f-taux').value = m.taux_per_diem || 0;
+    wrap.querySelector('.f-frais-voyage').value = m.frais_voyage_usd || 0;
     wrap.querySelector('.f-avance').value = m.avance_usd || 0;
     wrap.querySelector('.f-observation').value = m.observation || '';
 
@@ -629,7 +634,7 @@ function removeAutresFraisItem(btn, rowId) {
 function copyGroupFieldsInto(wrap, groupId) {
   const source = document.querySelector(`.mission-row[data-group="${groupId}"]`);
   if (!source || source === wrap) return;
-  ['f-date-debut', 'f-date-fin', 'f-taux', 'f-nuitees'].forEach((cls) => {
+  ['f-date-debut', 'f-date-fin', 'f-taux', 'f-nuitees', 'f-frais-voyage'].forEach((cls) => {
     const srcEl = source.querySelector('.' + cls);
     const dstEl = wrap.querySelector('.' + cls);
     if (srcEl && dstEl) dstEl.value = srcEl.value;
@@ -656,7 +661,8 @@ function recalcRow(rowId) {
 
   const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
   const taux = Number(row.querySelector('.f-taux').value || 0);
-  const fm = nuitees * taux;
+  const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
+  const fm = nuitees * taux + fraisVoyage;
 
   const avance = Number(row.querySelector('.f-avance').value || 0);
   const total = fm + fj;
@@ -679,7 +685,8 @@ function setAvance80(rowId) {
 
   const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
   const taux = Number(row.querySelector('.f-taux').value || 0);
-  const fm = nuitees * taux;
+  const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
+  const fm = nuitees * taux + fraisVoyage;
 
   const avance = Math.round(fm * 0.8 * 100) / 100;
   row.querySelector('.f-avance').value = avance.toFixed(2);
@@ -692,9 +699,10 @@ function recalcTotals() {
   document.querySelectorAll('.mission-row').forEach(row => {
     const nuitees = Number(row.querySelector('.f-nuitees')?.value || 0);
     const taux = Number(row.querySelector('.f-taux')?.value || 0);
+    const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
     const fj = Number(row.querySelector('.f-autres')?.value || 0);
     const avance = Number(row.querySelector('.f-avance')?.value || 0);
-    const fm = nuitees * taux;
+    const fm = nuitees * taux + fraisVoyage;
     const total = fm + fj;
 
     totFM += fm;
@@ -726,7 +734,7 @@ function onGroupFieldChange(rowId) {
   const groupId = row.dataset.group;
   document.querySelectorAll(`.mission-row[data-group="${groupId}"]`).forEach((other) => {
     if (other === row) return;
-    ['f-date-debut', 'f-date-fin', 'f-taux', 'f-nuitees'].forEach((cls) => {
+    ['f-date-debut', 'f-date-fin', 'f-taux', 'f-nuitees', 'f-frais-voyage'].forEach((cls) => {
       const srcEl = row.querySelector('.' + cls);
       const dstEl = other.querySelector('.' + cls);
       if (srcEl && dstEl) dstEl.value = srcEl.value;
@@ -771,7 +779,8 @@ function collectMissions() {
     const dateFin    = row.querySelector('.f-date-fin').value;
     const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
     const taux    = Number(row.querySelector('.f-taux').value || 0);
-    const fm      = Math.round(nuitees * taux * 100) / 100;
+    const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
+    const fm      = Math.round((nuitees * taux + fraisVoyage) * 100) / 100;
     const avance  = Number(row.querySelector('.f-avance').value || 0);
     const observation = row.querySelector('.f-observation')?.value.trim() || '';
 
@@ -798,6 +807,7 @@ function collectMissions() {
       date_fin: dateFin,
       nuitees,
       taux_per_diem: taux,
+      frais_voyage_usd: fraisVoyage,
       montant_usd: fm,
       autres_frais_usd: fj,
       autres_frais_details: details,

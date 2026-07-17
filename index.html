@@ -2114,7 +2114,10 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
   const solde      = Number(m.solde_usd||0);
 
   const lbl = escapeHtml(m.territoire_label || m.territoire_name || '—');
-  const lieuRows = `<tr><td>${lbl}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tr">${_docFmt(m.montant_usd)}</td></tr>`;
+  const fraisVoyage = Number(m.frais_voyage_usd || 0);
+  const nuiteeMontant = Number(m.nuitees || 0) * Number(m.taux_per_diem || 0);
+  const lieuRows = `<tr><td>${lbl}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tr">${_docFmt(nuiteeMontant)}</td></tr>`
+    + (fraisVoyage ? `<tr><td>Frais du jour de voyage</td><td class="tc">—</td><td class="tc">—</td><td class="tr">${_docFmt(fraisVoyage)}</td></tr>` : '');
 
   const detailsList = Array.isArray(m.autres_frais_details) && m.autres_frais_details.length
     ? m.autres_frais_details.filter((d) => (d.libelle || '').trim() || Number(d.montant || 0) > 0)
