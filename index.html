@@ -2188,6 +2188,17 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   const sens  = m.avis_sens || (ecart > 0 ? 'projet_rembourse' : (ecart < 0 ? 'agent_rembourse' : 'aucun'));
   const favorable = m.avis_comptable ? m.avis_comptable === 'favorable' : true;
 
+  // Détail des autres frais à justifier, avec case déjà cochée si le montant
+  // déclaré a été validé tel quel dans la modale du comptable (décochée s'il
+  // a été corrigé).
+  const autresItems = Array.isArray(m.autres_frais_details) ? m.autres_frais_details : [];
+  const autresItemsHtml = autresItems.length
+    ? `<div style="margin:6px 0">
+  <p style="margin:2px 0"><strong>Détail des autres frais à justifier&nbsp;:</strong></p>
+  ${autresItems.map((d) => `<div style="margin:2px 0 2px 12px">${d.checked === false ? '☐' : '☑'}&nbsp; ${escapeHtml(d.libelle || 'Frais')} — ${_docFmt(d.montant)} USD</div>`).join('')}
+</div>`
+    : '';
+
   let avisLigne;
   if (sens === 'projet_rembourse') {
     avisLigne = `Le projet rembourse ${escapeHtml(nom)}&nbsp;: <strong>${_docFmt(Math.abs(ecart))}</strong> USD`;
@@ -2209,6 +2220,7 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
 
 <div class="avis-amount-row"><span>Montant perçu (avance)&nbsp;:</span><span class="avis-box">${_docFmt(totProvision)}</span></div>
 <div class="avis-amount-row"><span>Montant des justificatifs présentés&nbsp;:</span><span class="avis-box">${_docFmt(totJustifie)}</span></div>
+${autresItemsHtml}
 
 <hr style="border:none;border-top:1px solid #000;margin:18px 0">
 
@@ -2552,11 +2564,12 @@ async function finalizeJustificatifs(reportId) {
     const finalItems = items.map((it, j) => {
       const chk = document.querySelector(`.avis-item-check[data-idx="${i}"][data-item-idx="${j}"]`);
       const amountInput = document.querySelector(`.avis-item-montant[data-idx="${i}"][data-item-idx="${j}"]`);
-      const montant = chk && !chk.checked ? Number(amountInput?.value || 0) : Number(it.montant || 0);
-      return { libelle: it.libelle, montant, isPerDiem: it.isPerDiem };
+      const isChecked = chk ? !!chk.checked : true;
+      const montant = !isChecked ? Number(amountInput?.value || 0) : Number(it.montant || 0);
+      return { libelle: it.libelle, montant, isPerDiem: it.isPerDiem, checked: isChecked };
     });
     const perDiemFinal   = Number(finalItems[0]?.montant || 0);
-    const finalDetails   = finalItems.slice(1).map((d) => ({ libelle: d.libelle, montant: d.montant }));
+    const finalDetails   = finalItems.slice(1).map((d) => ({ libelle: d.libelle, montant: d.montant, checked: d.checked }));
     const autresFraisUsd = finalDetails.reduce((s, d) => s + Number(d.montant || 0), 0);
     const totalJustifie  = perDiemFinal + autresFraisUsd;
 
