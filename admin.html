@@ -1148,14 +1148,44 @@ function handleStorageSync(event) {
 }
 
 // ─── REPORTS ──────────────────────────────────────────────────────────────────
+function normalizeProvinceKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function canonicalizeProvinceName(value, label = '') {
+  const normalizedValue = normalizeProvinceKey(value);
+  const normalizedLabel = normalizeProvinceKey(label);
+  const matchedProvince = REFERENCE.provinces.find((province) => {
+    const candidates = [province.name, province.label, province.code].map(normalizeProvinceKey);
+    return candidates.includes(normalizedValue) || candidates.includes(normalizedLabel);
+  });
+  if (matchedProvince) return matchedProvince.name;
+
+  if (
+    ['un', 'uncp', 'kinshasa', 'unite nationale de coordination'].includes(normalizedValue)
+    || normalizedLabel.includes('uncp')
+    || normalizedLabel.includes('unite nationale de coordination')
+    || normalizedLabel.includes('kinshasa')
+  ) {
+    return 'UN';
+  }
+
+  return String(value || '').trim();
+}
+
 async function refreshReportsCache() { 
   REPORTS_CACHE = await getAllReports(); 
 }
 
 function getReportProvinceName(report) {
-  if (report?.meta?.province) return report.meta.province;
-  const provinceLabel = report?.meta?.province_label;
-  return REFERENCE.provinces.find((province) => province.label === provinceLabel)?.name || provinceLabel || '';
+  return canonicalizeProvinceName(
+    report?.meta?.province || report?.province,
+    report?.meta?.province_label || report?.province_label
+  );
 }
 
 function getReportProvinceLabel(report) {
@@ -1299,10 +1329,21 @@ async function getStoredReports() {
         if (session?.role === 'comptable' && userProvs.includes('UN')) {
           // Le compte UNCP voit aussi les rapports élaborés par le RAF (admin)
           // et le RNSE (super_admin), quelle que soit la province choisie.
+          // Il récupère aussi les rapports saisis avec l'alias libre "Kinshasa"
+          // ou un libellé UNCP non canonique, déjà autorisés par la RLS.
           const provList = userProvs.map((p) => `"${p}"`).join(',');
-          query = query.or(`province.in.(${provList}),rapporteur_role.in.(admin,super_admin)`);
+          query = query.or([
+            `province.in.(${provList})`,
+            'province.ilike.%kinshasa%',
+            'province.ilike.%uncp%',
+            'province_label.ilike.%UNCP%',
+            'rapporteur_role.in.(admin,super_admin)'
+          ].join(','));
         } else {
           query = query.in('province', userProvs);
+          if (session?.role === 'comptable') {
+            query = query.not('rapporteur_role', 'in', '(admin,super_admin)');
+          }
         }
       }
       // provinces NULL/vide (ex: admin, comptes UNCP historiques) => pas de filtre
@@ -1727,7 +1768,13 @@ async function deleteReport(reportId, importId = '') {
         await refreshDashboard(true);
       } catch (e) {
         console.error(e);
-        showToast('Erreur lors de la suppression : ' + (e?.message || String(e)));
+        const message = String(e?.message || e?.hint || e || '');
+        const denied = e?.code === '42501' || /policy|permission|forbidden|not allowed|violates/i.test(message);
+        showToast(
+          denied
+            ? 'Suppression refusée par Supabase pour ce rapport. Si c’est un rapport RAF/RNSE visible par UNCP, exécutez la migration v22 avant de réessayer.'
+            : 'Erreur lors de la suppression : ' + (e?.message || String(e))
+        );
       }
     },
     'Supprimer le rapport'
