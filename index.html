@@ -1233,8 +1233,21 @@ function getStatusBadge(status) {
   return `<span class="statut-badge ${cfg.class}"><i class="bi bi-${cfg.icon} me-1"></i>${cfg.label}</span>`;
 }
 
+// Montant réellement en litige (solde non soldé) pour un rapport :
+//  - si le solde a déjà été versé (report.solde_paye_at), plus rien n'est en
+//    litige : on renvoie 0, quel que soit l'ancien solde théorique ;
+//  - si l'avis sur justificatifs a été rendu, on retient l'écart réellement
+//    constaté (avis_ecart : + si le projet doit encore à l'agent, − si
+//    l'agent doit rembourser) plutôt que le solde théorique de 20% ;
+//  - sinon (avant justification), on retombe sur le solde théorique (20%).
 function calculateReportLitige(report) {
-  return (report.missions || []).reduce((sum, mission) => sum + Number(mission.solde_usd || 0), 0);
+  if (report.solde_paye_at) return 0;
+  return (report.missions || []).reduce((sum, mission) => {
+    const ecart = (mission.avis_ecart !== undefined && mission.avis_ecart !== null)
+      ? Number(mission.avis_ecart)
+      : Number(mission.solde_usd || 0);
+    return sum + Math.abs(ecart);
+  }, 0);
 }
 
 async function refreshDashboard() {
@@ -1767,7 +1780,7 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
   const totalMontant = missions.reduce((s, m) => s + Number(m.montant_usd || 0), 0);
   const totalAutres  = missions.reduce((s, m) => s + Number(m.autres_frais_usd || 0), 0);
   const totalGeneral = missions.reduce((s, m) => s + Number(m.total_usd || 0), 0);
-  const totalSolde   = missions.reduce((s, m) => s + Number(m.solde_usd || 0), 0);
+  const totalSolde   = reports.reduce((s, r) => s + calculateReportLitige(r), 0);
 
   const panel = document.createElement('div');
   panel.className = `pnda-panel${activeTab === province.name ? ' active' : ''}`;
@@ -1918,12 +1931,12 @@ function summarizeProvince(provinceName, reportsSource = getFilteredReports()) {
   const missions = reports.flatMap((report) => report.missions || []);
   return {
     label: REFERENCE.provinces.find((p) => p.name === provinceName)?.label || provinceName,
-    reports: reports.length, 
+    reports: reports.length,
     missions: missions.length,
     montant: missions.reduce((s, m) => s + Number(m.montant_usd || 0), 0),
     autresFrais: missions.reduce((s, m) => s + Number(m.autres_frais_usd || 0), 0),
     total: missions.reduce((s, m) => s + Number(m.total_usd || 0), 0),
-    solde: missions.reduce((s, m) => s + Number(m.solde_usd || 0), 0)
+    solde: reports.reduce((s, r) => s + calculateReportLitige(r), 0)
   };
 }
 
@@ -3034,7 +3047,7 @@ function buildGeneralSheetRows(signatory = {}, reports = getFilteredReports()) {
     [{ value: 'En attente', style: 'text' }, { value: reports.filter(r => (r.statut||'activee') === 'en_attente').length, type: 'Number', style: 'integer' }],
     [{ value: 'Activées', style: 'text' }, { value: reports.filter(r => (r.statut||'activee') === 'activee').length, type: 'Number', style: 'integer' }],
     [{ value: 'Réalisées', style: 'text' }, { value: reports.filter(r => (r.statut||'activee') === 'realisee').length, type: 'Number', style: 'integer' }],
-    [{ value: 'Litige total USD', style: 'text' }, { value: missions.reduce((s, m) => s + Number(m.solde_usd || 0), 0), type: 'Number', style: 'currency' }],
+    [{ value: 'Litige total USD', style: 'text' }, { value: reports.reduce((s, r) => s + calculateReportLitige(r), 0), type: 'Number', style: 'currency' }],
     [],
     [{ value: 'Consolidation par province', style: 'title', mergeAcross: 6 }],
     [{ value: 'Province', style: 'header' }, { value: 'Rapports', style: 'header' }, { value: 'Missions', style: 'header' }, { value: 'Montant USD', style: 'header' }, { value: 'Autres frais', style: 'header' }, { value: 'Total USD', style: 'header' }, { value: 'Solde USD', style: 'header' }],
