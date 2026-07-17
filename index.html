@@ -2184,7 +2184,19 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
 
   const totProvision = Number(m.avance_usd || 0);
   const totJustifie  = Number(m.total_usd || 0);
-  const solde        = Number(m.solde_usd || 0);
+  const ecart = m.avis_ecart !== undefined && m.avis_ecart !== null ? Number(m.avis_ecart) : (totJustifie - totProvision);
+  const sens  = m.avis_sens || (ecart > 0 ? 'projet_rembourse' : (ecart < 0 ? 'agent_rembourse' : 'aucun'));
+  const favorable = m.avis_comptable ? m.avis_comptable === 'favorable' : true;
+
+  let avisLigne;
+  if (sens === 'projet_rembourse') {
+    avisLigne = `Le projet rembourse ${escapeHtml(nom)}&nbsp;: <strong>${_docFmt(Math.abs(ecart))}</strong> USD`;
+  } else if (sens === 'agent_rembourse') {
+    avisLigne = `${escapeHtml(nom)} rembourse le projet&nbsp;: <strong>${_docFmt(Math.abs(ecart))}</strong> USD`
+      + (favorable ? ' (remboursement confirmé)' : ' (en attente de confirmation)');
+  } else {
+    avisLigne = 'Solde nul — aucun remboursement';
+  }
 
   return `<div class="avis-page"${isLast ? '' : ' style="page-break-after:always"'}>
 <h1>AVIS SUR JUSTIFICATIFS PROVISION N° ${escapeHtml(num)}</h1>
@@ -2195,16 +2207,14 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
 <div class="avis-field"><span class="avis-label">Motif&nbsp;:</span><span class="avis-value">${escapeHtml(motif)}</span></div>
 <div class="avis-field"><span class="avis-label">Financement&nbsp;:</span><span class="avis-value">PNDA</span></div>
 
-<div class="avis-amount-row"><span>Montant de la provision à justifier&nbsp;:</span><span class="avis-box">${_docFmt(totProvision)}</span></div>
+<div class="avis-amount-row"><span>Montant perçu (avance)&nbsp;:</span><span class="avis-box">${_docFmt(totProvision)}</span></div>
 <div class="avis-amount-row"><span>Montant des justificatifs présentés&nbsp;:</span><span class="avis-box">${_docFmt(totJustifie)}</span></div>
 
 <hr style="border:none;border-top:1px solid #000;margin:18px 0">
 
-<p style="margin:4px 0"><strong>Avis</strong></p>
-<p style="margin:4px 0"><strong>Avis du Comptable</strong></p>
-<div class="avis-amount-row"><span>Justificatifs valables pour (montant)&nbsp;:</span><span class="avis-box">${_docFmt(totJustifie)}</span></div>
-<div class="avis-amount-row"><span>A rembourser à&nbsp;:</span><span class="avis-box">${_docFmt(solde)}</span></div>
-<p style="margin:6px 0 0">${escapeHtml(nom)}</p>
+<p style="margin:4px 0"><strong>Avis du Comptable — ${favorable ? 'FAVORABLE' : 'SOUS RÉSERVE'}</strong></p>
+<p style="margin:4px 0">${avisLigne}</p>
+${m.avis_observation ? `<p style="margin:8px 0"><strong>Observation&nbsp;:</strong> ${escapeHtml(m.avis_observation)}</p>` : ''}
 
 <p style="margin:26px 0 4px"><em>Correspondance</em></p>
 
@@ -2364,20 +2374,69 @@ function resolveAutresFraisDetails(m) {
     : (totAutres > 0 ? [{ libelle: 'Autres frais', montant: totAutres }] : []);
 }
 
-// Recalcule le "Montant justifié" d'une mission à partir du montant de
-// mission (fixe) + la somme des frais à justifier retenus : pour chaque
-// ligne, si la case est cochée le montant déclaré est pris tel quel, sinon
-// c'est le montant corrigé saisi par le comptable qui est utilisé.
-function recalcAvisMontantJustifie(missionIdx, montantFixe) {
-  const items = document.querySelectorAll(`.avis-frais-check[data-idx="${missionIdx}"]`);
-  let sumFrais = 0;
-  items.forEach((chk) => {
-    const itemIdx = chk.dataset.itemIdx;
-    const amountInput = document.querySelector(`.avis-frais-montant[data-idx="${missionIdx}"][data-item-idx="${itemIdx}"]`);
-    sumFrais += Number(amountInput?.value || 0);
+// Retourne TOUS les éléments à justifier d'une mission : le montant de
+// mission (per diem) validé lors de l'activation en première ligne, suivi
+// des frais annexes. Les deux catégories sont désormais cochables/corrigibles
+// de la même façon dans la modale d'avis.
+function resolveAvisItems(m) {
+  const items = [{ libelle: 'Frais de mission (per diem)', montant: Number(m.montant_usd || 0), isPerDiem: true }];
+  resolveAutresFraisDetails(m).forEach((d) => {
+    items.push({ libelle: d.libelle || 'Frais', montant: Number(d.montant || 0), isPerDiem: false });
   });
+  return items;
+}
+
+// Recalcule le "Montant justifié" d'une mission à partir de la somme de tous
+// les éléments cochés/corrigés (per diem + frais annexes), puis met à jour
+// l'avis automatique (favorable / sous réserve) de la ligne.
+function recalcAvisMontantJustifie(missionIdx) {
+  const items = document.querySelectorAll(`.avis-item-montant[data-idx="${missionIdx}"]`);
+  let sum = 0;
+  items.forEach((inp) => { sum += Number(inp.value || 0); });
   const totalInput = document.querySelector(`.avis-justifie-input[data-idx="${missionIdx}"]`);
-  if (totalInput) totalInput.value = (Number(montantFixe || 0) + sumFrais).toFixed(2);
+  if (totalInput) totalInput.value = sum.toFixed(2);
+  updateAvisDecision(missionIdx);
+}
+
+// Compare le montant justifié (retenu ci-dessus) au montant perçu (avance
+// déjà versée) pour déterminer automatiquement l'avis :
+//  - justifié > perçu  → le projet rembourse l'agent → favorable automatique
+//  - justifié = perçu  → solde nul → favorable automatique
+//  - justifié < perçu  → l'agent doit rembourser → favorable seulement si
+//    le comptable confirme (case à cocher) que l'agent remboursera.
+function updateAvisDecision(missionIdx) {
+  const totalInput  = document.querySelector(`.avis-justifie-input[data-idx="${missionIdx}"]`);
+  const percuInput  = document.querySelector(`.avis-percu-input[data-idx="${missionIdx}"]`);
+  const confirmWrap = document.querySelector(`.avis-confirm-wrap[data-idx="${missionIdx}"]`);
+  const confirmChk  = document.querySelector(`.avis-confirm-check[data-idx="${missionIdx}"]`);
+  const badge       = document.querySelector(`.avis-decision-badge[data-idx="${missionIdx}"]`);
+  const ecartLabel  = document.querySelector(`.avis-ecart-label[data-idx="${missionIdx}"]`);
+  if (!totalInput) return;
+
+  const justifie = Number(totalInput.value || 0);
+  const percu    = Number(percuInput?.value || 0);
+  const ecart    = Math.round((justifie - percu) * 100) / 100;
+
+  let favorable, ecartTxt;
+  if (ecart > 0) {
+    favorable = true;
+    ecartTxt = "Le projet rembourse l'agent : " + _docFmt(ecart) + ' USD';
+    if (confirmWrap) confirmWrap.classList.add('d-none');
+  } else if (ecart < 0) {
+    favorable = !!(confirmChk && confirmChk.checked);
+    ecartTxt = "L'agent doit rembourser : " + _docFmt(Math.abs(ecart)) + ' USD';
+    if (confirmWrap) confirmWrap.classList.remove('d-none');
+  } else {
+    favorable = true;
+    ecartTxt = 'Solde nul — aucun remboursement';
+    if (confirmWrap) confirmWrap.classList.add('d-none');
+  }
+  if (ecartLabel) ecartLabel.textContent = ecartTxt;
+  if (badge) {
+    badge.textContent = favorable ? '✓ Favorable' : '⚠ Sous réserve — confirmation requise';
+    badge.className = 'badge avis-decision-badge ' + (favorable ? 'bg-success' : 'bg-warning text-dark');
+    badge.dataset.idx = missionIdx;
+  }
 }
 
 // Ouvre la modale d'avis (favorable / sous réserve) permettant au comptable
@@ -2407,72 +2466,75 @@ function openAvisReviewModal(reportId) {
 
   const rows = rm.map((m, i) => {
     const nom = m.missionnaire_nom || resolveMissionnaireName(report);
-    const details = resolveAutresFraisDetails(m);
-    const fraisRowsHtml = details.length
-      ? details.map((d, j) => `
+    const items = resolveAvisItems(m);
+    const itemsHtml = items.map((it, j) => `
         <div class="d-flex align-items-center gap-2 mb-1">
-          <input type="checkbox" class="form-check-input avis-frais-check" data-idx="${i}" data-item-idx="${j}" checked>
-          <span class="small flex-grow-1">${escapeHtml(d.libelle || 'Frais')}</span>
-          <input type="number" step="0.01" class="form-control form-control-sm avis-frais-montant" style="max-width:110px" data-idx="${i}" data-item-idx="${j}" value="${Number(d.montant || 0)}" disabled>
-        </div>`).join('')
-      : '<p class="small text-muted mb-1">Aucun frais à justifier.</p>';
+          <input type="checkbox" class="form-check-input avis-item-check" data-idx="${i}" data-item-idx="${j}" checked>
+          <span class="small flex-grow-1${it.isPerDiem ? ' fw-semibold' : ''}">${escapeHtml(it.libelle)}${it.isPerDiem ? ' <span class="text-muted fw-normal">(validé à l\'activation)</span>' : ''}</span>
+          <input type="number" step="0.01" class="form-control form-control-sm avis-item-montant" style="max-width:110px" data-idx="${i}" data-item-idx="${j}" value="${Number(it.montant || 0)}" disabled>
+        </div>`).join('');
+    const justifieInit = items.reduce((s, it) => s + Number(it.montant || 0), 0);
+    const percu = Number(m.avance_usd || 0);
     return `<div class="border rounded p-2 mb-2">
       <div class="fw-bold small mb-1">${escapeHtml(nom)}${m.missionnaire_titre ? ' — ' + escapeHtml(m.missionnaire_titre) : ''}</div>
-      <div class="row g-2">
-        <div class="col-6">
-          <label class="form-label small mb-0 text-muted">Provision (USD)</label>
-          <input class="form-control form-control-sm" value="${_docFmt(m.avance_usd)}" disabled>
-        </div>
-        <div class="col-6">
-          <label class="form-label small mb-0 text-muted">Montant justifié (USD)</label>
-          <input type="number" step="0.01" class="form-control form-control-sm avis-justifie-input" data-idx="${i}" data-montant-fixe="${Number(m.montant_usd || 0)}" value="${Number(m.total_usd || 0)}" disabled>
-        </div>
-      </div>
-      <div class="mt-2">
-        <label class="form-label small mb-1 text-muted">Frais à justifier — cocher pour valider le montant déclaré, décocher pour corriger</label>
-        ${fraisRowsHtml}
+      <div class="mt-1">
+        <label class="form-label small mb-1 text-muted">Éléments à justifier — cocher pour valider le montant déclaré, décocher pour corriger</label>
+        ${itemsHtml}
       </div>
       <div class="row g-2 mt-1">
         <div class="col-6">
-          <label class="form-label small mb-0 text-muted">Avis du Comptable</label>
-          <select class="form-select form-select-sm avis-decision-select" data-idx="${i}">
-            <option value="favorable" selected>Favorable</option>
-            <option value="reserve">Sous réserve</option>
-          </select>
+          <label class="form-label small mb-0 text-muted">Montant perçu — avance (USD)</label>
+          <input class="form-control form-control-sm avis-percu-input" data-idx="${i}" value="${percu.toFixed(2)}" disabled>
         </div>
         <div class="col-6">
-          <label class="form-label small mb-0 text-muted">A rembourser (USD)</label>
-          <input class="form-control form-control-sm" value="${_docFmt(m.solde_usd)}" disabled>
+          <label class="form-label small mb-0 text-muted">Montant justifié (USD)</label>
+          <input type="number" step="0.01" class="form-control form-control-sm avis-justifie-input" data-idx="${i}" value="${justifieInit.toFixed(2)}" disabled>
         </div>
+      </div>
+      <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+        <span class="badge avis-decision-badge" data-idx="${i}">…</span>
+        <span class="small text-muted avis-ecart-label" data-idx="${i}"></span>
+      </div>
+      <div class="mt-2 avis-confirm-wrap d-none" data-idx="${i}">
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input avis-confirm-check" data-idx="${i}" id="avisConfirm${i}">
+          <label class="form-check-label small" for="avisConfirm${i}">Je confirme que ${escapeHtml(nom)} remboursera ce montant au projet</label>
+        </div>
+      </div>
+      <div class="mt-2">
+        <label class="form-label small mb-1 text-muted">Observation</label>
+        <textarea class="form-control form-control-sm avis-observation" data-idx="${i}" rows="2" placeholder="Observation du comptable (facultatif)">${escapeHtml(m.avis_observation || '')}</textarea>
       </div>
     </div>`;
   }).join('') || '<p class="text-muted small">Aucune mission.</p>';
 
   document.getElementById('avisReviewBody').innerHTML = `
     ${delaiInfo ? '<p class="small mb-3">' + delaiInfo + '</p>' : ''}
-    <p class="small text-muted mb-2">Vérifiez — et corrigez si besoin — les montants justifiés ci-dessous. L'acceptation de l'avis génère le document imprimable pour chaque missionnaire.</p>
+    <p class="small text-muted mb-2">Vérifiez — et corrigez si besoin — les montants justifiés ci-dessous. L'avis (favorable / sous réserve) est calculé automatiquement. L'acceptation génère le document imprimable pour chaque missionnaire.</p>
     ${rows}
   `;
 
-  // Cocher/décocher une ligne de frais active/désactive son champ montant
-  // (corrigible uniquement quand décochée) et recalcule le total justifié.
-  document.querySelectorAll('.avis-frais-check').forEach((chk) => {
+  // Cocher/décocher un élément à justifier active/désactive son champ montant
+  // (corrigible uniquement quand décoché) et recalcule le total justifié +
+  // l'avis automatique.
+  document.querySelectorAll('.avis-item-check').forEach((chk) => {
     chk.addEventListener('change', () => {
       const idx = chk.dataset.idx;
       const itemIdx = chk.dataset.itemIdx;
-      const amountInput = document.querySelector(`.avis-frais-montant[data-idx="${idx}"][data-item-idx="${itemIdx}"]`);
+      const amountInput = document.querySelector(`.avis-item-montant[data-idx="${idx}"][data-item-idx="${itemIdx}"]`);
       if (amountInput) amountInput.disabled = chk.checked;
-      const totalInput = document.querySelector(`.avis-justifie-input[data-idx="${idx}"]`);
-      recalcAvisMontantJustifie(idx, totalInput?.dataset.montantFixe);
+      recalcAvisMontantJustifie(idx);
     });
   });
-  document.querySelectorAll('.avis-frais-montant').forEach((inp) => {
-    inp.addEventListener('input', () => {
-      const idx = inp.dataset.idx;
-      const totalInput = document.querySelector(`.avis-justifie-input[data-idx="${idx}"]`);
-      recalcAvisMontantJustifie(idx, totalInput?.dataset.montantFixe);
-    });
+  document.querySelectorAll('.avis-item-montant').forEach((inp) => {
+    inp.addEventListener('input', () => recalcAvisMontantJustifie(inp.dataset.idx));
   });
+  document.querySelectorAll('.avis-confirm-check').forEach((chk) => {
+    chk.addEventListener('change', () => updateAvisDecision(chk.dataset.idx));
+  });
+
+  // Calcul initial de l'avis pour chaque missionnaire (badge + libellé d'écart).
+  rm.forEach((_, i) => updateAvisDecision(i));
 
   _avisReviewOkCallback = () => finalizeJustificatifs(reportId);
   _avisReviewModal.show();
@@ -2486,22 +2548,38 @@ async function finalizeJustificatifs(reportId) {
   const rm = report.missions || [];
 
   const editedMissions = rm.map((m, i) => {
-    const select = document.querySelector(`.avis-decision-select[data-idx="${i}"]`);
-    const details = resolveAutresFraisDetails(m);
-    const finalDetails = details.map((d, j) => {
-      const chk = document.querySelector(`.avis-frais-check[data-idx="${i}"][data-item-idx="${j}"]`);
-      const amountInput = document.querySelector(`.avis-frais-montant[data-idx="${i}"][data-item-idx="${j}"]`);
-      const montant = chk && !chk.checked ? Number(amountInput?.value || 0) : Number(d.montant || 0);
-      return { libelle: d.libelle || 'Frais', montant };
+    const items = resolveAvisItems(m);
+    const finalItems = items.map((it, j) => {
+      const chk = document.querySelector(`.avis-item-check[data-idx="${i}"][data-item-idx="${j}"]`);
+      const amountInput = document.querySelector(`.avis-item-montant[data-idx="${i}"][data-item-idx="${j}"]`);
+      const montant = chk && !chk.checked ? Number(amountInput?.value || 0) : Number(it.montant || 0);
+      return { libelle: it.libelle, montant, isPerDiem: it.isPerDiem };
     });
+    const perDiemFinal   = Number(finalItems[0]?.montant || 0);
+    const finalDetails   = finalItems.slice(1).map((d) => ({ libelle: d.libelle, montant: d.montant }));
     const autresFraisUsd = finalDetails.reduce((s, d) => s + Number(d.montant || 0), 0);
-    const montantUsd = Number(m.montant_usd || 0);
+    const totalJustifie  = perDiemFinal + autresFraisUsd;
+
+    const percu = Number(m.avance_usd || 0);
+    const ecart = Math.round((totalJustifie - percu) * 100) / 100;
+    const sens  = ecart > 0 ? 'projet_rembourse' : (ecart < 0 ? 'agent_rembourse' : 'aucun');
+    const confirmChk = document.querySelector(`.avis-confirm-check[data-idx="${i}"]`);
+    const confirmed  = sens === 'agent_rembourse' ? !!(confirmChk && confirmChk.checked) : false;
+    const favorable  = sens !== 'agent_rembourse' || confirmed;
+    const observation = document.querySelector(`.avis-observation[data-idx="${i}"]`)?.value?.trim() || '';
+
     return {
       ...m,
+      montant_usd: perDiemFinal,
       autres_frais_details: finalDetails,
       autres_frais_usd: autresFraisUsd,
-      total_usd: montantUsd + autresFraisUsd,
-      avis_comptable: select ? select.value : 'favorable'
+      total_usd: totalJustifie,
+      avis_montant_percu: percu,
+      avis_ecart: ecart,
+      avis_sens: sens,
+      avis_confirmation_agent: confirmed,
+      avis_observation: observation,
+      avis_comptable: favorable ? 'favorable' : 'reserve'
     };
   });
 
