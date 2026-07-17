@@ -1813,8 +1813,11 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
   const isSuperAdmin = session?.role === 'super_admin';
   const isUncpComptable = isUncpComptableSession(session);
   const reports = reportsSource.filter((report) => {
+    // Un rapport saisi par le RAF/RNSE n'apparaît jamais dans une province
+    // provinciale, même si son champ province est mal renseigné : il ne
+    // s'affiche que dans l'onglet UN, et seulement pour le comptable UNCP.
+    if (isRafOrRnseReport(report)) return province.name === 'UN' && isUncpComptable;
     if (getReportProvinceName(report) === province.name) return true;
-    if (province.name === 'UN' && isUncpComptable) return isRafOrRnseReport(report);
     return false;
   });
   const missions = reports.flatMap((report) => report.missions || []);

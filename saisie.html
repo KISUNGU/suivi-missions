@@ -348,11 +348,16 @@ async function loadProvincesAllowed() {
     .map((name) => allowed.find((p) => p.name === name))
     .filter(Boolean);
   PROVINCES_ALLOWED = core;
+  // L'option "Autre" (province libre) n'est proposée qu'aux comptes sans
+  // restriction de province (super_admin, RAF/RNSE). Un compte limité à une
+  // ou plusieurs provinces (ex: comptable UNCP scoped ['UN']) ne doit pas
+  // pouvoir saisir une province libre qui échapperait à son périmètre.
+  const isScopedAccount = SESSION.role !== 'super_admin' && Array.isArray(SESSION.provinces) && SESSION.provinces.length > 0;
   const select = document.getElementById('f-province');
   if (select) {
     select.innerHTML = '<option value="" disabled selected>-- Sélectionner --</option>' +
       core.map((p) => `<option value="${esc(p.name)}">${esc(PROVINCE_LABEL_OVERRIDES[p.name] || p.label || p.name)}</option>`).join('') +
-      `<option value="${AUTRE_VALUE}">Autre</option>`;
+      (isScopedAccount ? '' : `<option value="${AUTRE_VALUE}">Autre</option>`);
   }
 }
 
