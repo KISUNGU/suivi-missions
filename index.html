@@ -1838,10 +1838,17 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
     </div>
 
     <div class="card mb-3">
-      <div class="card-header py-3"><h6><i class="bi bi-folder2-open me-2"></i>Rapports de la province</h6></div>
+      <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h6 class="mb-0"><i class="bi bi-folder2-open me-2"></i>Rapports de la province</h6>
+        <div class="d-flex gap-1">
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="printHtmlTable('table-province-reports-${escapeHtml(province.name)}','Rapports de la province - ${escapeHtml(province.label)}')" title="Imprimer"><i class="bi bi-printer-fill"></i></button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="shareHtmlTable('table-province-reports-${escapeHtml(province.name)}','Rapports de la province - ${escapeHtml(province.label)}')" title="Partager"><i class="bi bi-share-fill"></i></button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportHtmlTableToCSV('table-province-reports-${escapeHtml(province.name)}','Rapports_${escapeHtml(province.name)}.csv')" title="Exporter Excel/CSV"><i class="bi bi-download"></i></button>
+        </div>
+      </div>
       <div class="card-body p-0">
         <div class="table-responsive">
-          <table class="table table-hover table-sm mb-0">
+          <table class="table table-hover table-sm mb-0" id="table-province-reports-${escapeHtml(province.name)}">
             <thead><tr><th>Date</th><th>Rapporteur</th><th>Trimestre</th><th>Missions</th><th>Total USD</th><th>Litige USD</th><th>Statut</th><th>Lu</th><th>Actions</th></tr></thead>
             <tbody>${reports.length ? reports.map((report, idx) => {
               const rm = report.missions || [];
@@ -1937,10 +1944,17 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
     </div>
 
     <div class="card">
-      <div class="card-header py-3"><h6><i class="bi bi-bar-chart me-2"></i>Résumé financier</h6></div>
+      <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h6 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Résumé financier</h6>
+        <div class="d-flex gap-1">
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="printHtmlTable('table-province-summary-${escapeHtml(province.name)}','Résumé financier - ${escapeHtml(province.label)}')" title="Imprimer"><i class="bi bi-printer-fill"></i></button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="shareHtmlTable('table-province-summary-${escapeHtml(province.name)}','Résumé financier - ${escapeHtml(province.label)}')" title="Partager"><i class="bi bi-share-fill"></i></button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportHtmlTableToCSV('table-province-summary-${escapeHtml(province.name)}','Resume_financier_${escapeHtml(province.name)}.csv')" title="Exporter Excel/CSV"><i class="bi bi-download"></i></button>
+        </div>
+      </div>
       <div class="card-body p-0">
         <div class="table-responsive">
-          <table class="table table-sm mb-0">
+          <table class="table table-sm mb-0" id="table-province-summary-${escapeHtml(province.name)}">
             <tbody>
               <tr><td class="fw-semibold">Montant missions</td><td class="text-end">${formatCurrency(totalMontant)} USD</td></tr>
               <tr><td class="fw-semibold">Autres frais</td><td class="text-end">${formatCurrency(totalAutres)} USD</td></tr>
