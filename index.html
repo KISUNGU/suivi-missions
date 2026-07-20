@@ -989,6 +989,15 @@ function resolveMissionnaireName(report) {
   return displayName || raw;
 }
 
+// Résout le nom d'affichage d'un compte (comptable/RAF) à partir de son email,
+// pour l'impression (ex. signature de l'avis sur justificatifs). Retombe sur
+// l'email brut si aucun display_name n'est enregistré dans profiles.
+function resolveAccountDisplayName(email) {
+  if (!email) return '';
+  const key = String(email).trim().toLowerCase();
+  return PROFILES_DIRECTORY[key] || email;
+}
+
 function initializeReportSyncChannel() {
   if (!('BroadcastChannel' in window)) return;
   try {
@@ -1734,7 +1743,7 @@ function buildGeneralPanel(reports = getFilteredReports()) {
           <div class="d-flex gap-1">
             <button type="button" class="btn btn-outline-secondary btn-sm" onclick="printHtmlTable('table-consolidation-province','Consolidation par province')" title="Imprimer"><i class="bi bi-printer-fill"></i></button>
             <button type="button" class="btn btn-outline-secondary btn-sm" onclick="shareHtmlTable('table-consolidation-province','Consolidation par province')" title="Partager"><i class="bi bi-share-fill"></i></button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportHtmlTableToCSV('table-consolidation-province','Consolidation_par_province.csv')" title="Exporter"><i class="bi bi-download"></i></button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportHtmlTableToExcel('table-consolidation-province','Consolidation_par_province.xlsx','Consolidation par province')" title="Exporter Excel"><i class="bi bi-file-earmark-excel"></i></button>
           </div>
         </div>
         <div class="card-body p-0">
@@ -1758,7 +1767,7 @@ function buildGeneralPanel(reports = getFilteredReports()) {
           <div class="d-flex gap-1">
             <button type="button" class="btn btn-outline-secondary btn-sm" onclick="printHtmlTable('table-derniers-rapports','Derniers rapports')" title="Imprimer"><i class="bi bi-printer-fill"></i></button>
             <button type="button" class="btn btn-outline-secondary btn-sm" onclick="shareHtmlTable('table-derniers-rapports','Derniers rapports')" title="Partager"><i class="bi bi-share-fill"></i></button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportHtmlTableToCSV('table-derniers-rapports','Derniers_rapports.csv')" title="Exporter"><i class="bi bi-download"></i></button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportHtmlTableToExcel('table-derniers-rapports','Derniers_rapports.xlsx','Derniers rapports')" title="Exporter Excel"><i class="bi bi-file-earmark-excel"></i></button>
           </div>
         </div>
         <div class="card-body p-0">
@@ -1843,7 +1852,7 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
         <div class="d-flex gap-1">
           <button type="button" class="btn btn-outline-secondary btn-sm" onclick="printHtmlTable('table-province-reports-${escapeHtml(province.name)}','Rapports de la province - ${escapeHtml(province.label)}')" title="Imprimer"><i class="bi bi-printer-fill"></i></button>
           <button type="button" class="btn btn-outline-secondary btn-sm" onclick="shareHtmlTable('table-province-reports-${escapeHtml(province.name)}','Rapports de la province - ${escapeHtml(province.label)}')" title="Partager"><i class="bi bi-share-fill"></i></button>
-          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportHtmlTableToCSV('table-province-reports-${escapeHtml(province.name)}','Rapports_${escapeHtml(province.name)}.csv')" title="Exporter Excel/CSV"><i class="bi bi-download"></i></button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportHtmlTableToExcel('table-province-reports-${escapeHtml(province.name)}','Rapports_${escapeHtml(province.name)}.xlsx','Rapports de la province - ${escapeHtml(province.label)}')" title="Exporter Excel"><i class="bi bi-file-earmark-excel"></i></button>
         </div>
       </div>
       <div class="card-body p-0">
@@ -1949,7 +1958,7 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
         <div class="d-flex gap-1">
           <button type="button" class="btn btn-outline-secondary btn-sm" onclick="printHtmlTable('table-province-summary-${escapeHtml(province.name)}','Résumé financier - ${escapeHtml(province.label)}')" title="Imprimer"><i class="bi bi-printer-fill"></i></button>
           <button type="button" class="btn btn-outline-secondary btn-sm" onclick="shareHtmlTable('table-province-summary-${escapeHtml(province.name)}','Résumé financier - ${escapeHtml(province.label)}')" title="Partager"><i class="bi bi-share-fill"></i></button>
-          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportHtmlTableToCSV('table-province-summary-${escapeHtml(province.name)}','Resume_financier_${escapeHtml(province.name)}.csv')" title="Exporter Excel/CSV"><i class="bi bi-download"></i></button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportHtmlTableToExcel('table-province-summary-${escapeHtml(province.name)}','Resume_financier_${escapeHtml(province.name)}.xlsx','Résumé financier - ${escapeHtml(province.label)}')" title="Exporter Excel"><i class="bi bi-file-earmark-excel"></i></button>
         </div>
       </div>
       <div class="card-body p-0">
@@ -2133,6 +2142,8 @@ th{background:#e8e8e8;text-align:center}
 .avis-field .avis-value{flex:1;border-bottom:1px solid #000;min-height:14px}
 .avis-amount-row{display:flex;justify-content:space-between;align-items:center;max-width:440px;margin:10px 0;font-size:10.5pt}
 .avis-box{border:2px solid #000;padding:4px 12px;min-width:110px;text-align:right;font-weight:bold}
+.avis-letterhead{font-size:9.5pt;font-weight:bold;line-height:1.5;margin-bottom:10px;text-transform:uppercase}
+.avis-title-avis{font-size:12pt;font-weight:bold;margin:16px 0 6px;text-decoration:underline}
 @page{size:A4;margin:1.5cm} @media print{body{padding:0}}</style>`;
 }
 
@@ -2252,11 +2263,11 @@ ${pages}
 // propre bordereau de liquidation.
 function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   const nom      = m.missionnaire_nom || resolveMissionnaireName(report);
-  const province = report.meta?.province_label || report.meta?.province || '';
+  const direction = m.missionnaire_entite || report.meta?.province_label || report.meta?.province || '';
   const num      = report.fld_number || '___/___/____';
   const motif    = m.nature || '';
 
-  const totProvision = Number(m.avance_usd || 0);
+  const totProvision = Number(m.avis_montant_percu !== undefined && m.avis_montant_percu !== null ? m.avis_montant_percu : (m.avance_usd || 0));
   const totJustifie  = Number(m.total_usd || 0);
   const ecart = m.avis_ecart !== undefined && m.avis_ecart !== null ? Number(m.avis_ecart) : (totJustifie - totProvision);
   const sens  = m.avis_sens || (ecart > 0 ? 'projet_rembourse' : (ecart < 0 ? 'agent_rembourse' : 'aucun'));
@@ -2267,51 +2278,65 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   // a été corrigé).
   const autresItems = Array.isArray(m.autres_frais_details) ? m.autres_frais_details : [];
   const autresItemsHtml = autresItems.length
-    ? `<div style="margin:6px 0">
+    ? `<div style="margin:8px 0">
   <p style="margin:2px 0"><strong>Détail des autres frais à justifier&nbsp;:</strong></p>
   ${autresItems.map((d) => `<div style="margin:2px 0 2px 12px">${d.checked === false ? '☐' : '☑'}&nbsp; ${escapeHtml(d.libelle || 'Frais')} — ${_docFmt(d.montant)} USD</div>`).join('')}
 </div>`
     : '';
 
-  let avisLigne;
+  let remboursementLabel;
+  let remboursementMontant;
   if (sens === 'projet_rembourse') {
-    avisLigne = `Le projet rembourse ${escapeHtml(nom)}&nbsp;: <strong>${_docFmt(Math.abs(ecart))}</strong> USD`;
+    remboursementLabel = `A REMBOURSER A&nbsp;: ${escapeHtml(nom)}`;
+    remboursementMontant = Math.abs(ecart);
   } else if (sens === 'agent_rembourse') {
-    avisLigne = `${escapeHtml(nom)} rembourse le projet&nbsp;: <strong>${_docFmt(Math.abs(ecart))}</strong> USD`
-      + (favorable ? ' (remboursement confirmé)' : ' (en attente de confirmation)');
+    remboursementLabel = `A REMBOURSER PAR&nbsp;: ${escapeHtml(nom)}`;
+    remboursementMontant = Math.abs(ecart);
   } else {
-    avisLigne = 'Solde nul — aucun remboursement';
+    remboursementLabel = 'A REMBOURSER&nbsp;:';
+    remboursementMontant = 0;
   }
+  const remboursementNote = sens === 'agent_rembourse'
+    ? (favorable ? ' (remboursement confirmé)' : ' (en attente de confirmation)')
+    : '';
+
+  const comptableName = resolveAccountDisplayName(report.justification_by) || '';
+  const dateAvis = report.justification_at ? _docDate(report.justification_at) : _docDate(new Date());
 
   return `<div class="avis-page"${isLast ? '' : ' style="page-break-after:always"'}>
+<div class="avis-letterhead">Administration &amp; Finances<br>Comptabilité</div>
 <h1>AVIS SUR JUSTIFICATIFS PROVISION N° ${escapeHtml(num)}</h1>
 
-<div class="avis-field"><span class="avis-label">Justificatifs présentés par&nbsp;:</span><span class="avis-value">${escapeHtml(nom)}</span></div>
-<div class="avis-field"><span class="avis-label">Fonction&nbsp;:</span><span class="avis-value">${escapeHtml(m.missionnaire_titre || '')}</span></div>
-<div class="avis-field"><span class="avis-label">Direction&nbsp;:</span><span class="avis-value">${escapeHtml(province)}</span></div>
-<div class="avis-field"><span class="avis-label">Motif&nbsp;:</span><span class="avis-value">${escapeHtml(motif)}</span></div>
-<div class="avis-field"><span class="avis-label">Financement&nbsp;:</span><span class="avis-value">PNDA</span></div>
+<div class="avis-field"><span class="avis-label">JUSTIFICATIFS PRESENTES PAR&nbsp;:</span><span class="avis-value">${escapeHtml(nom)}</span></div>
+<div class="avis-field"><span class="avis-label">FONCTION&nbsp;:</span><span class="avis-value">${escapeHtml(m.missionnaire_titre || '')}</span></div>
+<div class="avis-field"><span class="avis-label">DIRECTION&nbsp;:</span><span class="avis-value">${escapeHtml(direction)}</span></div>
+<div class="avis-field"><span class="avis-label">MOTIF&nbsp;:</span><span class="avis-value">${escapeHtml(motif)}</span></div>
+<div class="avis-field"><span class="avis-label">FINANCEMENT&nbsp;:</span><span class="avis-value">PNDA</span></div>
 
-<div class="avis-amount-row"><span>Montant perçu (avance)&nbsp;:</span><span class="avis-box">${_docFmt(totProvision)}</span></div>
-<div class="avis-amount-row"><span>Montant des justificatifs présentés&nbsp;:</span><span class="avis-box">${_docFmt(totJustifie)}</span></div>
+<div class="avis-amount-row"><span>MONTANT DE LA PROVISION RESTANT A JUSTIFIER&nbsp;:</span><span class="avis-box">${_docFmt(totProvision)}</span></div>
+<div class="avis-amount-row"><span>MONTANT DES JUSTIFICATIFS PRESENTES&nbsp;:</span><span class="avis-box">${_docFmt(totJustifie)}</span></div>
 ${autresItemsHtml}
 
-<hr style="border:none;border-top:1px solid #000;margin:18px 0">
+<hr style="border:none;border-top:2px solid #000;margin:18px 0">
 
-<p style="margin:4px 0"><strong>Avis du Comptable — ${favorable ? 'FAVORABLE' : 'SOUS RÉSERVE'}</strong></p>
-<p style="margin:4px 0">${avisLigne}</p>
+<p class="avis-title-avis">AVIS</p>
+<p style="margin:4px 0 10px"><strong>Avis du Comptable</strong>${!favorable ? '&nbsp;<span style="text-decoration:underline">(SOUS RÉSERVE)</span>' : ''}</p>
+
+<div class="avis-amount-row"><span>Justificatifs valables pour (montant)&nbsp;:</span><span class="avis-box">${_docFmt(totJustifie)}</span></div>
+<div class="avis-amount-row"><span>${remboursementLabel}${remboursementNote}</span><span class="avis-box">${_docFmt(remboursementMontant)}</span></div>
+
 ${m.avis_observation ? `<p style="margin:8px 0"><strong>Observation&nbsp;:</strong> ${escapeHtml(m.avis_observation)}</p>` : ''}
 
-<p style="margin:26px 0 4px"><em>Correspondance</em></p>
-
-<div style="display:flex;justify-content:space-between;margin-top:20px">
-  <div style="text-align:center;min-width:160px">
-    <div class="sig-line"></div>
+<div style="display:flex;justify-content:space-between;margin-top:34px">
+  <div style="min-width:220px">
     <p style="margin:3px 0"><strong>Nom &amp; Signature</strong></p>
+    <div class="sig-line" style="margin:5px 0"></div>
+    <p style="margin:3px 0">${escapeHtml(comptableName)}</p>
+    <p style="margin:3px 0">Date&nbsp;: ${dateAvis}</p>
   </div>
-  <div style="text-align:center;min-width:160px">
-    <div class="sig-line"></div>
-    <p style="margin:3px 0"><strong>Signature du Resp. Financier</strong></p>
+  <div style="min-width:220px;text-align:right">
+    <p style="margin:3px 0"><strong>Signature du RAF</strong></p>
+    <div class="sig-line" style="margin:5px 0 5px auto"></div>
   </div>
 </div>
 </div>`;
@@ -3340,6 +3365,127 @@ async function shareHtmlTable(tableId, title) {
   } catch (_) {
     showToast('Copie impossible : vérifiez les permissions du navigateur.');
   }
+}
+
+// Parse une cellule texte (telle qu'affichée dans le tableau HTML, format FR)
+// en nombre si possible, pour produire un vrai fichier Excel avec des cellules
+// numériques formatées (et non du texte brut comme le ferait un export CSV).
+function parseCellNumberFR(text) {
+  const clean = String(text ?? '').replace(/[\u00a0\s]/g, '');
+  if (!clean || !/^-?\d+(,\d+)?$/.test(clean)) return null;
+  const n = Number(clean.replace(',', '.'));
+  return Number.isFinite(n) ? n : null;
+}
+
+async function exportHtmlTableToExcel(tableId, filename, title) {
+  if (!window.ExcelJS) { showToast('Erreur : bibliothèque Excel non chargée.'); return; }
+  const table = document.getElementById(tableId);
+  if (!table) { showToast('Tableau introuvable.'); return; }
+
+  const headerCells = Array.from(table.querySelectorAll('thead tr')).slice(-1)[0]?.querySelectorAll('th,td') || [];
+  let headers = Array.from(headerCells).map((cell) => cell.textContent.trim().replace(/\s+/g, ' '));
+  const bodyRows = Array.from(table.querySelectorAll('tbody > tr')).filter((tr) => !tr.classList.contains('is-hidden') && !tr.classList.contains('report-detail'));
+  let dataRows = bodyRows.map((tr) => Array.from(tr.querySelectorAll('td')).map((cell) => cell.textContent.trim().replace(/\s+/g, ' ')));
+
+  // Colonnes purement interactives (boutons d'action) sans intérêt dans un export.
+  const skipIdx = headers.reduce((acc, h, i) => { if (/^actions?$/i.test(h)) acc.push(i); return acc; }, []);
+  if (skipIdx.length) {
+    headers = headers.filter((_, i) => !skipIdx.includes(i));
+    dataRows = dataRows.map((r) => r.filter((_, i) => !skipIdx.includes(i)));
+  }
+
+  if (!dataRows.length || !dataRows.some((r) => r.length)) { showToast('Aucune donnée à exporter.'); return; }
+
+  const colCount = Math.max(headers.length, ...dataRows.map((r) => r.length), 1);
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'PNDA-SE';
+  workbook.created = new Date();
+  const sheet = workbook.addWorksheet('Export', {
+    pageSetup: { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.3, right: 0.3, top: 0.5, bottom: 0.4, header: 0.2, footer: 0.2 } },
+    views: [{ state: 'frozen', ySplit: 4 }]
+  });
+
+  // ── Bandeau titre ──
+  sheet.mergeCells(1, 1, 1, colCount);
+  const titleCell = sheet.getCell(1, 1);
+  titleCell.value = title || 'Export PNDA-SE';
+  titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+  titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+  titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF123524' } };
+  sheet.getRow(1).height = 26;
+
+  // ── Sous-titre ──
+  sheet.mergeCells(2, 1, 2, colCount);
+  const session = getSession();
+  const subCell = sheet.getCell(2, 1);
+  subCell.value = `Exporté le ${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })} par ${session?.user?.email || session?.user || '—'}  ·  ${dataRows.length} ligne(s)`;
+  subCell.font = { italic: true, size: 10, color: { argb: 'FF444444' } };
+  subCell.alignment = { vertical: 'middle', horizontal: 'center' };
+  subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4EFD9' } };
+  sheet.getRow(2).height = 18;
+
+  sheet.getRow(3).height = 5; // espaceur
+
+  // ── En-têtes (ligne 4) ──
+  const headerRow = sheet.getRow(4);
+  headers.forEach((h, i) => { headerRow.getCell(i + 1).value = h; });
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, size: 10, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B7A43' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' }, color: { argb: 'FF0C3D22' } };
+  });
+  headerRow.height = 26;
+
+  // ── Détection des colonnes numériques (si toutes les valeurs non vides sont des nombres) ──
+  const numericCols = Array.from({ length: colCount }, (_, c) => {
+    const values = dataRows.map((r) => r[c]).filter((v) => v !== undefined && v !== '' && v !== '—');
+    return values.length > 0 && values.every((v) => parseCellNumberFR(v) !== null);
+  });
+
+  // ── Données ──
+  dataRows.forEach((r, idx) => {
+    const row = sheet.getRow(5 + idx);
+    const isBand = idx % 2 === 1;
+    for (let c = 0; c < colCount; c++) {
+      const raw = r[c] ?? '';
+      const cell = row.getCell(c + 1);
+      if (numericCols[c] && raw !== '' && raw !== '—') {
+        cell.value = parseCellNumberFR(raw);
+        cell.numFmt = '#,##0.00';
+        cell.alignment = { horizontal: 'right', vertical: 'middle' };
+      } else {
+        cell.value = raw;
+        cell.alignment = { vertical: 'middle', wrapText: raw.length > 30 };
+      }
+      cell.font = { size: 9.5 };
+      cell.border = { top: { style: 'thin', color: { argb: 'FFDDDDDD' } }, left: { style: 'thin', color: { argb: 'FFDDDDDD' } }, bottom: { style: 'thin', color: { argb: 'FFDDDDDD' } }, right: { style: 'thin', color: { argb: 'FFDDDDDD' } } };
+      if (isBand) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF6F8F6' } };
+    }
+    row.commit();
+  });
+
+  // ── Largeur des colonnes (auto, selon le contenu) ──
+  for (let c = 0; c < colCount; c++) {
+    const lengths = [headers[c] || ''].concat(dataRows.map((r) => r[c] || '')).map((v) => String(v).length);
+    sheet.getColumn(c + 1).width = Math.min(Math.max(...lengths, 8) + 2, 40);
+  }
+
+  // ── Filtre + impression ──
+  sheet.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4, column: colCount } };
+  sheet.pageSetup.printTitlesRow = '4:4';
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('✓ Export Excel généré.');
 }
 
 function exportHtmlTableToCSV(tableId, filename) {
