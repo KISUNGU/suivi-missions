@@ -542,6 +542,9 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
       <div class="col-md-2">
         <label class="form-label-sm">Taux per diem (USD)</label>
         <input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="0" onchange="setAvance80('${id}'); onGroupFieldChange('${id}')">
+        <button type="button" class="btn btn-link btn-sm p-0 mt-1 f-perdiem-toggle-btn" onclick="togglePerdiemBreakdown('${id}')" title="À activer si le taux per diem diffère selon le lieu visité durant la mission">
+          <i class="bi bi-signpost-split"></i> Taux variable selon le lieu&nbsp;?
+        </button>
       </div>
       <div class="col-md-2">
         <label class="form-label-sm">Frais du jour de voyage (USD)</label>
@@ -554,6 +557,14 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
           <button type="button" class="btn btn-outline-secondary" onclick="setAvance80('${id}')" title="Recalculer à 80% du FM">80%</button>
         </div>
       </div>
+    </div>
+    <div class="perdiem-breakdown-box border rounded p-2 mt-2 d-none">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="form-label-sm mb-0"><i class="bi bi-signpost-split me-1"></i>Répartition des nuitées par lieu (taux différents)</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPerdiemItem('${id}')"><i class="bi bi-plus-lg"></i> Ajouter un lieu</button>
+      </div>
+      <div class="perdiem-items"></div>
+      <div class="small mt-1 perdiem-summary text-muted"></div>
     </div>
     <div class="autres-frais-box border rounded p-2 mt-2">
       <div class="d-flex justify-content-between align-items-center mb-1">
@@ -596,6 +607,12 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
     wrap.querySelector('.f-frais-voyage').value = m.frais_voyage_usd || 0;
     wrap.querySelector('.f-avance').value = m.avance_usd || 0;
     wrap.querySelector('.f-observation').value = m.observation || '';
+
+    if (Array.isArray(m.perdiem_breakdown) && m.perdiem_breakdown.length) {
+      togglePerdiemBreakdown(id);
+      wrap.querySelector('.perdiem-items').innerHTML = '';
+      m.perdiem_breakdown.forEach((it) => addPerdiemItem(id, it.lieu, it.nuitees, it.taux));
+    }
 
     const details = Array.isArray(m.autres_frais_details) && m.autres_frais_details.length
       ? m.autres_frais_details
@@ -646,6 +663,76 @@ function copyGroupFieldsInto(wrap, groupId) {
   });
 }
 
+// ─── RÉPARTITION DES NUITÉES PAR LIEU (taux per diem différents) ──────────────
+// Par défaut, une mission a un taux per diem unique (nuitées × taux). Quand le
+// per diem diffère selon la localité visitée (ex. mission couvrant plusieurs
+// territoires à des taux différents), le bouton "Taux variable selon le lieu"
+// permet de répartir le total des nuitées en plusieurs segments (lieu,
+// nuitées, taux) dont la somme (nuitées × taux) remplace le calcul simple.
+function isPerdiemBreakdownActive(row) {
+  const box = row?.querySelector('.perdiem-breakdown-box');
+  return !!box && !box.classList.contains('d-none');
+}
+
+function computePerdiemBreakdown(row) {
+  const items = Array.from(row.querySelectorAll('.perdiem-item')).map((item) => ({
+    lieu: item.querySelector('.f-pd-lieu').value.trim(),
+    nuitees: Number(item.querySelector('.f-pd-nuitees').value || 0),
+    taux: Number(item.querySelector('.f-pd-taux').value || 0)
+  }));
+  const totalNuitees = items.reduce((s, it) => s + it.nuitees, 0);
+  const totalMontant = items.reduce((s, it) => s + it.nuitees * it.taux, 0);
+  return { items, totalNuitees, totalMontant };
+}
+
+function togglePerdiemBreakdown(rowId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  const box = row.querySelector('.perdiem-breakdown-box');
+  const tauxInput = row.querySelector('.f-taux');
+  const btn = row.querySelector('.f-perdiem-toggle-btn');
+  const activating = box.classList.contains('d-none');
+
+  box.classList.toggle('d-none', !activating);
+  if (activating) {
+    tauxInput.disabled = true;
+    tauxInput.classList.add('bg-light');
+    btn.innerHTML = '<i class="bi bi-x-circle"></i> Utiliser un taux unique';
+    if (!box.querySelector('.perdiem-item')) {
+      const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
+      const taux = Number(tauxInput.value || 0);
+      addPerdiemItem(rowId, '', nuitees, taux);
+    }
+  } else {
+    box.querySelector('.perdiem-items').innerHTML = '';
+    tauxInput.disabled = false;
+    tauxInput.classList.remove('bg-light');
+    btn.innerHTML = '<i class="bi bi-signpost-split"></i> Taux variable selon le lieu&nbsp;?';
+  }
+  recalcRow(rowId);
+}
+
+function addPerdiemItem(rowId, lieu = '', nuitees = 0, taux = 0) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  const container = row.querySelector('.perdiem-items');
+  const item = document.createElement('div');
+  item.className = 'row g-2 align-items-center mb-1 perdiem-item';
+  item.innerHTML = `
+    <div class="col-md-5"><input type="text" class="form-control form-control-sm f-pd-lieu" placeholder="Lieu (ex. Gungu)" value="${esc(lieu)}" onchange="recalcRow('${rowId}')"></div>
+    <div class="col-md-3"><input type="number" min="0" class="form-control form-control-sm f-pd-nuitees" placeholder="Nuitées" value="${Number(nuitees) || 0}" onchange="recalcRow('${rowId}')"></div>
+    <div class="col-md-3"><input type="number" min="0" step="0.01" class="form-control form-control-sm f-pd-taux" placeholder="Taux USD" value="${Number(taux) || 0}" onchange="recalcRow('${rowId}')"></div>
+    <div class="col-md-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removePerdiemItem(this, '${rowId}')" title="Retirer ce lieu"><i class="bi bi-trash"></i></button></div>
+  `;
+  container.appendChild(item);
+  recalcRow(rowId);
+}
+
+function removePerdiemItem(btn, rowId) {
+  btn.closest('.perdiem-item')?.remove();
+  recalcRow(rowId);
+}
+
 function removeMissionRow(id) {
   const el = document.getElementById(id);
   if (el) el.remove();
@@ -665,9 +752,22 @@ function recalcRow(rowId) {
   if (totalEl) totalEl.textContent = fmtCur(fj);
 
   const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
-  const taux = Number(row.querySelector('.f-taux').value || 0);
   const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
-  const fm = nuitees * taux + fraisVoyage;
+
+  let fm;
+  if (isPerdiemBreakdownActive(row)) {
+    const { totalNuitees, totalMontant } = computePerdiemBreakdown(row);
+    fm = totalMontant + fraisVoyage;
+    const summaryEl = row.querySelector('.perdiem-summary');
+    if (summaryEl) {
+      const mismatch = totalNuitees !== nuitees;
+      summaryEl.innerHTML = `Total réparti : <strong>${totalNuitees}</strong> nuitée(s) pour <strong>${fmtCur(totalMontant)}</strong> USD` +
+        (mismatch ? ` <span class="text-danger">— attendu ${nuitees} nuitée(s) d'après les dates</span>` : ' <span class="text-success">✓</span>');
+    }
+  } else {
+    const taux = Number(row.querySelector('.f-taux').value || 0);
+    fm = nuitees * taux + fraisVoyage;
+  }
 
   const avance = Number(row.querySelector('.f-avance').value || 0);
   const total = fm + fj;
@@ -688,10 +788,11 @@ function setAvance80(rowId) {
   const row = document.getElementById(rowId);
   if (!row) return;
 
-  const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
-  const taux = Number(row.querySelector('.f-taux').value || 0);
   const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
-  const fm = nuitees * taux + fraisVoyage;
+  const perdiem = isPerdiemBreakdownActive(row)
+    ? computePerdiemBreakdown(row).totalMontant
+    : Number(row.querySelector('.f-nuitees').value || 0) * Number(row.querySelector('.f-taux').value || 0);
+  const fm = perdiem + fraisVoyage;
 
   const avance = Math.round(fm * 0.8 * 100) / 100;
   row.querySelector('.f-avance').value = avance.toFixed(2);
@@ -702,12 +803,13 @@ function recalcTotals() {
   let totFM = 0, totFJ = 0, totTotal = 0, totAvance = 0, totSolde = 0, totPercu = 0;
 
   document.querySelectorAll('.mission-row').forEach(row => {
-    const nuitees = Number(row.querySelector('.f-nuitees')?.value || 0);
-    const taux = Number(row.querySelector('.f-taux')?.value || 0);
     const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
     const fj = Number(row.querySelector('.f-autres')?.value || 0);
     const avance = Number(row.querySelector('.f-avance')?.value || 0);
-    const fm = nuitees * taux + fraisVoyage;
+    const perdiem = isPerdiemBreakdownActive(row)
+      ? computePerdiemBreakdown(row).totalMontant
+      : Number(row.querySelector('.f-nuitees')?.value || 0) * Number(row.querySelector('.f-taux')?.value || 0);
+    const fm = perdiem + fraisVoyage;
     const total = fm + fj;
 
     totFM += fm;
@@ -783,11 +885,23 @@ function collectMissions() {
     const dateDebut = row.querySelector('.f-date-debut').value;
     const dateFin    = row.querySelector('.f-date-fin').value;
     const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
-    const taux    = Number(row.querySelector('.f-taux').value || 0);
     const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
-    const fm      = Math.round((nuitees * taux + fraisVoyage) * 100) / 100;
     const avance  = Number(row.querySelector('.f-avance').value || 0);
     const observation = row.querySelector('.f-observation')?.value.trim() || '';
+
+    const breakdownActive = isPerdiemBreakdownActive(row);
+    const perdiemBreakdown = breakdownActive
+      ? Array.from(row.querySelectorAll('.perdiem-item')).map((item) => ({
+          lieu: item.querySelector('.f-pd-lieu').value.trim(),
+          nuitees: Number(item.querySelector('.f-pd-nuitees').value || 0),
+          taux: Number(item.querySelector('.f-pd-taux').value || 0)
+        })).filter((it) => it.lieu || it.nuitees || it.taux)
+      : [];
+    const perdiemMontant = perdiemBreakdown.reduce((s, it) => s + it.nuitees * it.taux, 0);
+    const taux = breakdownActive
+      ? (nuitees > 0 ? Math.round((perdiemMontant / nuitees) * 100) / 100 : 0)
+      : Number(row.querySelector('.f-taux').value || 0);
+    const fm = Math.round(((breakdownActive ? perdiemMontant : nuitees * taux) + fraisVoyage) * 100) / 100;
 
     const details = Array.from(row.querySelectorAll('.autres-frais-item')).map((item) => ({
       libelle: item.querySelector('.f-item-libelle').value.trim(),
@@ -812,6 +926,7 @@ function collectMissions() {
       date_fin: dateFin,
       nuitees,
       taux_per_diem: taux,
+      perdiem_breakdown: perdiemBreakdown,
       frais_voyage_usd: fraisVoyage,
       montant_usd: fm,
       autres_frais_usd: fj,
