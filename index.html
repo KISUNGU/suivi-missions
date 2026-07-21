@@ -305,97 +305,98 @@
     table th, table td { padding: 2px 3px !important; white-space: normal !important; word-break: break-word; }
     .report-detail-table { font-size: 6.5pt !important; }
     .report-detail-table th, .report-detail-table td { padding: 1px 2px !important; }
-    thead { display: table-header-group; } /* répète l'en-tête sur chaque page */
+    thead { display: table-header-group; }
     tr { break-inside: avoid; }
     .table-responsive { overflow: visible !important; }
     @page { size: A4 landscape; margin: 0.8cm; }
   }
-/* ── WORKFLOW BADGES ─────────────────────────────────────── */
-.workflow-badge-btn {
-  transition: transform 0.15s ease;
-}
-.workflow-badge-btn:hover {
-  transform: scale(1.08);
-}
-.status-filter-active {
-  opacity: 0.6;
-  background: rgba(255,255,255,0.1);
-  border-radius: 50%;
-}
 
-/* ─── STATUT BADGES ───────────────────────────────────────── */
-.statut-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.statut-badge.en-attente { 
-  background: #fff3cd; 
-  color: #856404; 
-  border: 1px solid #ffeeba; 
-}
-.statut-badge.activee { 
-  background: #d1ecf1; 
-  color: #0c5460; 
-  border: 1px solid #bee5eb; 
-}
-.statut-badge.realisee { 
-  background: #d4edda; 
-  color: #155724; 
-  border: 1px solid #c3e6cb; 
-}
-.statut-badge.retournee { 
-  background: #f8d7da; 
-  color: #721c24; 
-  border: 1px solid #f5c6cb; 
-}
+  /* ── WORKFLOW BADGES ─────────────────────────────────────── */
+  .workflow-badge-btn {
+    transition: transform 0.15s ease;
+  }
+  .workflow-badge-btn:hover {
+    transform: scale(1.08);
+  }
+  .status-filter-active {
+    opacity: 0.6;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+  }
 
-/* ─── WORKFLOW PANEL ──────────────────────────────────────── */
-#workflow-panel .display-6 {
-  font-size: 2rem;
-}
-@media (max-width: 767.98px) {
+  /* ─── STATUT BADGES ───────────────────────────────────────── */
+  .statut-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .statut-badge.en-attente { 
+    background: #fff3cd; 
+    color: #856404; 
+    border: 1px solid #ffeeba; 
+  }
+  .statut-badge.activee { 
+    background: #d1ecf1; 
+    color: #0c5460; 
+    border: 1px solid #bee5eb; 
+  }
+  .statut-badge.realisee { 
+    background: #d4edda; 
+    color: #155724; 
+    border: 1px solid #c3e6cb; 
+  }
+  .statut-badge.retournee { 
+    background: #f8d7da; 
+    color: #721c24; 
+    border: 1px solid #f5c6cb; 
+  }
+
+  /* ─── WORKFLOW PANEL ──────────────────────────────────────── */
   #workflow-panel .display-6 {
-    font-size: 1.5rem;
+    font-size: 2rem;
   }
-}
+  @media (max-width: 767.98px) {
+    #workflow-panel .display-6 {
+      font-size: 1.5rem;
+    }
+  }
 
-/* Ajoute cette règle pour gérer 7 cartes */
-@media (min-width: 768px) and (max-width: 1200px) {
-  #summary-grid > [class*="col-"] {
-    width: 25%; /* 4 cartes par ligne sur tablette */
+  /* Responsive pour 7 cartes */
+  @media (min-width: 768px) and (max-width: 1200px) {
+    #summary-grid > [class*="col-"] {
+      width: 25%;
+    }
   }
-}
-@media (min-width: 1200px) {
-  #summary-grid > [class*="col-"] {
-    width: 14.28%; /* 7 cartes par ligne sur desktop */
+  @media (min-width: 1200px) {
+    #summary-grid > [class*="col-"] {
+      width: 14.28%;
+    }
   }
-}
 
-/* ─── RESPONSIVE ADJUSTMENTS ──────────────────────────────── */
-@media (max-width: 991.98px) {
-  #workflow-badges {
-    order: 3;
-    width: 100%;
-    justify-content: center;
-    margin-top: 5px;
+  /* ─── RESPONSIVE ADJUSTMENTS ──────────────────────────────── */
+  @media (max-width: 991.98px) {
+    #workflow-badges {
+      order: 3;
+      width: 100%;
+      justify-content: center;
+      margin-top: 5px;
+    }
+    .top-navbar .ms-auto {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
   }
-  .top-navbar .ms-auto {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-}
 
-/* ─── STAT CARD COLORS ────────────────────────────────────── */
-.stat-value.text-warning { color: #856404 !important; }
-.stat-value.text-info { color: #0c5460 !important; }
-.stat-value.text-success { color: #155724 !important; }
-.stat-value.text-danger { color: #721c24 !important; }
+  /* ─── STAT CARD COLORS ────────────────────────────────────── */
+  .stat-value.text-warning { color: #856404 !important; }
+  .stat-value.text-info { color: #0c5460 !important; }
+  .stat-value.text-success { color: #155724 !important; }
+  .stat-value.text-danger { color: #721c24 !important; }
 </style>
 </head>
 <body>
@@ -592,17 +593,6 @@
             </div>
           </div>
         </div>
-        <!-- <div class="col-6 col-md-2">
-          <div class="card h-100">
-            <div class="card-body d-flex justify-content-between align-items-center">
-              <div>
-                <div class="text-muted small fw-semibold text-uppercase stat-label-admin">Missions</div>
-                <span class="stat-value" id="stat-missions">—</span>
-              </div>
-              <i class="bi bi-list-check stat-icon icon-blue"></i>
-            </div>
-          </div>
-        </div> -->
 
         <div class="col-6 col-md-2">
           <div class="card h-100">
@@ -938,7 +928,7 @@ const SIGNATORY_STORAGE_KEY = 'PNDA_EXPORT_SIGNATORY';
 const REPORT_SYNC_KEY = 'PNDA_REPORTS_SYNC';
 const REPORT_SYNC_CHANNEL = 'pnda-reports-sync';
 let REPORTS_CACHE = [];
-let PROFILES_DIRECTORY = {}; // email (minuscules) -> display_name enregistré dans profiles
+let PROFILES_DIRECTORY = {};
 let importedReports = [];
 let activeTab = 'general';
 let currentStatusFilter = '';
@@ -955,7 +945,7 @@ initialize();
 
 async function initialize() {
   const session = await PndaAuth.hydrateSession(db, ['admin', 'super_admin', 'comptable']);
-  if (!session) return; // l'écran de connexion PndaAuth prend le relais
+  if (!session) return;
   await Promise.all([loadReference(), loadProfilesDirectory()]);
   TAB_ORDER = ['general', ...REFERENCE.provinces.map((province) => province.name)];
   openDashboard(session.user);
@@ -964,7 +954,7 @@ async function initialize() {
   await refreshDashboard();
 }
 
-// ── Annuaire des profils (résolution du nom réel du missionnaire) ──────────────
+// ── Annuaire des profils ──────────────────────────────────────────────────────
 async function loadProfilesDirectory() {
   try {
     const { data, error } = await db.from('profiles').select('email, display_name');
@@ -978,9 +968,6 @@ async function loadProfilesDirectory() {
   }
 }
 
-// Résout le nom d'enregistrement réel du missionnaire à partir de l'annuaire
-// profiles, au lieu du nom de compte/email brut parfois figé dans meta.rapporteur
-// au moment de la saisie du rapport.
 function resolveMissionnaireName(report) {
   const raw = (report && report.meta && report.meta.rapporteur) || '';
   if (!raw) return '—';
@@ -989,9 +976,6 @@ function resolveMissionnaireName(report) {
   return displayName || raw;
 }
 
-// Résout le nom d'affichage d'un compte (comptable/RAF) à partir de son email,
-// pour l'impression (ex. signature de l'avis sur justificatifs). Retombe sur
-// l'email brut si aucun display_name n'est enregistré dans profiles.
 function resolveAccountDisplayName(email) {
   if (!email) return '';
   const key = String(email).trim().toLowerCase();
@@ -1154,7 +1138,6 @@ function getAdminProvinces(session) {
   if (Array.isArray(userProvs) && userProvs.length) {
     return REFERENCE.provinces.filter((p) => userProvs.includes(p.name));
   }
-  // provinces NULL/vide (ex: admin, comptes UNCP historiques) => accès à toutes les provinces
   return REFERENCE.provinces;
 }
 
@@ -1242,13 +1225,7 @@ function getStatusBadge(status) {
   return `<span class="statut-badge ${cfg.class}"><i class="bi bi-${cfg.icon} me-1"></i>${cfg.label}</span>`;
 }
 
-// Montant réellement en litige (solde non soldé) pour un rapport :
-//  - si le solde a déjà été versé (report.solde_paye_at), plus rien n'est en
-//    litige : on renvoie 0, quel que soit l'ancien solde théorique ;
-//  - si l'avis sur justificatifs a été rendu, on retient l'écart réellement
-//    constaté (avis_ecart : + si le projet doit encore à l'agent, − si
-//    l'agent doit rembourser) plutôt que le solde théorique de 20% ;
-//  - sinon (avant justification), on retombe sur le solde théorique (20%).
+// Montant réellement en litige (solde non soldé) pour un rapport
 function calculateReportLitige(report) {
   if (report.solde_paye_at) return 0;
   return (report.missions || []).reduce((sum, mission) => {
@@ -1306,54 +1283,6 @@ function updateWorkflowPanel() {
   if (wfActivee) wfActivee.textContent = stats.activee;
   if (wfRealisee) wfRealisee.textContent = stats.realisee;
   if (wfRetournee) wfRetournee.textContent = stats.retournee;
-}
-
-function getReportsSnapshotSignature(reports = REPORTS_CACHE) {
-  const summary = reports.reduce((acc, report) => {
-    const status = report?.statut || 'activee';
-    const missions = Array.isArray(report?.missions) ? report.missions : [];
-    acc.count += 1;
-    acc.missions += missions.length;
-    acc.total += missions.reduce((sum, mission) => sum + Number(mission.total_usd || 0), 0);
-    acc.solde += missions.reduce((sum, mission) => sum + Number(mission.solde_usd || 0), 0);
-    acc.statusCounts[status] = (acc.statusCounts[status] || 0) + 1;
-    const savedAt = report?.savedAt || report?.meta?.date_generation || '';
-    if (savedAt > acc.latestSavedAt) acc.latestSavedAt = savedAt;
-    return acc;
-  }, {
-    count: 0,
-    missions: 0,
-    total: 0,
-    solde: 0,
-    latestSavedAt: '',
-    statusCounts: { en_attente: 0, activee: 0, realisee: 0, retournee: 0 }
-  });
-
-  return JSON.stringify({
-    count: summary.count,
-    missions: summary.missions,
-    total: Number(summary.total.toFixed(2)),
-    solde: Number(summary.solde.toFixed(2)),
-    latestSavedAt: summary.latestSavedAt,
-    statusCounts: summary.statusCounts
-  });
-}
-
-// ─── AUTO-POLL ────────────────────────────────────────────────────────────────
-let _pollInterval = null;
-function startPolling() {
-  if (_pollInterval) {
-    clearInterval(_pollInterval);
-    _pollInterval = null;
-  }
-}
-
-function handleStorageSync(event) {
-  if (event.key === 'PNDA_SESSION' && !getSession()) { window.location.reload(); return; }
-  if ([IMPORT_STORAGE_KEY, REPORT_SYNC_KEY, 'PNDA_SESSION'].includes(event.key)) {
-    importedReports = getPersistedImportedReports();
-    refreshDashboard();
-  }
 }
 
 // ─── REPORTS ──────────────────────────────────────────────────────────────────
@@ -1470,24 +1399,6 @@ function getFilteredReports() {
   });
 }
 
-function applyFilters(data) {
-  const rapporteurFilter = document.getElementById('filter-rapporteur')?.value?.trim().toLowerCase()
-    || document.getElementById('filterChef')?.value?.trim().toLowerCase()
-    || '';
-  const missionFilter = document.getElementById('filterMission')?.value?.trim().toLowerCase() || '';
-
-  if (!Array.isArray(data)) return [];
-
-  return data.filter((item) => {
-    const rapporteurValue = String(item?.chef_nom || item?.meta?.rapporteur || item?.rapporteur || '').toLowerCase();
-    const missionValue = String(item?.mission_intitule || item?.nature || item?.intitule || item?.objectif || '').toLowerCase();
-
-    if (rapporteurFilter && !rapporteurValue.includes(rapporteurFilter)) return false;
-    if (missionFilter && !missionValue.includes(missionFilter)) return false;
-    return true;
-  });
-}
-
 function populateFilterProvinceOptions() {
   const currentValue = getFilterValue('province');
   const session = getSession();
@@ -1579,10 +1490,6 @@ async function getStoredReports() {
       const userProvs = session?.provinces;
       if (Array.isArray(userProvs) && userProvs.length) {
         if (session?.role === 'comptable' && userProvs.includes('UN')) {
-          // Le compte UNCP voit aussi les rapports élaborés par le RAF (admin)
-          // et le RNSE (super_admin), quelle que soit la province choisie.
-          // Il récupère aussi les rapports saisis avec l'alias libre "Kinshasa"
-          // ou un libellé UNCP non canonique, déjà autorisés par la RLS.
           const provList = userProvs.map((p) => `"${p}"`).join(',');
           query = query.or([
             `province.in.(${provList})`,
@@ -1598,8 +1505,6 @@ async function getStoredReports() {
           }
         }
       }
-      // provinces NULL/vide (ex: admin, comptes UNCP historiques) => pas de filtre
-      // supplémentaire côté client ; les RLS Supabase bornent déjà l'accès réel.
     }
     const { data, error } = await query;
     if (error) throw error;
@@ -1701,7 +1606,6 @@ function renderSummaryCards() {
   const totalGeneral = missions.reduce((sum, m) => sum + Number(m.total_usd || 0), 0);
   
   document.getElementById('stat-reports').textContent = reports.length;
-  // document.getElementById('stat-missions').textContent = missions.length; // Ligne à commenter ou supprimer
   document.getElementById('stat-total').textContent = formatCurrency(totalGeneral);
   
   const enAttente = allReports.filter((r) => (r.statut || 'activee') === 'en_attente').length;
@@ -1822,9 +1726,6 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
   const isSuperAdmin = session?.role === 'super_admin';
   const isUncpComptable = isUncpComptableSession(session);
   const reports = reportsSource.filter((report) => {
-    // Un rapport saisi par le RAF/RNSE n'apparaît jamais dans une province
-    // provinciale, même si son champ province est mal renseigné : il ne
-    // s'affiche que dans l'onglet UN, et seulement pour le comptable UNCP.
     if (isRafOrRnseReport(report)) return province.name === 'UN' && isUncpComptable;
     if (getReportProvinceName(report) === province.name) return true;
     return false;
@@ -2025,7 +1926,7 @@ async function updateReportStatut(reportId, newStatut) {
   const okClasses = { activee: 'btn-success', retournee: 'btn-warning', realisee: 'btn-secondary', en_attente: 'btn-secondary' };
   const icons     = { activee: 'bi-play-fill', retournee: 'bi-arrow-return-left', realisee: 'bi-flag-fill', en_attente: 'bi-clock' };
   askConfirm(
-    `Changer le statut de ce rapport en « <strong>${labels[newStatut] || newStatut}</strong> » ?`,
+    `Changer le statut de ce rapport en « <strong>${labels[newStatut] || newStatut}</strong> » ?`,
     async () => {
       try {
         const session = getSession();
@@ -2161,7 +2062,7 @@ function _accompNames(rm) {
   return names;
 }
 
-// Construit le contenu (une page) du bordereau pour UN missionnaire donné.
+// ─── BORDEREAU DE LIQUIDATION ────────────────────────────────────────────────
 function buildBordereauPageHtml(report, m, rm, isLast) {
   const nom = m.missionnaire_nom || resolveMissionnaireName(report);
   const selfLabel = [m.missionnaire_nom, m.missionnaire_titre].filter(Boolean).join(' — ');
@@ -2185,9 +2086,6 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
   const lbl = escapeHtml(m.territoire_label || m.territoire_name || '—');
   const fraisVoyage = Number(m.frais_voyage_usd || 0);
   const nuiteeMontant = Number(m.nuitees || 0) * Number(m.taux_per_diem || 0);
-  // Mission couvrant plusieurs lieux à taux différents (ex. Lieu Alpha du X au
-  // Y, Lieu Beta du X au Y…) : une ligne par lieu, chacune avec son propre
-  // taux/nuitées, au lieu d'une seule ligne agrégée avec un taux moyen.
   const perdiemBreakdown = Array.isArray(m.perdiem_breakdown)
     ? m.perdiem_breakdown.filter((it) => (it.lieu || '').trim() || Number(it.nuitees || 0) > 0)
     : [];
@@ -2240,7 +2138,7 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
     ${autresRows}
     <tr class="bold bg"><td colspan="4">Total frais à justifier</td><td class="tr">${_docFmt(totAutres)}</td></tr>
     <tr class="bold bg"><td colspan="4">Montant total</td><td class="tr">${_docFmt(totGeneral)}</td></tr>
-    <tr><td colspan="4"> Avance versée (80% FM)</td><td class="tr bold">${_docFmt(avance)}</td></tr>
+    <tr><td colspan="4"> Avance versée (80% FM)</td><td class="tr bold">${_docFmt(avance)}</td></tr>
     <tr><td colspan="4">Solde à payer au retour de la mission</td><td class="tr">${_docFmt(solde)}</td></tr>
     <tr class="bold bg"><td colspan="4">Total perçu (FM + FJ)</td><td class="tr">${_docFmt(avance + totAutres)}</td></tr>
   </tbody>
@@ -2257,8 +2155,6 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
 </div>`;
 }
 
-// Assemble le bordereau complet : une page par missionnaire (chef de mission
-// et personnes accompagnées), imprimées à la suite dans une seule fenêtre.
 function buildBordereauHtml(report) {
   const rm = (report.missions || []);
   const num = report.liquidation_number || '___/____';
@@ -2270,9 +2166,7 @@ ${pages}
 </body></html>`;
 }
 
-// Construit une page "AVIS SUR JUSTIFICATIFS PROVISION" (formulaire simple,
-// sans tableau) pour UN missionnaire donné — mêmes montants que sur son
-// propre bordereau de liquidation.
+// ─── AVIS SUR JUSTIFICATIFS PROVISION ──────────────────────────────────────
 function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   const nom      = m.missionnaire_nom || resolveMissionnaireName(report);
   const direction = m.missionnaire_entite || report.meta?.province_label || report.meta?.province || '';
@@ -2285,9 +2179,6 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   const sens  = m.avis_sens || (ecart > 0 ? 'projet_rembourse' : (ecart < 0 ? 'agent_rembourse' : 'aucun'));
   const favorable = m.avis_comptable ? m.avis_comptable === 'favorable' : true;
 
-  // Détail des autres frais à justifier, avec case déjà cochée si le montant
-  // déclaré a été validé tel quel dans la modale du comptable (décochée s'il
-  // a été corrigé).
   const autresItems = Array.isArray(m.autres_frais_details) ? m.autres_frais_details : [];
   const autresItemsHtml = autresItems.length
     ? `<div style="margin:8px 0">
@@ -2354,8 +2245,6 @@ ${m.avis_observation ? `<p style="margin:8px 0"><strong>Observation&nbsp;:</stro
 </div>`;
 }
 
-// Assemble l'avis complet : une page par missionnaire, imprimées à la suite
-// dans une seule fenêtre (même principe que buildBordereauHtml).
 function buildAvisJustificatifsHtml(report) {
   const rm = report.missions || [];
   const num = report.fld_number || '___/___/____';
@@ -2367,12 +2256,7 @@ ${pages}
 </body></html>`;
 }
 
-// Construit une page "JUSTIFICATION DE LA MISSION" (tableau prévu / payé /
-// réalisé / écart) pour UNE mission donnée : ligne per diem (avance 80% /
-// solde 20%) puis détail des provisions à justifier (payées en totalité),
-// avec sous-totaux et total général. Les montants "prévus" proviennent de
-// l'instantané pris avant l'avis (prevu_montant_usd / prevu_autres_frais_details) ;
-// les montants "réalisés" sont ceux validés/corrigés par l'avis.
+// ─── JUSTIFICATION DE LA MISSION ──────────────────────────────────────────────
 function buildJustificationMissionPageHtml(report, m, rm, isLast) {
   const libelleMission = m.territoire_label || m.destination_province_label || m.nature || '—';
   const dateDepart = _docDate(m.date_debut);
@@ -2380,8 +2264,6 @@ function buildJustificationMissionPageHtml(report, m, rm, isLast) {
   const taux = Number(m.taux_per_diem || 0);
   const joursPrevus = Number(m.nuitees || 0);
   const joursReels = (m.jours_reels !== undefined && m.jours_reels !== null) ? Number(m.jours_reels) : joursPrevus;
-  // Chaque mission représente désormais UN missionnaire (formulaire individuel) :
-  // NBRE PERS. vaut donc 1 par défaut, sauf override explicite éventuel.
   const nbrePers = Number(m.participants || 1);
 
   const prevuMontant = (m.prevu_montant_usd !== undefined && m.prevu_montant_usd !== null) ? Number(m.prevu_montant_usd) : Number(m.montant_usd || 0);
@@ -2391,11 +2273,6 @@ function buildJustificationMissionPageHtml(report, m, rm, isLast) {
   const pctPaye = prevuMontant > 0 ? Math.round((payeMontant / prevuMontant) * 100) : 0;
   const fraisVoyage = Number(m.frais_voyage_usd || 0);
 
-  // Mission couvrant plusieurs lieux à taux différents (ex. Lieu Alpha du X au
-  // Y, Lieu Beta du X au Y…) : une ligne informative par lieu (taux/jours/
-  // montant prévu propres à ce lieu). L'avis du comptable ne corrige que le
-  // total agrégé du per diem (pas lieu par lieu) : Payé/Réalisé/Écart restent
-  // donc affichés au niveau du S/Total 1, pas sur chaque ligne de lieu.
   const perdiemBreakdown = Array.isArray(m.perdiem_breakdown)
     ? m.perdiem_breakdown.filter((it) => (it.lieu || '').trim() || Number(it.nuitees || 0) > 0)
     : [];
@@ -2427,62 +2304,90 @@ function buildJustificationMissionPageHtml(report, m, rm, isLast) {
     const firstCell = i === 0 ? '<td class="bold">Provision à justifier</td>' : '<td class="nb"></td>';
     detailRows.push(`<tr>${firstCell}<td>${escapeHtml(libelle)}</td><td colspan="4" class="tc">—</td><td class="tr">${_docFmt(pv)}</td><td class="tr">${_docFmt(pv)}</td><td class="tr">${_docFmt(rl)}</td><td class="tr">${_docFmt(ec)}</td></tr>`);
   }
+
   const totPrevu = prevuMontant + s2Prevu;
   const totPaye = payeMontant + s2Paye;
   const totRealise = realiseMontant + s2Realise;
   const totEcart = Math.round((totPaye - totRealise) * 100) / 100;
 
   return `<div class="just-page"${isLast ? '' : ' style="page-break-after:always"'}>
-<div style="text-align:center;font-size:9pt;line-height:1.5;margin-bottom:8px">
-  République Démocratique du Congo &nbsp;•&nbsp; MINISTÈRE DE L'AGRICULTURE<br>
-  <strong>PROGRAMME NATIONAL DE DÉVELOPPEMENT AGRICOLE &laquo;PNDA&raquo;</strong><br>
-  Unité Nationale de Coordination du Projet
-</div>
-<h1>JUSTIFICATION DE LA MISSION</h1>
-<table>
-  <thead><tr>
-    <th>MISSION</th><th>${escapeHtml(libelleMission)}</th><th>TAUX</th>
-    <th>NOMBRE DE<br>JOURS PREVUS</th><th>NOMBRE DE<br>JOURS REELS</th><th>NBRE<br>PERS.</th>
-    <th>MONTANT<br>PREVU</th><th>MONTANT<br>PAYE</th><th>MONTANT<br>REALISE</th><th>ECART</th>
-  </tr></thead>
-  <tbody>
-    <tr><td class="bold">Date départ</td><td>${escapeHtml(dateDepart)}</td><td colspan="8" class="nb"></td></tr>
-    <tr><td class="bold">Date retour</td><td>${escapeHtml(dateRetour)}</td><td colspan="8" class="nb"></td></tr>
-    ${perdiemRows}
-    <tr class="bold bg"><td class="nb"></td><td>S/Total 1</td><td colspan="4" class="nb"></td>
-      <td class="tr">${_docFmt(prevuMontant)}</td><td class="tr">${_docFmt(payeMontant)}</td><td class="tr">${_docFmt(realiseMontant)}</td><td class="tr">${_docFmt(ecartMontant)}</td></tr>
-    ${detailRows.join('')}
-    <tr class="bold bg"><td class="nb"></td><td>S/Total 2</td><td colspan="4" class="nb"></td>
-      <td class="tr">${_docFmt(s2Prevu)}</td><td class="tr">${_docFmt(s2Paye)}</td><td class="tr">${_docFmt(s2Realise)}</td><td class="tr">${_docFmt(s2Ecart)}</td></tr>
-    <tr class="bold bg"><td class="nb"></td><td>Montant total</td><td colspan="4" class="nb"></td>
-      <td class="tr">${_docFmt(totPrevu)}</td><td class="tr">${_docFmt(totPaye)}</td><td class="tr">${_docFmt(totRealise)}</td><td class="tr">${_docFmt(totEcart)}</td></tr>
-  </tbody>
-</table>
+    <div style="text-align:center;font-size:9pt;line-height:1.5;margin-bottom:8px">
+      République Démocratique du Congo &nbsp;•&nbsp; MINISTÈRE DE L'AGRICULTURE<br>
+      <strong>PROGRAMME NATIONAL DE DÉVELOPPEMENT AGRICOLE &laquo;PNDA&raquo;</strong><br>
+      Unité Nationale de Coordination du Projet
+    </div>
 
-<div style="display:flex;justify-content:flex-end;margin-top:10px">
-  <div class="avis-amount-row" style="max-width:260px">
-    <span><strong>Montant justifié&nbsp;:</strong></span><span class="avis-box">${_docFmt(totRealise)}</span>
-  </div>
-</div>
+    <h1>JUSTIFICATION DE LA MISSION</h1>
 
-<p style="margin:26px 0 4px"><em>Correspondance&nbsp;:</em></p>
+    <table>
+      <thead>
+        <tr>
+          <th>MISSION</th>
+          <th>${escapeHtml(libelleMission)}</th>
+          <th>TAUX</th>
+          <th>NOMBRE DE<br>JOURS PREVUS</th>
+          <th>NOMBRE DE<br>JOURS REELS</th>
+          <th>NBRE<br>PERS.</th>
+          <th>MONTANT<br>PREVU</th>
+          <th>MONTANT<br>PAYE</th>
+          <th>MONTANT<br>REALISE</th>
+          <th>ECART</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="bold">Date départ</td><td>${escapeHtml(dateDepart)}</td><td colspan="8" class="nb"></td></tr>
+        <tr><td class="bold">Date retour</td><td>${escapeHtml(dateRetour)}</td><td colspan="8" class="nb"></td></tr>
 
-<div style="display:flex;justify-content:space-between;margin-top:20px">
-  <div style="min-width:220px">
-    <p style="margin:3px 0"><strong>Nom &amp; Signature du missionnaire</strong></p>
-    <div class="sig-line" style="margin:5px 0"></div>
-    <p style="margin:3px 0">${escapeHtml(m.missionnaire_nom || resolveMissionnaireName(report))}</p>
-  </div>
-  <div style="min-width:220px;text-align:right">
-    <p style="margin:3px 0"><strong>Signature du Comptable</strong></p>
-    <div class="sig-line" style="margin:5px 0 5px auto"></div>
-  </div>
-</div>
-</div>`;
+        ${perdiemRows}
+
+        <tr class="bold bg"><td class="nb"></td><td>S/Total 1</td><td colspan="4" class="nb"></td>
+          <td class="tr">${_docFmt(prevuMontant)}</td>
+          <td class="tr">${_docFmt(payeMontant)}</td>
+          <td class="tr">${_docFmt(realiseMontant)}</td>
+          <td class="tr">${_docFmt(ecartMontant)}</td>
+        </tr>
+
+        ${detailRows.join('')}
+
+        <tr class="bold bg"><td class="nb"></td><td>S/Total 2</td><td colspan="4" class="nb"></td>
+          <td class="tr">${_docFmt(s2Prevu)}</td>
+          <td class="tr">${_docFmt(s2Paye)}</td>
+          <td class="tr">${_docFmt(s2Realise)}</td>
+          <td class="tr">${_docFmt(s2Ecart)}</td>
+        </tr>
+
+        <tr class="bold bg"><td class="nb"></td><td>Montant total</td><td colspan="4" class="nb"></td>
+          <td class="tr">${_docFmt(totPrevu)}</td>
+          <td class="tr">${_docFmt(totPaye)}</td>
+          <td class="tr">${_docFmt(totRealise)}</td>
+          <td class="tr">${_docFmt(totEcart)}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:10px">
+      <div class="avis-amount-row" style="max-width:260px">
+        <span><strong>Montant justifié&nbsp;:</strong></span>
+        <span class="avis-box">${_docFmt(totRealise)}</span>
+      </div>
+    </div>
+
+    <p style="margin:26px 0 4px"><em>Correspondance&nbsp;:</em></p>
+
+    <div style="display:flex;justify-content:space-between;margin-top:20px">
+      <div style="min-width:220px">
+        <p style="margin:3px 0"><strong>Nom &amp; Signature du missionnaire</strong></p>
+        <div class="sig-line" style="margin:5px 0"></div>
+        <p style="margin:3px 0">${escapeHtml(m.missionnaire_nom || resolveMissionnaireName(report))}</p>
+      </div>
+      <div style="min-width:220px;text-align:right">
+        <p style="margin:3px 0"><strong>Signature du Comptable</strong></p>
+        <div class="sig-line" style="margin:5px 0 5px auto"></div>
+      </div>
+    </div>
+  </div>`;
 }
 
-// Assemble la "Justification de la mission" complète : une page par mission
-// du rapport, imprimées à la suite dans une seule fenêtre.
 function buildJustificationMissionHtml(report) {
   const rm = report.missions || [];
   const pages = rm.length
@@ -2493,10 +2398,6 @@ ${pages}
 </body></html>`;
 }
 
-// Document combiné imprimé après acceptation de l'avis : les pages "Avis sur
-// justificatifs provision" (une par missionnaire) suivies des pages
-// "Justification de la mission" (une par mission), dans une seule fenêtre
-// d'impression.
 function buildAvisAndJustificationHtml(report) {
   const rm = report.missions || [];
   const num = report.fld_number || '___/___/____';
@@ -2515,7 +2416,7 @@ async function activerMission(reportId) {
   const report = REPORTS_CACHE.find(r => r.id === reportId);
   if (!report) return;
   askConfirm(
-    'Activer cette mission et générer le <strong>Bordereau de Liquidation</strong> ?',
+    'Activer cette mission et générer le <strong>Bordereau de Liquidation</strong> ?',
     async () => {
       try {
         const session  = getSession();
@@ -2528,10 +2429,6 @@ async function activerMission(reportId) {
         if (!liqNumber) {
           const { data: seq, error: seqErr } = await db.rpc('next_liquidation_seq', { p_province: province, p_year: annee });
           if (seqErr) throw seqErr;
-          // Le compteur "seq" est incrémenté séparément par province : on doit
-          // inclure le code province dans le numéro pour rester unique parmi
-          // TOUS les rapports (l'index unique liquidation_number est global,
-          // sinon deux provinces génèrent toutes les deux "0001/<année>").
           liqNumber = String(seq).padStart(4, '0') + '/' + provinceCode + '/' + annee;
         }
         const { error } = await db.from('reports').update({
@@ -2539,7 +2436,7 @@ async function activerMission(reportId) {
           liquidation_number: liqNumber, liquidation_printed_at: now, liquidation_printed_by: email
         }).eq('id', reportId);
         if (error) throw error;
-        showToast('✓ Mission activée — Bordereau N° ' + liqNumber);
+        showToast('✓ Mission activée — Bordereau N° ' + liqNumber);
         await refreshDashboard();
         const updated = { ...report, statut: 'activee', activated_at: now, liquidation_number: liqNumber };
         openPrintWindow(buildBordereauHtml(updated));
@@ -2574,7 +2471,6 @@ function renderJustificationBlock(report, rm) {
   const totalAvanceR = rm.reduce((s, m) => s + Number(m.avance_usd || 0), 0);
   const totalR       = rm.reduce((s, m) => s + Number(m.total_usd  || 0), 0);
 
-  // Délai 48h : fin de la dernière mission
   let latestDateFin = null;
   rm.forEach((m) => {
     if (m.date_fin) {
@@ -2630,10 +2526,6 @@ document.getElementById('avisReviewAcceptBtn').addEventListener('click', () => {
   if (_avisReviewOkCallback) _avisReviewOkCallback();
 });
 
-// Retourne la liste détaillée des "frais à justifier" d'une mission (libellé +
-// montant déclaré). Si aucun détail n'a été saisi mais qu'un total existe (ex.
-// anciens rapports), on reconstitue une ligne unique "Autres frais" — même
-// logique que pour l'impression du bordereau/avis.
 function resolveAutresFraisDetails(m) {
   const totAutres = Number(m.autres_frais_usd || 0);
   return Array.isArray(m.autres_frais_details) && m.autres_frais_details.length
@@ -2641,10 +2533,6 @@ function resolveAutresFraisDetails(m) {
     : (totAutres > 0 ? [{ libelle: 'Autres frais', montant: totAutres }] : []);
 }
 
-// Retourne TOUS les éléments à justifier d'une mission : le montant de
-// mission (per diem) validé lors de l'activation en première ligne, suivi
-// des frais annexes. Les deux catégories sont désormais cochables/corrigibles
-// de la même façon dans la modale d'avis.
 function resolveAvisItems(m) {
   const items = [{ libelle: 'Frais de mission (per diem)', montant: Number(m.montant_usd || 0), isPerDiem: true }];
   resolveAutresFraisDetails(m).forEach((d) => {
@@ -2653,9 +2541,6 @@ function resolveAvisItems(m) {
   return items;
 }
 
-// Recalcule le "Montant justifié" d'une mission à partir de la somme de tous
-// les éléments cochés/corrigés (per diem + frais annexes), puis met à jour
-// l'avis automatique (favorable / sous réserve) de la ligne.
 function recalcAvisMontantJustifie(missionIdx) {
   const items = document.querySelectorAll(`.avis-item-montant[data-idx="${missionIdx}"]`);
   let sum = 0;
@@ -2665,12 +2550,6 @@ function recalcAvisMontantJustifie(missionIdx) {
   updateAvisDecision(missionIdx);
 }
 
-// Compare le montant justifié (retenu ci-dessus) au montant perçu (avance
-// déjà versée) pour déterminer automatiquement l'avis :
-//  - justifié > perçu  → le projet rembourse l'agent → favorable automatique
-//  - justifié = perçu  → solde nul → favorable automatique
-//  - justifié < perçu  → l'agent doit rembourser → favorable seulement si
-//    le comptable confirme (case à cocher) que l'agent remboursera.
 function updateAvisDecision(missionIdx) {
   const totalInput  = document.querySelector(`.avis-justifie-input[data-idx="${missionIdx}"]`);
   const percuInput  = document.querySelector(`.avis-percu-input[data-idx="${missionIdx}"]`);
@@ -2706,9 +2585,6 @@ function updateAvisDecision(missionIdx) {
   }
 }
 
-// Ouvre la modale d'avis (favorable / sous réserve) permettant au comptable
-// de vérifier — et au besoin corriger — les montants justifiés avant que les
-// documents imprimables ne soient générés.
 function openAvisReviewModal(reportId) {
   const report = REPORTS_CACHE.find((r) => r.id === reportId);
   if (!report) return;
@@ -2781,9 +2657,6 @@ function openAvisReviewModal(reportId) {
     ${rows}
   `;
 
-  // Cocher/décocher un élément à justifier active/désactive son champ montant
-  // (corrigible uniquement quand décoché) et recalcule le total justifié +
-  // l'avis automatique.
   document.querySelectorAll('.avis-item-check').forEach((chk) => {
     chk.addEventListener('change', () => {
       const idx = chk.dataset.idx;
@@ -2800,15 +2673,12 @@ function openAvisReviewModal(reportId) {
     chk.addEventListener('change', () => updateAvisDecision(chk.dataset.idx));
   });
 
-  // Calcul initial de l'avis pour chaque missionnaire (badge + libellé d'écart).
   rm.forEach((_, i) => updateAvisDecision(i));
 
   _avisReviewOkCallback = () => finalizeJustificatifs(reportId);
   _avisReviewModal.show();
 }
 
-// Enregistre l'avis (favorable/sous réserve) et les montants éventuellement
-// corrigés, puis ouvre l'impression de l'avis pour chaque missionnaire.
 async function finalizeJustificatifs(reportId) {
   const report = REPORTS_CACHE.find((r) => r.id === reportId);
   if (!report) return;
@@ -2838,9 +2708,6 @@ async function finalizeJustificatifs(reportId) {
 
     return {
       ...m,
-      // Instantané des montants "prévus" (déclarés à l'activation, avant avis)
-      // conservé pour la page imprimable "Justification de la mission", qui
-      // compare prévu / payé / réalisé / écart pour chaque ligne.
       prevu_montant_usd: Number(m.montant_usd || 0),
       prevu_autres_frais_details: items.slice(1).map((it) => ({ libelle: it.libelle, montant: it.montant })),
       prevu_total_usd: Number(m.total_usd || 0),
@@ -2889,7 +2756,7 @@ async function enregistrerSolde(reportId) {
   const rm = report?.missions || [];
   const totalSolde = rm.reduce((s, m) => s + Number(m.solde_usd || 0), 0);
   askConfirm(
-    'Confirmer le versement du solde <strong>' + formatCurrency(totalSolde) + ' USD</strong> (20%) au missionnaire ?',
+    'Confirmer le versement du solde <strong>' + formatCurrency(totalSolde) + ' USD</strong> (20%) au missionnaire ?',
     async () => {
       try {
         const session = getSession();
@@ -2900,7 +2767,7 @@ async function enregistrerSolde(reportId) {
         if (error) throw error;
         showToast('✓ Versement du solde (20%) enregistré.');
         await refreshDashboard();
-      } catch (e) { console.error(e); showToast('Erreur lors de l’enregistrement.'); }
+      } catch (e) { console.error(e); showToast('Erreur lors de l\'enregistrement.'); }
     },
     'Versement solde', 'Confirmer', 'btn-success'
   );
@@ -2939,7 +2806,7 @@ async function deleteReport(reportId, importId = '') {
         const denied = e?.code === '42501' || /policy|permission|forbidden|not allowed|violates/i.test(message);
         showToast(
           denied
-            ? 'Suppression refusée par Supabase pour ce rapport. Si c’est un rapport RAF/RNSE visible par UNCP, exécutez la migration v22 avant de réessayer.'
+            ? 'Suppression refusée par Supabase pour ce rapport. Si c\'est un rapport RAF/RNSE visible par UNCP, exécutez la migration v22 avant de réessayer.'
             : 'Erreur lors de la suppression : ' + (e?.message || String(e))
         );
       }
@@ -3066,7 +2933,7 @@ async function saveEditedReport() {
     await refreshDashboard();
   } catch (e) {
     console.error(e);
-    showToast('Erreur lors de la sauvegarde : ' + (e?.message || String(e)));
+    showToast('Erreur lors de la sauvegarde : ' + (e?.message || String(e)));
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Enregistrer les modifications';
@@ -3182,7 +3049,7 @@ async function exportExcelWorkbook() {
   subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4EFD9' } };
   sheet.getRow(2).height = 18;
 
-  sheet.getRow(3).height = 5; // espaceur
+  sheet.getRow(3).height = 5;
 
   // ── En-têtes (ligne 4) ──
   const headerRow = sheet.getRow(4);
@@ -3230,7 +3097,7 @@ async function exportExcelWorkbook() {
   });
   totalRow.height = 20;
 
-  // ── Bloc signature (comptable / responsable de l'export) ──
+  // ── Bloc signature ──
   const roleLabels = (typeof PndaAuth !== 'undefined' && PndaAuth.ROLE_LABELS) || { comptable: 'Comptable', admin: 'Administrateur', super_admin: 'Super-administrateur' };
   const signatoryName = session?.displayName || session?.user?.email || session?.user || '—';
   const signatoryRole = roleLabels[session?.role] || 'Comptable';
@@ -3286,186 +3153,11 @@ async function exportExcelWorkbook() {
   showToast('✓ Export Excel généré.');
 }
 
-function buildGeneralSheetRows(signatory = {}, reports = getFilteredReports()) {
-  const missions = reports.flatMap((r) => r.missions || []);
-  const provinceRows = REFERENCE.provinces.map((p) => summarizeProvince(p.name, reports));
-  return [
-    ...buildWorkbookHeaderRows('Tableau de bord général', 7),
-    [{ value: 'PNDA-SE - Tableau de bord général', style: 'title', mergeAcross: 6 }],
-    [{ value: 'Date export', style: 'subtitle' }, { value: new Date().toLocaleDateString('fr-FR'), style: 'date' }],
-    [{ value: 'Utilisateur', style: 'subtitle' }, { value: document.getElementById('session-user').textContent || '—', style: 'text' }],
-    [],
-    [{ value: 'Indicateur', style: 'header' }, { value: 'Valeur', style: 'header' }],
-    [{ value: 'Rapports consolidés', style: 'text' }, { value: reports.length, type: 'Number', style: 'integer' }],
-    [{ value: 'Missions consolidées', style: 'text' }, { value: missions.length, type: 'Number', style: 'integer' }],
-    [{ value: 'En attente', style: 'text' }, { value: reports.filter(r => (r.statut||'activee') === 'en_attente').length, type: 'Number', style: 'integer' }],
-    [{ value: 'Activées', style: 'text' }, { value: reports.filter(r => (r.statut||'activee') === 'activee').length, type: 'Number', style: 'integer' }],
-    [{ value: 'Réalisées', style: 'text' }, { value: reports.filter(r => (r.statut||'activee') === 'realisee').length, type: 'Number', style: 'integer' }],
-    [{ value: 'Litige total USD', style: 'text' }, { value: reports.reduce((s, r) => s + calculateReportLitige(r), 0), type: 'Number', style: 'currency' }],
-    [],
-    [{ value: 'Consolidation par province', style: 'title', mergeAcross: 6 }],
-    [{ value: 'Province', style: 'header' }, { value: 'Rapports', style: 'header' }, { value: 'Missions', style: 'header' }, { value: 'Montant USD', style: 'header' }, { value: 'Autres frais', style: 'header' }, { value: 'Total USD', style: 'header' }, { value: 'Solde USD', style: 'header' }],
-    ...provinceRows.map((row) => [
-      { value: row.label, style: 'text' }, { value: row.reports, type: 'Number', style: 'integer' },
-      { value: row.missions, type: 'Number', style: 'integer' }, { value: row.montant, type: 'Number', style: 'currency' },
-      { value: row.autresFrais, type: 'Number', style: 'currency' }, { value: row.total, type: 'Number', style: 'currency' },
-      { value: row.solde, type: 'Number', style: 'currency' }
-    ]),
-    [],
-    [{ value: 'Derniers rapports', style: 'title', mergeAcross: 6 }],
-    [{ value: 'Date', style: 'header' }, { value: 'Province', style: 'header' }, { value: 'Rapporteur', style: 'header' }, { value: 'Missions', style: 'header' }, { value: 'Total USD', style: 'header' }, { value: 'Litige USD', style: 'header' }, { value: 'Statut', style: 'header' }],
-    ...reports.slice(0, 20).map((r) => [
-      { value: formatDate(r.savedAt), style: 'date' }, 
-      { value: getReportProvinceLabel(r) || '—', style: 'text' },
-      { value: r.meta?.rapporteur || '—', style: 'text' },
-      { value: r.missions?.length || 0, type: 'Number', style: 'integer' },
-      { value: (r.missions || []).reduce((s, m) => s + Number(m.total_usd || 0), 0), type: 'Number', style: 'currency' },
-      { value: calculateReportLitige(r), type: 'Number', style: 'currency' },
-      { value: getStatusLabel(r.statut || 'activee').replace(/[⏳⚡✓↩]/g, '').trim(), style: 'text' }
-    ]),
-    [], ...buildSignatureRows(signatory, 7)
-  ];
-}
-
-function buildProvinceSheetRows(province, signatory = {}, reportsSource = getFilteredReports()) {
-  const reports = reportsSource.filter((r) => getReportProvinceName(r) === province.name);
-  const missions = reports.flatMap((r) => (r.missions || []).map((m) => ({ ...m, __report: r })));
-  return [
-    ...buildWorkbookHeaderRows(`Province - ${province.label}`, 17),
-    [{ value: `Province - ${province.label}`, style: 'title', mergeAcross: 16 }],
-    [{ value: 'Rapports', style: 'subtitle' }, { value: reports.length, type: 'Number', style: 'integer' }],
-    [{ value: 'Missions', style: 'subtitle' }, { value: missions.length, type: 'Number', style: 'integer' }],
-    [],
-    [{ value: 'Rapports', style: 'title', mergeAcross: 6 }],
-    [{ value: 'Date', style: 'header' }, { value: 'Rapporteur', style: 'header' }, { value: 'Trimestre', style: 'header' }, { value: 'Année', style: 'header' }, { value: 'Total USD', style: 'header' }, { value: 'Litige USD', style: 'header' }, { value: 'Statut', style: 'header' }],
-    ...reports.map((r) => [
-      { value: formatDate(r.savedAt), style: 'date' }, { value: r.meta?.rapporteur || '—', style: 'text' },
-      { value: r.meta?.trimestre || '—', style: 'text' }, { value: r.meta?.annee || '—', style: 'integer' },
-      { value: (r.missions || []).reduce((s, m) => s + Number(m.total_usd || 0), 0), type: 'Number', style: 'currency' },
-      { value: calculateReportLitige(r), type: 'Number', style: 'currency' },
-      { value: getStatusLabel(r.statut || 'activee').replace(/[⏳⚡✓↩]/g, '').trim(), style: 'text' }
-    ]),
-    [],
-    [{ value: 'Détail des missions', style: 'title', mergeAcross: 17 }],
-    [{ value:'Début',style:'header' },{ value:'Fin prévue',style:'header' },{ value:'Numero',style:'header' },{ value:'Nature',style:'header' },{ value:'Objectif',style:'header' },
-     { value:'Prov. dest.',style:'header' },{ value:'Territoire',style:'header' },{ value:'Secteur',style:'header' },
-     { value:'Rapporteur',style:'header' },{ value:'Participants',style:'header' },{ value:'Nuitées',style:'header' },{ value:'Taux/nuit',style:'header' },
-     { value:'Montant USD',style:'header' },{ value:'Autres frais',style:'header' },{ value:'Total USD',style:'header' },
-     { value:'Avance USD',style:'header' },{ value:'Solde USD',style:'header' },{ value:'Observation',style:'header' }],
-    ...missions.map((m) => [
-      { value: m.date_debut || formatDate(m.__report.savedAt), style: 'date' },
-      { value: m.date_fin || '—', style: 'date' },
-      { value: m.numero || '—', style: 'text' }, { value: m.nature || '—', style: 'text' },
-      { value: m.objectif || '—', style: 'text' },
-      { value: m.destination_province_label || '—', style: 'text' }, { value: m.territoire_label || '—', style: 'text' }, { value: m.secteur_label || '—', style: 'text' },
-      { value: m.__report.meta?.rapporteur || '—', style: 'text' },
-      { value: Number(m.participants || 0), type: 'Number', style: 'integer' },
-      { value: Number(m.nuitees || 0), type: 'Number', style: 'integer' },
-      { value: Number(m.taux_per_diem || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.montant_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.autres_frais_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.total_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.avance_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.solde_usd || 0), type: 'Number', style: 'currency' },
-      { value: buildObservationText(m), style: 'text' }
-    ]),
-    [], ...buildSignatureRows(signatory, 18)
-  ];
-}
-
-function buildAllMissionsSheetRows(signatory = {}, reports = getFilteredReports()) {
-  const missions = reports.flatMap((r) => (r.missions || []).map((m) => ({ ...m, __report: r })));
-  return [
-    ...buildWorkbookHeaderRows('Toutes les missions', 21),
-    [{ value: 'Toutes les missions', style: 'title', mergeAcross: 20 }],
-    [{ value:'Province',style:'header' },{ value:'Rapporteur',style:'header' },{ value:'Trimestre',style:'header' },{ value:'Année',style:'header' },{ value:'Numero',style:'header' },{ value:'Nature',style:'header' },{ value:'Objectif',style:'header' },
-     { value:'Prov. dest.',style:'header' },{ value:'Territoire',style:'header' },{ value:'Secteur',style:'header' },
-     { value:'Début',style:'header' },{ value:'Fin prévue',style:'header' },{ value:'Participants',style:'header' },
-     { value:'Nuitées',style:'header' },{ value:'Taux/nuit',style:'header' },
-     { value:'Montant USD',style:'header' },{ value:'Autres frais',style:'header' },{ value:'Total USD',style:'header' },
-     { value:'Avance USD',style:'header' },{ value:'Solde USD',style:'header' },{ value:'Statut',style:'header' },{ value:'Observation',style:'header' }],
-    ...missions.map((m) => [
-      { value: getReportProvinceLabel(m.__report) || '—', style: 'text' },
-      { value: m.__report.meta?.rapporteur || '—', style: 'text' },
-      { value: m.__report.meta?.trimestre || '—', style: 'text' },
-      { value: m.__report.meta?.annee || '—', style: 'integer' },
-      { value: m.numero || '—', style: 'text' },
-      { value: m.nature || '—', style: 'text' }, { value: m.objectif || '—', style: 'text' },
-      { value: m.destination_province_label || '—', style: 'text' }, { value: m.territoire_label || '—', style: 'text' }, { value: m.secteur_label || '—', style: 'text' },
-      { value: m.date_debut || '—', style: 'text' }, { value: m.date_fin || '—', style: 'text' },
-      { value: Number(m.participants || 0), type: 'Number', style: 'integer' },
-      { value: Number(m.nuitees || 0), type: 'Number', style: 'integer' },
-      { value: Number(m.taux_per_diem || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.montant_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.autres_frais_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.total_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.avance_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.solde_usd || 0), type: 'Number', style: 'currency' },
-      { value: getStatusLabel(m.__report.statut || 'activee').replace(/[⏳⚡✓↩]/g, '').trim(), style: 'text' },
-      { value: buildObservationText(m), style: 'text' }
-    ]),
-    [], ...buildSignatureRows(signatory, 22)
-  ];
-}
-
-function buildWorkbookHeaderRows(sheetTitle, totalColumns) {
-  const trailingColumns = Math.max(totalColumns - 2, 0);
-  return [
-    [{ value: 'PNDA', style: 'logoMark' }, { value: 'PNDA-SE', style: 'brandTitle', mergeAcross: trailingColumns }],
-    [{ value: `Programme National de Développement Agricole - ${sheetTitle}`, style: 'brandSubtitle', mergeAcross: Math.max(totalColumns - 1, 0) }],
-    []
-  ];
-}
-
-function buildWorksheetOptionsXml() {
-  return [
-    '<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">',
-    '<PageSetup><Layout x:Orientation="Landscape"/>',
-    '<PageMargins x:Bottom="0.45" x:Left="0.25" x:Right="0.25" x:Top="0.35"/></PageSetup>',
-    '<FitToPage/><Print><ValidPrinterInfo/><PaperSizeIndex>9</PaperSizeIndex>',
-    '<FitWidth>1</FitWidth><FitHeight>0</FitHeight></Print>',
-    '<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal>',
-    '<TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane>',
-    '</WorksheetOptions>'
-  ].join('');
-}
-
-function buildSignatureRows(signatory, totalColumns) {
-  const name = signatory.name || '................................';
-  const position = signatory.position || '................................';
-  const location = signatory.location || '........................';
-  const exportDate = new Date().toLocaleDateString('fr-FR');
-  const mergeAcross = Math.max(totalColumns - 2, 0);
-  return [
-    [{ value: `Fait à ${location}, le ${exportDate}`, style: 'subtitle', mergeAcross }],
-    [{ value: 'Signature', style: 'subtitle', mergeAcross }],
-    [{ value: '_______________________________', style: 'text', mergeAcross }],
-    [],
-    [{ value: `Nom: ${name}`, style: 'text', mergeAcross }],
-    [{ value: `Poste: ${position}`, style: 'text', mergeAcross }]
-  ];
-}
-
-function sheetNameForProvince(label) { return label.replace(/[\\/*?:\[\]]/g, '_').slice(0, 31); }
-function sheetName(value) { return String(value || 'Sheet1').replace(/[\\/*?:\[\]]/g, '_').slice(0, 31); }
-
-function xmlEscape(value) {
-  return String(value ?? '')
-  .replaceAll('&', '&amp;')
-  .replaceAll('<', '&lt;')
-  .replaceAll('>', '&gt;')
-  .replaceAll('"', '&quot;')
-  .replaceAll("'", '&apos;');
-}
-
 // ─── UTILITIES ────────────────────────────────────────────────────────────────
 function formatCurrency(value) {
   return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
 }
 
-// Combine les libellés des "frais à justifier" (réunions, transport local, etc.)
-// saisis pour la mission avec la remarque libre, pour affichage dans la colonne
-// "Observation" (tableau comptable + exports Excel/CSV).
 function buildObservationText(m) {
   const details = Array.isArray(m.autres_frais_details)
     ? m.autres_frais_details.filter((d) => (d.libelle || '').trim() || Number(d.montant || 0) > 0)
@@ -3529,9 +3221,6 @@ async function shareHtmlTable(tableId, title) {
   }
 }
 
-// Parse une cellule texte (telle qu'affichée dans le tableau HTML, format FR)
-// en nombre si possible, pour produire un vrai fichier Excel avec des cellules
-// numériques formatées (et non du texte brut comme le ferait un export CSV).
 function parseCellNumberFR(text) {
   const clean = String(text ?? '').replace(/[\u00a0\s]/g, '');
   if (!clean || !/^-?\d+(,\d+)?$/.test(clean)) return null;
@@ -3549,7 +3238,6 @@ async function exportHtmlTableToExcel(tableId, filename, title) {
   const bodyRows = Array.from(table.querySelectorAll('tbody > tr')).filter((tr) => !tr.classList.contains('is-hidden') && !tr.classList.contains('report-detail'));
   let dataRows = bodyRows.map((tr) => Array.from(tr.querySelectorAll('td')).map((cell) => cell.textContent.trim().replace(/\s+/g, ' ')));
 
-  // Colonnes purement interactives (boutons d'action) sans intérêt dans un export.
   const skipIdx = headers.reduce((acc, h, i) => { if (/^actions?$/i.test(h)) acc.push(i); return acc; }, []);
   if (skipIdx.length) {
     headers = headers.filter((_, i) => !skipIdx.includes(i));
@@ -3567,7 +3255,6 @@ async function exportHtmlTableToExcel(tableId, filename, title) {
     views: [{ state: 'frozen', ySplit: 4 }]
   });
 
-  // ── Bandeau titre ──
   sheet.mergeCells(1, 1, 1, colCount);
   const titleCell = sheet.getCell(1, 1);
   titleCell.value = title || 'Export PNDA-SE';
@@ -3576,7 +3263,6 @@ async function exportHtmlTableToExcel(tableId, filename, title) {
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF123524' } };
   sheet.getRow(1).height = 26;
 
-  // ── Sous-titre ──
   sheet.mergeCells(2, 1, 2, colCount);
   const session = getSession();
   const subCell = sheet.getCell(2, 1);
@@ -3586,9 +3272,8 @@ async function exportHtmlTableToExcel(tableId, filename, title) {
   subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4EFD9' } };
   sheet.getRow(2).height = 18;
 
-  sheet.getRow(3).height = 5; // espaceur
+  sheet.getRow(3).height = 5;
 
-  // ── En-têtes (ligne 4) ──
   const headerRow = sheet.getRow(4);
   headers.forEach((h, i) => { headerRow.getCell(i + 1).value = h; });
   headerRow.eachCell((cell) => {
@@ -3599,13 +3284,11 @@ async function exportHtmlTableToExcel(tableId, filename, title) {
   });
   headerRow.height = 26;
 
-  // ── Détection des colonnes numériques (si toutes les valeurs non vides sont des nombres) ──
   const numericCols = Array.from({ length: colCount }, (_, c) => {
     const values = dataRows.map((r) => r[c]).filter((v) => v !== undefined && v !== '' && v !== '—');
     return values.length > 0 && values.every((v) => parseCellNumberFR(v) !== null);
   });
 
-  // ── Données ──
   dataRows.forEach((r, idx) => {
     const row = sheet.getRow(5 + idx);
     const isBand = idx % 2 === 1;
@@ -3627,13 +3310,11 @@ async function exportHtmlTableToExcel(tableId, filename, title) {
     row.commit();
   });
 
-  // ── Largeur des colonnes (auto, selon le contenu) ──
   for (let c = 0; c < colCount; c++) {
     const lengths = [headers[c] || ''].concat(dataRows.map((r) => r[c] || '')).map((v) => String(v).length);
     sheet.getColumn(c + 1).width = Math.min(Math.max(...lengths, 8) + 2, 40);
   }
 
-  // ── Filtre + impression ──
   sheet.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4, column: colCount } };
   sheet.pageSetup.printTitlesRow = '4:4';
 
