@@ -2355,6 +2355,129 @@ ${pages}
 </body></html>`;
 }
 
+// Construit une page "JUSTIFICATION DE LA MISSION" (tableau prévu / payé /
+// réalisé / écart) pour UNE mission donnée : ligne per diem (avance 80% /
+// solde 20%) puis détail des provisions à justifier (payées en totalité),
+// avec sous-totaux et total général. Les montants "prévus" proviennent de
+// l'instantané pris avant l'avis (prevu_montant_usd / prevu_autres_frais_details) ;
+// les montants "réalisés" sont ceux validés/corrigés par l'avis.
+function buildJustificationMissionPageHtml(report, m, rm, isLast) {
+  const libelleMission = m.territoire_label || m.destination_province_label || m.nature || '—';
+  const dateDepart = _docDate(m.date_debut);
+  const dateRetour = _docDate(m.date_fin);
+  const taux = Number(m.taux_per_diem || 0);
+  const joursPrevus = Number(m.nuitees || 0);
+  const joursReels = (m.jours_reels !== undefined && m.jours_reels !== null) ? Number(m.jours_reels) : joursPrevus;
+  // Chaque mission représente désormais UN missionnaire (formulaire individuel) :
+  // NBRE PERS. vaut donc 1 par défaut, sauf override explicite éventuel.
+  const nbrePers = Number(m.participants || 1);
+
+  const prevuMontant = (m.prevu_montant_usd !== undefined && m.prevu_montant_usd !== null) ? Number(m.prevu_montant_usd) : Number(m.montant_usd || 0);
+  const payeMontant = Number(m.avance_usd || 0);
+  const realiseMontant = Number(m.montant_usd || 0);
+  const ecartMontant = Math.round((payeMontant - realiseMontant) * 100) / 100;
+  const pctPaye = prevuMontant > 0 ? Math.round((payeMontant / prevuMontant) * 100) : 0;
+
+  const prevuDetails = Array.isArray(m.prevu_autres_frais_details) && m.prevu_autres_frais_details.length
+    ? m.prevu_autres_frais_details : resolveAutresFraisDetails(m);
+  const realiseDetails = resolveAutresFraisDetails(m);
+  const detailCount = Math.max(prevuDetails.length, realiseDetails.length);
+  let s2Prevu = 0, s2Paye = 0, s2Realise = 0, s2Ecart = 0;
+  const detailRows = [];
+  for (let i = 0; i < detailCount; i++) {
+    const pv = Number(prevuDetails[i]?.montant || 0);
+    const rl = Number(realiseDetails[i]?.montant || 0);
+    const libelle = realiseDetails[i]?.libelle || prevuDetails[i]?.libelle || 'Frais';
+    const ec = Math.round((pv - rl) * 100) / 100;
+    s2Prevu += pv; s2Paye += pv; s2Realise += rl; s2Ecart += ec;
+    const firstCell = i === 0 ? '<td class="bold">Provision à justifier</td>' : '<td class="nb"></td>';
+    detailRows.push(`<tr>${firstCell}<td>${escapeHtml(libelle)}</td><td colspan="4" class="tc">—</td><td class="tr">${_docFmt(pv)}</td><td class="tr">${_docFmt(pv)}</td><td class="tr">${_docFmt(rl)}</td><td class="tr">${_docFmt(ec)}</td></tr>`);
+  }
+  const totPrevu = prevuMontant + s2Prevu;
+  const totPaye = payeMontant + s2Paye;
+  const totRealise = realiseMontant + s2Realise;
+  const totEcart = Math.round((totPaye - totRealise) * 100) / 100;
+
+  return `<div class="just-page"${isLast ? '' : ' style="page-break-after:always"'}>
+<div style="text-align:center;font-size:9pt;line-height:1.5;margin-bottom:8px">
+  République Démocratique du Congo &nbsp;•&nbsp; MINISTÈRE DE L'AGRICULTURE<br>
+  <strong>PROGRAMME NATIONAL DE DÉVELOPPEMENT AGRICOLE &laquo;PNDA&raquo;</strong><br>
+  Unité Nationale de Coordination du Projet
+</div>
+<h1>JUSTIFICATION DE LA MISSION</h1>
+<table>
+  <thead><tr>
+    <th>MISSION</th><th>${escapeHtml(libelleMission)}</th><th>TAUX</th>
+    <th>NOMBRE DE<br>JOURS PREVUS</th><th>NOMBRE DE<br>JOURS REELS</th><th>NBRE<br>PERS.</th>
+    <th>MONTANT<br>PREVU</th><th>MONTANT<br>PAYE</th><th>MONTANT<br>REALISE</th><th>ECART</th>
+  </tr></thead>
+  <tbody>
+    <tr><td class="bold">Date départ</td><td>${escapeHtml(dateDepart)}</td><td colspan="8" class="nb"></td></tr>
+    <tr><td class="bold">Date retour</td><td>${escapeHtml(dateRetour)}</td><td colspan="8" class="nb"></td></tr>
+    <tr><td class="nb"></td><td>Per diem</td><td class="tc">${_docFmt(taux)}</td><td class="tc">${joursPrevus}</td><td class="tc">${joursReels}</td><td class="tc">${nbrePers}</td>
+      <td class="tr">${_docFmt(prevuMontant)}</td><td class="tr">${pctPaye}%<br>${_docFmt(payeMontant)}</td><td class="tr">${_docFmt(realiseMontant)}</td><td class="tr">${_docFmt(ecartMontant)}</td></tr>
+    <tr class="bold bg"><td class="nb"></td><td>S/Total 1</td><td colspan="4" class="nb"></td>
+      <td class="tr">${_docFmt(prevuMontant)}</td><td class="tr">${_docFmt(payeMontant)}</td><td class="tr">${_docFmt(realiseMontant)}</td><td class="tr">${_docFmt(ecartMontant)}</td></tr>
+    ${detailRows.join('')}
+    <tr class="bold bg"><td class="nb"></td><td>S/Total 2</td><td colspan="4" class="nb"></td>
+      <td class="tr">${_docFmt(s2Prevu)}</td><td class="tr">${_docFmt(s2Paye)}</td><td class="tr">${_docFmt(s2Realise)}</td><td class="tr">${_docFmt(s2Ecart)}</td></tr>
+    <tr class="bold bg"><td class="nb"></td><td>Montant total</td><td colspan="4" class="nb"></td>
+      <td class="tr">${_docFmt(totPrevu)}</td><td class="tr">${_docFmt(totPaye)}</td><td class="tr">${_docFmt(totRealise)}</td><td class="tr">${_docFmt(totEcart)}</td></tr>
+  </tbody>
+</table>
+
+<div style="display:flex;justify-content:flex-end;margin-top:10px">
+  <div class="avis-amount-row" style="max-width:260px">
+    <span><strong>Montant justifié&nbsp;:</strong></span><span class="avis-box">${_docFmt(totRealise)}</span>
+  </div>
+</div>
+
+<p style="margin:26px 0 4px"><em>Correspondance&nbsp;:</em></p>
+
+<div style="display:flex;justify-content:space-between;margin-top:20px">
+  <div style="min-width:220px">
+    <p style="margin:3px 0"><strong>Nom &amp; Signature du missionnaire</strong></p>
+    <div class="sig-line" style="margin:5px 0"></div>
+    <p style="margin:3px 0">${escapeHtml(m.missionnaire_nom || resolveMissionnaireName(report))}</p>
+  </div>
+  <div style="min-width:220px;text-align:right">
+    <p style="margin:3px 0"><strong>Signature du Comptable</strong></p>
+    <div class="sig-line" style="margin:5px 0 5px auto"></div>
+  </div>
+</div>
+</div>`;
+}
+
+// Assemble la "Justification de la mission" complète : une page par mission
+// du rapport, imprimées à la suite dans une seule fenêtre.
+function buildJustificationMissionHtml(report) {
+  const rm = report.missions || [];
+  const pages = rm.length
+    ? rm.map((m, i) => buildJustificationMissionPageHtml(report, m, rm, i === rm.length - 1)).join('')
+    : buildJustificationMissionPageHtml(report, {}, [], true);
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Justification de la mission</title>${_baseStyle()}</head><body>
+${pages}
+</body></html>`;
+}
+
+// Document combiné imprimé après acceptation de l'avis : les pages "Avis sur
+// justificatifs provision" (une par missionnaire) suivies des pages
+// "Justification de la mission" (une par mission), dans une seule fenêtre
+// d'impression.
+function buildAvisAndJustificationHtml(report) {
+  const rm = report.missions || [];
+  const num = report.fld_number || '___/___/____';
+  const avisPages = rm.length
+    ? rm.map((m) => buildAvisJustificatifsPageHtml(report, m, rm, false)).join('')
+    : buildAvisJustificatifsPageHtml(report, {}, [], false);
+  const justifPages = rm.length
+    ? rm.map((m, i) => buildJustificationMissionPageHtml(report, m, rm, i === rm.length - 1)).join('')
+    : buildJustificationMissionPageHtml(report, {}, [], true);
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Avis FLD ${escapeHtml(num)}</title>${_baseStyle()}</head><body>
+${avisPages}${justifPages}
+</body></html>`;
+}
+
 async function activerMission(reportId) {
   const report = REPORTS_CACHE.find(r => r.id === reportId);
   if (!report) return;
@@ -2407,7 +2530,7 @@ function reprintBordereau(reportId) {
 function reprintJustificationDocs(reportId) {
   const report = REPORTS_CACHE.find(r => r.id === reportId);
   if (!report) return;
-  openPrintWindow(buildAvisJustificatifsHtml(report));
+  openPrintWindow(buildAvisAndJustificationHtml(report));
 }
 
 // ── JUSTIFICATIFS / CLÔTURE ──────────────────────────────────────────────
@@ -2682,6 +2805,12 @@ async function finalizeJustificatifs(reportId) {
 
     return {
       ...m,
+      // Instantané des montants "prévus" (déclarés à l'activation, avant avis)
+      // conservé pour la page imprimable "Justification de la mission", qui
+      // compare prévu / payé / réalisé / écart pour chaque ligne.
+      prevu_montant_usd: Number(m.montant_usd || 0),
+      prevu_autres_frais_details: items.slice(1).map((it) => ({ libelle: it.libelle, montant: it.montant })),
+      prevu_total_usd: Number(m.total_usd || 0),
       montant_usd: perDiemFinal,
       autres_frais_details: finalDetails,
       autres_frais_usd: autresFraisUsd,
@@ -2718,7 +2847,7 @@ async function finalizeJustificatifs(reportId) {
     showToast('✓ Avis accepté — justificatifs enregistrés — ' + fldNumber);
     await refreshDashboard();
     const updated = { ...report, justification_at: nowIso, fld_number: fldNumber, missions: editedMissions };
-    openPrintWindow(buildAvisJustificatifsHtml(updated));
+    openPrintWindow(buildAvisAndJustificationHtml(updated));
   } catch (e) { console.error(e); showToast('Erreur lors de l\'enregistrement.'); }
 }
 
