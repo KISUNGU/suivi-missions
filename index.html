@@ -2185,7 +2185,19 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
   const lbl = escapeHtml(m.territoire_label || m.territoire_name || '—');
   const fraisVoyage = Number(m.frais_voyage_usd || 0);
   const nuiteeMontant = Number(m.nuitees || 0) * Number(m.taux_per_diem || 0);
-  const lieuRows = `<tr><td>${lbl}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tr">${_docFmt(nuiteeMontant)}</td></tr>`
+  // Mission couvrant plusieurs lieux à taux différents (ex. Lieu Alpha du X au
+  // Y, Lieu Beta du X au Y…) : une ligne par lieu, chacune avec son propre
+  // taux/nuitées, au lieu d'une seule ligne agrégée avec un taux moyen.
+  const perdiemBreakdown = Array.isArray(m.perdiem_breakdown)
+    ? m.perdiem_breakdown.filter((it) => (it.lieu || '').trim() || Number(it.nuitees || 0) > 0)
+    : [];
+  const perdiemRows = perdiemBreakdown.length
+    ? perdiemBreakdown.map((it) => {
+        const periode = (it.date_debut && it.date_fin) ? ` <span style="font-size:7.5pt;color:#444">(${_docDate(it.date_debut)} au ${_docDate(it.date_fin)})</span>` : '';
+        return `<tr><td>${escapeHtml(it.lieu || lbl)}${periode}</td><td class="tc">${it.nuitees || 0}</td><td class="tc">${_docFmt(it.taux)}</td><td class="tr">${_docFmt(Number(it.nuitees || 0) * Number(it.taux || 0))}</td></tr>`;
+      }).join('')
+    : `<tr><td>${lbl}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tr">${_docFmt(nuiteeMontant)}</td></tr>`;
+  const lieuRows = perdiemRows
     + (fraisVoyage ? `<tr><td>Frais du jour de voyage</td><td class="tc">—</td><td class="tc">—</td><td class="tr">${_docFmt(fraisVoyage)}</td></tr>` : '');
 
   const detailsList = Array.isArray(m.autres_frais_details) && m.autres_frais_details.length
@@ -2377,6 +2389,28 @@ function buildJustificationMissionPageHtml(report, m, rm, isLast) {
   const realiseMontant = Number(m.montant_usd || 0);
   const ecartMontant = Math.round((payeMontant - realiseMontant) * 100) / 100;
   const pctPaye = prevuMontant > 0 ? Math.round((payeMontant / prevuMontant) * 100) : 0;
+  const fraisVoyage = Number(m.frais_voyage_usd || 0);
+
+  // Mission couvrant plusieurs lieux à taux différents (ex. Lieu Alpha du X au
+  // Y, Lieu Beta du X au Y…) : une ligne informative par lieu (taux/jours/
+  // montant prévu propres à ce lieu). L'avis du comptable ne corrige que le
+  // total agrégé du per diem (pas lieu par lieu) : Payé/Réalisé/Écart restent
+  // donc affichés au niveau du S/Total 1, pas sur chaque ligne de lieu.
+  const perdiemBreakdown = Array.isArray(m.perdiem_breakdown)
+    ? m.perdiem_breakdown.filter((it) => (it.lieu || '').trim() || Number(it.nuitees || 0) > 0)
+    : [];
+  const perdiemRows = perdiemBreakdown.length
+    ? perdiemBreakdown.map((it) => {
+        const label = 'Per diem' + (it.lieu ? ' — ' + escapeHtml(it.lieu) : '');
+        const periode = (it.date_debut && it.date_fin) ? ` <span style="font-size:7.5pt;color:#444">(${_docDate(it.date_debut)} au ${_docDate(it.date_fin)})</span>` : '';
+        const pv = Number(it.nuitees || 0) * Number(it.taux || 0);
+        return `<tr><td class="nb"></td><td>${label}${periode}</td><td class="tc">${_docFmt(it.taux)}</td><td class="tc">${it.nuitees||0}</td><td class="tc">${it.nuitees||0}</td><td class="tc">${nbrePers}</td>
+      <td class="tr">${_docFmt(pv)}</td><td class="tr">—</td><td class="tr">—</td><td class="tr">—</td></tr>`;
+      }).join('')
+      + (fraisVoyage ? `<tr><td class="nb"></td><td>Frais du jour de voyage</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">${nbrePers}</td>
+      <td class="tr">${_docFmt(fraisVoyage)}</td><td class="tr">—</td><td class="tr">—</td><td class="tr">—</td></tr>` : '')
+    : `<tr><td class="nb"></td><td>Per diem</td><td class="tc">${_docFmt(taux)}</td><td class="tc">${joursPrevus}</td><td class="tc">${joursReels}</td><td class="tc">${nbrePers}</td>
+      <td class="tr">${_docFmt(prevuMontant)}</td><td class="tr">${pctPaye}%<br>${_docFmt(payeMontant)}</td><td class="tr">${_docFmt(realiseMontant)}</td><td class="tr">${_docFmt(ecartMontant)}</td></tr>`;
 
   const prevuDetails = Array.isArray(m.prevu_autres_frais_details) && m.prevu_autres_frais_details.length
     ? m.prevu_autres_frais_details : resolveAutresFraisDetails(m);
@@ -2414,8 +2448,7 @@ function buildJustificationMissionPageHtml(report, m, rm, isLast) {
   <tbody>
     <tr><td class="bold">Date départ</td><td>${escapeHtml(dateDepart)}</td><td colspan="8" class="nb"></td></tr>
     <tr><td class="bold">Date retour</td><td>${escapeHtml(dateRetour)}</td><td colspan="8" class="nb"></td></tr>
-    <tr><td class="nb"></td><td>Per diem</td><td class="tc">${_docFmt(taux)}</td><td class="tc">${joursPrevus}</td><td class="tc">${joursReels}</td><td class="tc">${nbrePers}</td>
-      <td class="tr">${_docFmt(prevuMontant)}</td><td class="tr">${pctPaye}%<br>${_docFmt(payeMontant)}</td><td class="tr">${_docFmt(realiseMontant)}</td><td class="tr">${_docFmt(ecartMontant)}</td></tr>
+    ${perdiemRows}
     <tr class="bold bg"><td class="nb"></td><td>S/Total 1</td><td colspan="4" class="nb"></td>
       <td class="tr">${_docFmt(prevuMontant)}</td><td class="tr">${_docFmt(payeMontant)}</td><td class="tr">${_docFmt(realiseMontant)}</td><td class="tr">${_docFmt(ecartMontant)}</td></tr>
     ${detailRows.join('')}

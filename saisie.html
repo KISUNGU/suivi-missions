@@ -560,8 +560,11 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
     </div>
     <div class="perdiem-breakdown-box border rounded p-2 mt-2 d-none">
       <div class="d-flex justify-content-between align-items-center mb-1">
-        <span class="form-label-sm mb-0"><i class="bi bi-signpost-split me-1"></i>Répartition des nuitées par lieu (taux différents)</span>
+        <span class="form-label-sm mb-0"><i class="bi bi-signpost-split me-1"></i>Répartition par lieu (ex. Lieu Alpha du X au Y, Lieu Beta du X au Y…)</span>
         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPerdiemItem('${id}')"><i class="bi bi-plus-lg"></i> Ajouter un lieu</button>
+      </div>
+      <div class="row g-2 small text-muted mb-1 d-none d-md-flex">
+        <div class="col-md-3">Lieu</div><div class="col-md-2">Du</div><div class="col-md-2">Au</div><div class="col-md-2">Nuitées</div><div class="col-md-2">Taux USD</div>
       </div>
       <div class="perdiem-items"></div>
       <div class="small mt-1 perdiem-summary text-muted"></div>
@@ -611,7 +614,7 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
     if (Array.isArray(m.perdiem_breakdown) && m.perdiem_breakdown.length) {
       togglePerdiemBreakdown(id);
       wrap.querySelector('.perdiem-items').innerHTML = '';
-      m.perdiem_breakdown.forEach((it) => addPerdiemItem(id, it.lieu, it.nuitees, it.taux));
+      m.perdiem_breakdown.forEach((it) => addPerdiemItem(id, it.lieu, it.date_debut || '', it.date_fin || '', it.taux, it.nuitees));
     }
 
     const details = Array.isArray(m.autres_frais_details) && m.autres_frais_details.length
@@ -677,12 +680,34 @@ function isPerdiemBreakdownActive(row) {
 function computePerdiemBreakdown(row) {
   const items = Array.from(row.querySelectorAll('.perdiem-item')).map((item) => ({
     lieu: item.querySelector('.f-pd-lieu').value.trim(),
+    date_debut: item.querySelector('.f-pd-date-debut')?.value || '',
+    date_fin: item.querySelector('.f-pd-date-fin')?.value || '',
     nuitees: Number(item.querySelector('.f-pd-nuitees').value || 0),
     taux: Number(item.querySelector('.f-pd-taux').value || 0)
   }));
   const totalNuitees = items.reduce((s, it) => s + it.nuitees, 0);
   const totalMontant = items.reduce((s, it) => s + it.nuitees * it.taux, 0);
   return { items, totalNuitees, totalMontant };
+}
+
+// Recalcule automatiquement les nuitées d'un segment (lieu) à partir de ses
+// propres dates de début/fin — même logique que pour la mission dans son
+// ensemble (onDateChange), mais appliquée à un seul lieu du parcours.
+function recalcPerdiemItemNuitees(item) {
+  const debut = item.querySelector('.f-pd-date-debut')?.value;
+  const fin   = item.querySelector('.f-pd-date-fin')?.value;
+  const nuiteesInput = item.querySelector('.f-pd-nuitees');
+  if (!nuiteesInput) return;
+  if (debut && fin) {
+    const diffDays = Math.round((new Date(fin) - new Date(debut)) / 86400000);
+    nuiteesInput.value = Math.max(0, diffDays);
+  }
+}
+
+function onPerdiemDateChange(el, rowId) {
+  const item = el.closest('.perdiem-item');
+  if (item) recalcPerdiemItemNuitees(item);
+  recalcRow(rowId);
 }
 
 function togglePerdiemBreakdown(rowId) {
@@ -699,9 +724,10 @@ function togglePerdiemBreakdown(rowId) {
     tauxInput.classList.add('bg-light');
     btn.innerHTML = '<i class="bi bi-x-circle"></i> Utiliser un taux unique';
     if (!box.querySelector('.perdiem-item')) {
-      const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
+      const debut = row.querySelector('.f-date-debut').value;
+      const fin = row.querySelector('.f-date-fin').value;
       const taux = Number(tauxInput.value || 0);
-      addPerdiemItem(rowId, '', nuitees, taux);
+      addPerdiemItem(rowId, '', debut, fin, taux);
     }
   } else {
     box.querySelector('.perdiem-items').innerHTML = '';
@@ -712,19 +738,22 @@ function togglePerdiemBreakdown(rowId) {
   recalcRow(rowId);
 }
 
-function addPerdiemItem(rowId, lieu = '', nuitees = 0, taux = 0) {
+function addPerdiemItem(rowId, lieu = '', dateDebut = '', dateFin = '', taux = 0, nuiteesOverride = null) {
   const row = document.getElementById(rowId);
   if (!row) return;
   const container = row.querySelector('.perdiem-items');
   const item = document.createElement('div');
   item.className = 'row g-2 align-items-center mb-1 perdiem-item';
   item.innerHTML = `
-    <div class="col-md-5"><input type="text" class="form-control form-control-sm f-pd-lieu" placeholder="Lieu (ex. Gungu)" value="${esc(lieu)}" onchange="recalcRow('${rowId}')"></div>
-    <div class="col-md-3"><input type="number" min="0" class="form-control form-control-sm f-pd-nuitees" placeholder="Nuitées" value="${Number(nuitees) || 0}" onchange="recalcRow('${rowId}')"></div>
-    <div class="col-md-3"><input type="number" min="0" step="0.01" class="form-control form-control-sm f-pd-taux" placeholder="Taux USD" value="${Number(taux) || 0}" onchange="recalcRow('${rowId}')"></div>
+    <div class="col-md-3"><input type="text" class="form-control form-control-sm f-pd-lieu" placeholder="Lieu (ex. Gungu)" value="${esc(lieu)}" onchange="recalcRow('${rowId}')"></div>
+    <div class="col-md-2"><input type="date" class="form-control form-control-sm f-pd-date-debut" value="${esc(dateDebut)}" onchange="onPerdiemDateChange(this, '${rowId}')" title="Date de début sur ce lieu"></div>
+    <div class="col-md-2"><input type="date" class="form-control form-control-sm f-pd-date-fin" value="${esc(dateFin)}" onchange="onPerdiemDateChange(this, '${rowId}')" title="Date de fin sur ce lieu"></div>
+    <div class="col-md-2"><input type="number" min="0" class="form-control form-control-sm f-pd-nuitees" placeholder="Nuitées" value="${nuiteesOverride != null ? (Number(nuiteesOverride) || 0) : ''}" readonly title="Calculées automatiquement à partir des dates"></div>
+    <div class="col-md-2"><input type="number" min="0" step="0.01" class="form-control form-control-sm f-pd-taux" placeholder="Taux USD" value="${Number(taux) || 0}" onchange="recalcRow('${rowId}')"></div>
     <div class="col-md-1 text-end"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removePerdiemItem(this, '${rowId}')" title="Retirer ce lieu"><i class="bi bi-trash"></i></button></div>
   `;
   container.appendChild(item);
+  if (dateDebut && dateFin && nuiteesOverride == null) recalcPerdiemItemNuitees(item);
   recalcRow(rowId);
 }
 
@@ -893,6 +922,8 @@ function collectMissions() {
     const perdiemBreakdown = breakdownActive
       ? Array.from(row.querySelectorAll('.perdiem-item')).map((item) => ({
           lieu: item.querySelector('.f-pd-lieu').value.trim(),
+          date_debut: item.querySelector('.f-pd-date-debut')?.value || '',
+          date_fin: item.querySelector('.f-pd-date-fin')?.value || '',
           nuitees: Number(item.querySelector('.f-pd-nuitees').value || 0),
           taux: Number(item.querySelector('.f-pd-taux').value || 0)
         })).filter((it) => it.lieu || it.nuitees || it.taux)
