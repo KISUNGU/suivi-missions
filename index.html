@@ -2289,9 +2289,14 @@ function buildJustificationMissionPageHtml(report, m, rm, isLast) {
     : `<tr><td class="nb"></td><td>Per diem</td><td class="tc">${_docFmt(taux)}</td><td class="tc">${joursPrevus}</td><td class="tc">${joursReels}</td><td class="tc">${nbrePers}</td>
       <td class="tr">${_docFmt(prevuMontant)}</td><td class="tr">${pctPaye}%<br>${_docFmt(payeMontant)}</td><td class="tr">${_docFmt(realiseMontant)}</td><td class="tr">${_docFmt(ecartMontant)}</td></tr>`;
 
-  const prevuDetails = Array.isArray(m.prevu_autres_frais_details) && m.prevu_autres_frais_details.length
+  let prevuDetails = Array.isArray(m.prevu_autres_frais_details) && m.prevu_autres_frais_details.length
     ? m.prevu_autres_frais_details : resolveAutresFraisDetails(m);
-  const realiseDetails = resolveAutresFraisDetails(m);
+  let realiseDetails = resolveAutresFraisDetails(m);
+  if (!prevuDetails.length && !realiseDetails.length) {
+    // Garder la rubrique visible dans la justification, meme sans montant saisi.
+    prevuDetails = [{ libelle: 'Autres frais', montant: 0 }];
+    realiseDetails = [{ libelle: 'Autres frais', montant: 0 }];
+  }
   const detailCount = Math.max(prevuDetails.length, realiseDetails.length);
   let s2Prevu = 0, s2Paye = 0, s2Realise = 0, s2Ecart = 0;
   const detailRows = [];
