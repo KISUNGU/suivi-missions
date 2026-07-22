@@ -2207,6 +2207,13 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
 
   const lbl = escapeHtml(m.territoire_label || m.territoire_name || '—');
   const fraisVoyage = Number(m.frais_voyage_usd || 0);
+  const repasSoirEnabled = !!m.repas_soir_enabled || Number(m.repas_soir_taux_usd || 0) > 0 || Number(m.repas_soir_montant_usd || 0) > 0;
+  const repasSoirTaux = Number(m.repas_soir_taux_usd || 0);
+  const repasSoirMontant = Number(
+    m.repas_soir_montant_usd !== undefined && m.repas_soir_montant_usd !== null
+      ? m.repas_soir_montant_usd
+      : (repasSoirEnabled ? Number(m.nuitees || 0) * repasSoirTaux : 0)
+  );
   const nuiteeMontant = Number(m.nuitees || 0) * Number(m.taux_per_diem || 0);
   const perdiemBreakdown = Array.isArray(m.perdiem_breakdown)
     ? m.perdiem_breakdown.filter((it) => (it.lieu || '').trim() || Number(it.nuitees || 0) > 0)
@@ -2218,7 +2225,10 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
       }).join('')
     : `<tr><td>${lbl}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tr">${_docFmt(nuiteeMontant)}</td></tr>`;
   const lieuRows = perdiemRows
-    + (fraisVoyage ? `<tr><td>Frais du jour de voyage</td><td class="tc">—</td><td class="tc">—</td><td class="tr">${_docFmt(fraisVoyage)}</td></tr>` : '');
+    + (fraisVoyage ? `<tr><td>Frais du jour de voyage</td><td class="tc">—</td><td class="tc">—</td><td class="tr">${_docFmt(fraisVoyage)}</td></tr>` : '')
+    + ((repasSoirEnabled && repasSoirMontant > 0)
+      ? `<tr><td>Repas du soir</td><td class="tc">${m.nuitees || 0}</td><td class="tc">${_docFmt(repasSoirTaux)}</td><td class="tr">${_docFmt(repasSoirMontant)}</td></tr>`
+      : '');
 
   const detailsList = Array.isArray(m.autres_frais_details) && m.autres_frais_details.length
     ? m.autres_frais_details.filter((d) => (d.libelle || '').trim() || Number(d.montant || 0) > 0)
@@ -2394,6 +2404,13 @@ function buildJustificationMissionPageHtml(report, m, rm, isLast) {
   const ecartMontant = Math.round((payeMontant - realiseMontant) * 100) / 100;
   const pctPaye = prevuMontant > 0 ? Math.round((payeMontant / prevuMontant) * 100) : 0;
   const fraisVoyage = Number(m.frais_voyage_usd || 0);
+  const repasSoirEnabled = !!m.repas_soir_enabled || Number(m.repas_soir_taux_usd || 0) > 0 || Number(m.repas_soir_montant_usd || 0) > 0;
+  const repasSoirTaux = Number(m.repas_soir_taux_usd || 0);
+  const repasSoirMontant = Number(
+    m.repas_soir_montant_usd !== undefined && m.repas_soir_montant_usd !== null
+      ? m.repas_soir_montant_usd
+      : (repasSoirEnabled ? joursPrevus * repasSoirTaux : 0)
+  );
 
   const perdiemBreakdown = Array.isArray(m.perdiem_breakdown)
     ? m.perdiem_breakdown.filter((it) => (it.lieu || '').trim() || Number(it.nuitees || 0) > 0)
@@ -2408,8 +2425,16 @@ function buildJustificationMissionPageHtml(report, m, rm, isLast) {
       }).join('')
       + (fraisVoyage ? `<tr><td class="nb"></td><td>Frais du jour de voyage</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">${nbrePers}</td>
       <td class="tr">${_docFmt(fraisVoyage)}</td><td class="tr">—</td><td class="tr">—</td><td class="tr">—</td></tr>` : '')
+      + ((repasSoirEnabled && repasSoirMontant > 0)
+        ? `<tr><td class="nb"></td><td>Repas du soir</td><td class="tc">${_docFmt(repasSoirTaux)}</td><td class="tc">${joursPrevus}</td><td class="tc">${joursReels}</td><td class="tc">${nbrePers}</td>
+      <td class="tr">${_docFmt(repasSoirMontant)}</td><td class="tr">—</td><td class="tr">—</td><td class="tr">—</td></tr>`
+        : '')
     : `<tr><td class="nb"></td><td>Per diem</td><td class="tc">${_docFmt(taux)}</td><td class="tc">${joursPrevus}</td><td class="tc">${joursReels}</td><td class="tc">${nbrePers}</td>
-      <td class="tr">${_docFmt(prevuMontant)}</td><td class="tr">${pctPaye}%<br>${_docFmt(payeMontant)}</td><td class="tr">${_docFmt(realiseMontant)}</td><td class="tr">${_docFmt(ecartMontant)}</td></tr>`;
+      <td class="tr">${_docFmt(prevuMontant)}</td><td class="tr">${pctPaye}%<br>${_docFmt(payeMontant)}</td><td class="tr">${_docFmt(realiseMontant)}</td><td class="tr">${_docFmt(ecartMontant)}</td></tr>`
+      + ((repasSoirEnabled && repasSoirMontant > 0)
+        ? `<tr><td class="nb"></td><td>Repas du soir</td><td class="tc">${_docFmt(repasSoirTaux)}</td><td class="tc">${joursPrevus}</td><td class="tc">${joursReels}</td><td class="tc">${nbrePers}</td>
+      <td class="tr">${_docFmt(repasSoirMontant)}</td><td class="tr">—</td><td class="tr">—</td><td class="tr">—</td></tr>`
+        : '');
 
   let prevuDetails = Array.isArray(m.prevu_autres_frais_details) && m.prevu_autres_frais_details.length
     ? m.prevu_autres_frais_details : resolveAutresFraisDetails(m);

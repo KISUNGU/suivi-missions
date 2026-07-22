@@ -577,10 +577,18 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
         <button type="button" class="btn btn-link btn-sm p-0 mt-1 f-perdiem-toggle-btn" onclick="togglePerdiemBreakdown('${id}')" title="À activer si le taux per diem diffère selon le lieu visité durant la mission">
           <i class="bi bi-signpost-split"></i> Taux variable selon le lieu&nbsp;?
         </button>
+        <button type="button" class="btn btn-link btn-sm p-0 mt-1 f-repas-soir-toggle-btn" onclick="toggleRepasSoir('${id}')" title="Activer si la mission comprend des repas du soir (calculés sur base des nuitées)">
+          <i class="bi bi-moon-stars"></i> Repas du soir&nbsp;?
+        </button>
       </div>
       <div class="col-md-2">
         <label class="form-label-sm">Frais du jour de voyage (USD)</label>
         <input type="number" min="0" step="0.01" class="form-control form-control-sm f-frais-voyage" value="0" onchange="setAvance80('${id}'); onGroupFieldChange('${id}')">
+      </div>
+      <div class="col-md-2 f-repas-soir-wrap d-none">
+        <label class="form-label-sm">Repas du soir (taux USD)</label>
+        <input type="number" min="0" step="0.01" class="form-control form-control-sm f-repas-soir-taux" value="0" onchange="setAvance80('${id}'); onGroupFieldChange('${id}')">
+        <input type="hidden" class="f-repas-soir-enabled" value="0">
       </div>
       <div class="col-md-2">
         <label class="form-label-sm">Avance versée</label>
@@ -640,6 +648,8 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
     wrap.querySelector('.f-nuitees').value = m.nuitees || 0;
     wrap.querySelector('.f-taux').value = m.taux_per_diem || 0;
     wrap.querySelector('.f-frais-voyage').value = m.frais_voyage_usd || 0;
+    wrap.querySelector('.f-repas-soir-taux').value = Number(m.repas_soir_taux_usd || 0);
+    setRepasSoirEnabledByRow(wrap, !!m.repas_soir_enabled || Number(m.repas_soir_taux_usd || 0) > 0, false);
     wrap.querySelector('.f-avance').value = m.avance_usd || 0;
     wrap.querySelector('.f-observation').value = m.observation || '';
 
@@ -691,11 +701,41 @@ function removeAutresFraisItem(btn, rowId) {
 function copyGroupFieldsInto(wrap, groupId) {
   const source = document.querySelector(`.mission-row[data-group="${groupId}"]`);
   if (!source || source === wrap) return;
-  ['f-date-debut', 'f-date-fin', 'f-taux', 'f-nuitees', 'f-frais-voyage'].forEach((cls) => {
+  ['f-date-debut', 'f-date-fin', 'f-taux', 'f-nuitees', 'f-frais-voyage', 'f-repas-soir-taux', 'f-repas-soir-enabled'].forEach((cls) => {
     const srcEl = source.querySelector('.' + cls);
     const dstEl = wrap.querySelector('.' + cls);
     if (srcEl && dstEl) dstEl.value = srcEl.value;
   });
+  setRepasSoirEnabledByRow(wrap, isRepasSoirEnabled(wrap), false);
+}
+
+function isRepasSoirEnabled(row) {
+  return Number(row?.querySelector('.f-repas-soir-enabled')?.value || 0) === 1;
+}
+
+function setRepasSoirEnabledByRow(row, enabled, clearRateIfDisabled = true) {
+  if (!row) return;
+  const hidden = row.querySelector('.f-repas-soir-enabled');
+  const wrap = row.querySelector('.f-repas-soir-wrap');
+  const btn = row.querySelector('.f-repas-soir-toggle-btn');
+  const rateInput = row.querySelector('.f-repas-soir-taux');
+  if (!hidden || !wrap || !btn || !rateInput) return;
+
+  const isOn = !!enabled;
+  hidden.value = isOn ? '1' : '0';
+  wrap.classList.toggle('d-none', !isOn);
+  if (!isOn && clearRateIfDisabled) rateInput.value = 0;
+  btn.innerHTML = isOn
+    ? '<i class="bi bi-x-circle"></i> Retirer repas du soir'
+    : '<i class="bi bi-moon-stars"></i> Repas du soir&nbsp;?';
+}
+
+function toggleRepasSoir(rowId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  setRepasSoirEnabledByRow(row, !isRepasSoirEnabled(row));
+  setAvance80(rowId);
+  onGroupFieldChange(rowId);
 }
 
 // ─── RÉPARTITION DES NUITÉES PAR LIEU (taux per diem différents) ──────────────
@@ -814,11 +854,14 @@ function recalcRow(rowId) {
 
   const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
   const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
+  const repasSoirEnabled = isRepasSoirEnabled(row);
+  const repasSoirTaux = Number(row.querySelector('.f-repas-soir-taux')?.value || 0);
+  const repasSoirMontant = repasSoirEnabled ? (nuitees * repasSoirTaux) : 0;
 
   let fm;
   if (isPerdiemBreakdownActive(row)) {
     const { totalNuitees, totalMontant } = computePerdiemBreakdown(row);
-    fm = totalMontant + fraisVoyage;
+    fm = totalMontant + fraisVoyage + repasSoirMontant;
     const summaryEl = row.querySelector('.perdiem-summary');
     if (summaryEl) {
       const mismatch = totalNuitees !== nuitees;
@@ -827,7 +870,7 @@ function recalcRow(rowId) {
     }
   } else {
     const taux = Number(row.querySelector('.f-taux').value || 0);
-    fm = nuitees * taux + fraisVoyage;
+    fm = nuitees * taux + fraisVoyage + repasSoirMontant;
   }
 
   // Le workflow métier impose une avance de 80% du FM et un solde de 20% du FM.
@@ -854,10 +897,14 @@ function setAvance80(rowId) {
   if (!row) return;
 
   const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
+  const nuitees = Number(row.querySelector('.f-nuitees')?.value || 0);
+  const repasSoirMontant = isRepasSoirEnabled(row)
+    ? nuitees * Number(row.querySelector('.f-repas-soir-taux')?.value || 0)
+    : 0;
   const perdiem = isPerdiemBreakdownActive(row)
     ? computePerdiemBreakdown(row).totalMontant
     : Number(row.querySelector('.f-nuitees').value || 0) * Number(row.querySelector('.f-taux').value || 0);
-  const fm = perdiem + fraisVoyage;
+  const fm = perdiem + fraisVoyage + repasSoirMontant;
 
   const avance = roundMoney(fm * 0.8);
   row.querySelector('.f-avance').value = avance.toFixed(2);
@@ -869,11 +916,15 @@ function recalcTotals() {
 
   document.querySelectorAll('.mission-row').forEach(row => {
     const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
+    const nuitees = Number(row.querySelector('.f-nuitees')?.value || 0);
+    const repasSoirMontant = isRepasSoirEnabled(row)
+      ? nuitees * Number(row.querySelector('.f-repas-soir-taux')?.value || 0)
+      : 0;
     const fj = Number(row.querySelector('.f-autres')?.value || 0);
     const perdiem = isPerdiemBreakdownActive(row)
       ? computePerdiemBreakdown(row).totalMontant
       : Number(row.querySelector('.f-nuitees')?.value || 0) * Number(row.querySelector('.f-taux')?.value || 0);
-    const fm = roundMoney(perdiem + fraisVoyage);
+    const fm = roundMoney(perdiem + fraisVoyage + repasSoirMontant);
     const avance = roundMoney(fm * 0.8);
     const solde = roundMoney(fm - avance);
     const total = roundMoney(fm + fj);
@@ -908,11 +959,12 @@ function onGroupFieldChange(rowId) {
   const groupId = row.dataset.group;
   document.querySelectorAll(`.mission-row[data-group="${groupId}"]`).forEach((other) => {
     if (other === row) return;
-    ['f-date-debut', 'f-date-fin', 'f-taux', 'f-nuitees', 'f-frais-voyage'].forEach((cls) => {
+    ['f-date-debut', 'f-date-fin', 'f-taux', 'f-nuitees', 'f-frais-voyage', 'f-repas-soir-taux', 'f-repas-soir-enabled'].forEach((cls) => {
       const srcEl = row.querySelector('.' + cls);
       const dstEl = other.querySelector('.' + cls);
       if (srcEl && dstEl) dstEl.value = srcEl.value;
     });
+    setRepasSoirEnabledByRow(other, isRepasSoirEnabled(other), false);
   });
   setTimeout(forceRecalcAll, 20);
 }
@@ -953,6 +1005,9 @@ function collectMissions() {
     const dateFin    = row.querySelector('.f-date-fin').value;
     const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
     const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
+    const repasSoirEnabled = isRepasSoirEnabled(row);
+    const repasSoirTaux = Number(row.querySelector('.f-repas-soir-taux')?.value || 0);
+    const repasSoirMontant = repasSoirEnabled ? roundMoney(nuitees * repasSoirTaux) : 0;
     const observation = row.querySelector('.f-observation')?.value.trim() || '';
 
     const breakdownActive = isPerdiemBreakdownActive(row);
@@ -969,7 +1024,7 @@ function collectMissions() {
     const taux = breakdownActive
       ? (nuitees > 0 ? Math.round((perdiemMontant / nuitees) * 100) / 100 : 0)
       : Number(row.querySelector('.f-taux').value || 0);
-    const fm = roundMoney((breakdownActive ? perdiemMontant : nuitees * taux) + fraisVoyage);
+    const fm = roundMoney((breakdownActive ? perdiemMontant : nuitees * taux) + fraisVoyage + repasSoirMontant);
     const avance  = roundMoney(fm * 0.8);
 
     const details = Array.from(row.querySelectorAll('.autres-frais-item')).map((item) => ({
@@ -997,6 +1052,9 @@ function collectMissions() {
       taux_per_diem: taux,
       perdiem_breakdown: perdiemBreakdown,
       frais_voyage_usd: fraisVoyage,
+      repas_soir_enabled: repasSoirEnabled,
+      repas_soir_taux_usd: repasSoirEnabled ? repasSoirTaux : 0,
+      repas_soir_montant_usd: repasSoirMontant,
       montant_usd: fm,
       autres_frais_usd: fj,
       autres_frais_details: details,
