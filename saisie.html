@@ -338,24 +338,58 @@ const CORE_PROVINCES = ['UN', 'Kwilu', 'Kasaï', 'Kasaï Central'];
 const PROVINCE_LABEL_OVERRIDES = { UN: 'Kinshasa' };
 const AUTRE_VALUE = '__autre__';
 
+function normalizeProvinceKey(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  const normalized = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (['un', 'kinshasa', 'uncp', 'unite nationale de coordination'].includes(normalized)) return 'un';
+  return normalized;
+}
+
+function canonicalizeProvinceName(value) {
+  const key = normalizeProvinceKey(value);
+  if (key === 'un') return 'UN';
+  const coreMatch = CORE_PROVINCES.find((p) => normalizeProvinceKey(p) === key);
+  return coreMatch || String(value || '').trim();
+}
+
+function getCanonicalSessionProvinces() {
+  if (!Array.isArray(SESSION?.provinces) || !SESSION.provinces.length) return [];
+  const normalized = SESSION.provinces
+    .map((province) => canonicalizeProvinceName(province))
+    .filter(Boolean);
+  return [...new Set(normalized)];
+}
+
 async function loadProvincesAllowed() {
   const { data: allProvinces } = await db.from('provinces').select('*').order('code');
   const catalog = allProvinces || [];
-  // Afficher pour tous les comptes les 4 provinces de référence, dans un ordre fixe.
+  // Provinces de référence, dans un ordre fixe.
   const core = CORE_PROVINCES
     .map((name) => catalog.find((p) => p.name === name) || {
       name,
       label: PROVINCE_LABEL_OVERRIDES[name] || name,
       code: null
     });
-  PROVINCES_ALLOWED = core;
+
+  const isStaff = ['admin', 'super_admin'].includes(SESSION?.role || '');
+  if (isStaff) {
+    PROVINCES_ALLOWED = core;
+  } else {
+    const userProvinces = getCanonicalSessionProvinces();
+    PROVINCES_ALLOWED = core.filter((p) => userProvinces.includes(canonicalizeProvinceName(p.name)));
+  }
 
   // L'option "Autre" est toujours disponible et active la saisie libre.
   const select = document.getElementById('f-province');
   if (select) {
     select.innerHTML = '<option value="" disabled selected>-- Sélectionner --</option>' +
-      core.map((p) => `<option value="${esc(p.name)}">${esc(PROVINCE_LABEL_OVERRIDES[p.name] || p.label || p.name)}</option>`).join('') +
+      PROVINCES_ALLOWED.map((p) => `<option value="${esc(p.name)}">${esc(PROVINCE_LABEL_OVERRIDES[p.name] || p.label || p.name)}</option>`).join('') +
       `<option value="${AUTRE_VALUE}">Autre</option>`;
+
+    if (PROVINCES_ALLOWED.length === 1) {
+      select.value = PROVINCES_ALLOWED[0].name;
+      onProvinceChange();
+    }
   }
 }
 
@@ -1092,7 +1126,11 @@ async function submitReport() {
     await loadMyReports();
   } catch (err) {
     console.error(err);
-    showFormError('Erreur lors de la soumission : ' + (err.message || err));
+    const rawMsg = String(err?.message || err?.hint || err || '').toLowerCase();
+    const isRls = rawMsg.includes('row-level security') || rawMsg.includes('permission denied');
+    showFormError(isRls
+      ? "Soumission refusée par les règles d'accès (RLS). Vérifiez que la province choisie fait partie de vos provinces autorisées."
+      : ('Erreur lors de la soumission : ' + (err?.message || err)));
   } finally {
     btn.disabled = false;
   }
