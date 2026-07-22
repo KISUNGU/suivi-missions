@@ -1132,9 +1132,17 @@ function logoutAdmin() {
   PndaAuth.logout(db);
 }
 
+function getCanonicalSessionProvinces(session) {
+  if (!Array.isArray(session?.provinces) || !session.provinces.length) return [];
+  const normalized = session.provinces
+    .map((province) => canonicalizeProvinceName(province, province))
+    .filter(Boolean);
+  return [...new Set(normalized)];
+}
+
 function getAdminProvinces(session) {
   if (session?.role === 'super_admin') return REFERENCE.provinces;
-  const userProvs = session?.provinces;
+  const userProvs = getCanonicalSessionProvinces(session);
   if (Array.isArray(userProvs) && userProvs.length) {
     return REFERENCE.provinces.filter((p) => userProvs.includes(p.name));
   }
@@ -1142,7 +1150,7 @@ function getAdminProvinces(session) {
 }
 
 function isUncpComptableSession(session) {
-  return session?.role === 'comptable' && Array.isArray(session?.provinces) && session.provinces.includes('UN');
+  return session?.role === 'comptable' && getCanonicalSessionProvinces(session).includes('UN');
 }
 
 function isRafOrRnseReport(report) {
@@ -1487,9 +1495,9 @@ async function getStoredReports() {
     let query = db.from('reports').select('*').order('saved_at', { ascending: false }).limit(500);
     
     if (session?.role !== 'super_admin') {
-      const userProvs = session?.provinces;
+      const userProvs = getCanonicalSessionProvinces(session);
       if (Array.isArray(userProvs) && userProvs.length) {
-        if (session?.role === 'comptable' && userProvs.includes('UN')) {
+        if (session?.role === 'comptable' && isUncpComptableSession(session)) {
           const provList = userProvs.map((p) => `"${p}"`).join(',');
           query = query.or([
             `province.in.(${provList})`,
