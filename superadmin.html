@@ -1019,6 +1019,8 @@
         </button>
       </div>
 
+      <div id="rp-delete-requests-notice" class="d-none mb-3"></div>
+
       <div class="card">
         <div class="card-header py-3">
           <h5><i class="bi bi-folder2-open me-2"></i>Rapports soumis</h5>
@@ -1046,6 +1048,46 @@
                 </tr>
               </thead>
               <tbody id="tbl-all-reports">
+                <tr><td colspan="10" class="text-center text-muted py-4">Chargement…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h5 class="mb-0"><i class="bi bi-inboxes me-2"></i>Demandes de suppression</h5>
+          <div class="d-flex gap-2 align-items-center">
+            <select class="form-select form-select-sm" id="dr-filter-status" onchange="loadDeleteRequestsTable()">
+              <option value="">Tous statuts</option>
+              <option value="pending">En attente</option>
+              <option value="executed">Exécutées</option>
+              <option value="rejected">Rejetées</option>
+            </select>
+            <button class="btn btn-outline-secondary btn-sm" onclick="loadDeleteRequestsTable()" title="Actualiser les demandes">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+              <thead>
+                <tr>
+                  <th>Date demande</th>
+                  <th>Rapport</th>
+                  <th>Province</th>
+                  <th>Rapporteur</th>
+                  <th>Demandeur</th>
+                  <th>Statut</th>
+                  <th>Traitée par</th>
+                  <th>Date traitement</th>
+                  <th>Note</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-delete-requests">
                 <tr><td colspan="10" class="text-center text-muted py-4">Chargement…</td></tr>
               </tbody>
             </table>
@@ -1150,6 +1192,7 @@ let TERRITOIRES_CACHE  = [];
 let SECTEURS_CACHE     = [];
 let ALL_REPORTS_CACHE  = [];
 let MR_CACHE           = [];
+let DELETE_REQUESTS_CACHE = [];
 let currentReportStatusFilter = '';
 const REPORT_SYNC_KEY = 'PNDA_REPORTS_SYNC';
 
@@ -1206,6 +1249,160 @@ function calculateReportTotal(report) {
     return missions.reduce((sum, mission) => sum + Number(mission.total_usd || 0), 0);
   }
   return Number(report?.meta?.total_general_usd || report?.meta?.total_montant_usd || 0);
+}
+
+function getPendingDeleteRequestByReportId(reportId) {
+  if (!reportId) return null;
+  return DELETE_REQUESTS_CACHE.find((request) => request.report_id === reportId && request.status === 'pending') || null;
+}
+
+async function refreshDeleteRequestsCache() {
+  try {
+    const { data, error } = await db.from('report_delete_requests')
+      .select('*')
+      .eq('status', 'pending')
+      .order('requested_at', { ascending: false })
+      .limit(500);
+    if (error) throw error;
+    DELETE_REQUESTS_CACHE = data || [];
+  } catch (error) {
+    const message = String(error?.message || '').toLowerCase();
+    if (message.includes('report_delete_requests') && message.includes('does not exist')) {
+      DELETE_REQUESTS_CACHE = [];
+      return;
+    }
+    console.error('Erreur chargement demandes suppression:', error);
+    DELETE_REQUESTS_CACHE = [];
+  }
+}
+
+function renderDeleteRequestsNotice() {
+  const container = document.getElementById('rp-delete-requests-notice');
+  if (!container) return;
+
+  const pending = DELETE_REQUESTS_CACHE.filter((request) => request.status === 'pending');
+  if (!pending.length) {
+    container.className = 'd-none mb-3';
+    container.innerHTML = '';
+    return;
+  }
+
+  container.className = 'alert alert-warning d-flex align-items-center gap-2 mb-3';
+  container.innerHTML = `<i class="bi bi-bell-fill"></i><span><strong>${pending.length}</strong> demande(s) de suppression en attente de traitement.</span>`;
+}
+
+function getDeleteActionHtml(reportId) {
+  const pendingRequest = getPendingDeleteRequestByReportId(reportId);
+  if (!pendingRequest) {
+    return `<button class="btn btn-outline-danger btn-sm" onclick="deleteReport('${esc(reportId)}')" title="Supprimer directement"><i class="bi bi-trash3-fill"></i></button>`;
+  }
+
+  const requestId = esc(pendingRequest.id || '');
+  return `
+    <span class="badge bg-warning text-dark me-1" title="Demande en attente">Demande</span>
+    <button class="btn btn-outline-danger btn-sm me-1" onclick="executeDeleteRequest('${requestId}','${esc(reportId)}')" title="Exécuter la demande"><i class="bi bi-check2-square"></i></button>
+    <button class="btn btn-outline-secondary btn-sm" onclick="rejectDeleteRequest('${requestId}')" title="Rejeter la demande"><i class="bi bi-x-square"></i></button>
+  `;
+}
+
+function getDeleteRequestStatusBadge(status) {
+  if (status === 'pending') {
+    return '<span class="badge bg-warning text-dark">En attente</span>';
+  }
+  if (status === 'executed') {
+    return '<span class="badge bg-success">Exécutée</span>';
+  }
+  if (status === 'rejected') {
+    return '<span class="badge bg-secondary">Rejetée</span>';
+  }
+  return `<span class="badge bg-light text-dark border">${esc(status || '—')}</span>`;
+}
+
+function formatDateTime(value) {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString('fr-FR');
+}
+
+function highlightReportRow(reportId) {
+  if (!reportId) return;
+  document.querySelectorAll('#tbl-all-reports tr').forEach((row) => row.classList.remove('table-warning'));
+  const row = document.querySelector(`#tbl-all-reports tr[data-report-id="${CSS.escape(String(reportId))}"]`);
+  if (!row) {
+    showToast('Rapport introuvable dans la liste filtrée.');
+    return;
+  }
+  row.classList.add('table-warning');
+  row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function goToReportFromDeleteRequest(reportId, province = '', rapporteur = '') {
+  const provinceFilter = document.getElementById('rp-filter-province');
+  const rapporteurFilter = document.getElementById('rp-filter-rapporteur');
+  const statutFilter = document.getElementById('rp-filter-statut');
+
+  if (provinceFilter) provinceFilter.value = province || '';
+  if (rapporteurFilter) rapporteurFilter.value = rapporteur || '';
+  if (statutFilter) statutFilter.value = '';
+  currentReportStatusFilter = '';
+
+  await loadAllReports();
+  highlightReportRow(reportId);
+}
+
+async function loadDeleteRequestsTable() {
+  const statusFilter = document.getElementById('dr-filter-status')?.value || '';
+  const tbody = document.getElementById('tbl-delete-requests');
+  if (!tbody) return;
+
+  let query = db.from('report_delete_requests')
+    .select('*')
+    .order('requested_at', { ascending: false })
+    .limit(300);
+
+  if (statusFilter) {
+    query = query.eq('status', statusFilter);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    const message = String(error?.message || '').toLowerCase();
+    if (message.includes('report_delete_requests') && message.includes('does not exist')) {
+      tbody.innerHTML = '<tr><td colspan="10" class="text-center text-warning py-4">Migration v26 non appliquée (table report_delete_requests introuvable).</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger py-4">Erreur de chargement des demandes.</td></tr>';
+    return;
+  }
+
+  const requests = data || [];
+  tbody.innerHTML = requests.length ? requests.map((request) => {
+    const reportId = esc(request.report_id || '');
+    const focusBtn = `<button class="btn btn-outline-primary btn-sm me-1" onclick="goToReportFromDeleteRequest('${reportId}','${esc(request.province || '')}','${esc(request.rapporteur || '')}')" title="Afficher ce rapport"><i class="bi bi-eye"></i></button>`;
+    const actions = request.status === 'pending'
+      ? `
+        ${focusBtn}
+        <button class="btn btn-outline-danger btn-sm me-1" onclick="executeDeleteRequest('${esc(request.id)}','${reportId}')" title="Exécuter"><i class="bi bi-check2-square"></i></button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="rejectDeleteRequest('${esc(request.id)}')" title="Rejeter"><i class="bi bi-x-square"></i></button>
+      `
+      : `${focusBtn}<span class="text-muted small">—</span>`;
+
+    return `
+      <tr>
+        <td class="small text-nowrap">${esc(formatDateTime(request.requested_at))}</td>
+        <td class="small"><code>${reportId || '—'}</code></td>
+        <td class="small">${esc(request.province_label || request.province || '—')}</td>
+        <td class="small">${esc(request.rapporteur || '—')}</td>
+        <td class="small">${esc(request.requested_by_email || '—')}</td>
+        <td>${getDeleteRequestStatusBadge(request.status)}</td>
+        <td class="small">${esc(request.processed_by_email || '—')}</td>
+        <td class="small text-nowrap">${esc(formatDateTime(request.processed_at))}</td>
+        <td class="small">${esc(request.decision_note || request.reason || '—')}</td>
+        <td class="text-nowrap">${actions}</td>
+      </tr>
+    `;
+  }).join('') : '<tr><td colspan="10" class="text-center text-muted py-4">Aucune demande trouvée.</td></tr>';
 }
 
 function scheduleVisibleDataRefresh() {
@@ -1394,6 +1591,9 @@ function filterReportsByStatus(status) {
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 async function loadDashboard() {
   try {
+    await refreshDeleteRequestsCache();
+    renderDeleteRequestsNotice();
+
     const [
       { count: nbUsers },
       { count: nbProvs },
@@ -1922,6 +2122,10 @@ async function deleteSecteur(id, label) {
 
 // ─── RAPPORTS ────────────────────────────────────────────────────────────────
 async function loadAllReports() {
+  await refreshDeleteRequestsCache();
+  renderDeleteRequestsNotice();
+  await loadDeleteRequestsTable();
+
   const province   = document.getElementById('rp-filter-province')?.value || '';
   const rapporteur = document.getElementById('rp-filter-rapporteur')?.value.trim().toLowerCase() || '';
   const statut     = document.getElementById('rp-filter-statut')?.value || currentReportStatusFilter || '';
@@ -1945,8 +2149,9 @@ async function loadAllReports() {
     const litige = calculateLitige(r);
     const status = r.statut || 'activee';
     const total = calculateReportTotal(r);
+    const actionHtml = getDeleteActionHtml(r.id);
     return `
-    <tr>
+    <tr data-report-id="${esc(r.id || '')}">
       <td>${esc(r.seq_number ? '#'+r.seq_number : '—')}</td>
       <td class="text-nowrap small">${esc(new Date(r.saved_at).toLocaleDateString('fr-FR'))}</td>
       <td>${esc(r.province_label||r.province||'—')}</td>
@@ -1956,11 +2161,7 @@ async function loadAllReports() {
       <td class="small">${esc(fmtCur(total))}</td>
       <td class="small ${litige > 0 ? 'text-warning fw-bold' : 'text-success'}">${esc(fmtCur(litige))}</td>
       <td>${getStatusBadge(status)}</td>
-      <td>
-        <button class="btn btn-outline-danger btn-sm" onclick="deleteReport('${esc(r.id)}')">
-          <i class="bi bi-trash3-fill"></i>
-        </button>
-      </td>
+      <td>${actionHtml}</td>
     </tr>
   `}).join('') || '<tr><td colspan="10" class="text-center text-muted py-4">Aucun rapport.</td></tr>';
 }
@@ -1978,6 +2179,63 @@ async function deleteReport(id) {
     'Supprimer le rapport',
     'Supprimer',
     'btn-danger'
+  );
+}
+
+async function executeDeleteRequest(requestId, reportId) {
+  askConfirm(
+    'Exécuter cette demande et supprimer définitivement le rapport ?',
+    async () => {
+      try {
+        const session = getSession();
+        const { error: deleteError } = await db.from('reports').delete().eq('id', reportId);
+        if (deleteError) throw deleteError;
+
+        const { error: updateError } = await db.from('report_delete_requests').update({
+          status: 'executed',
+          processed_by_email: session?.user || null,
+          processed_at: new Date().toISOString(),
+          decision_note: 'Suppression exécutée par RNSE'
+        }).eq('id', requestId);
+        if (updateError) throw updateError;
+
+        showToast('✓ Demande exécutée, rapport supprimé.');
+        await loadAllReports();
+        await loadWorkflowStats();
+      } catch (error) {
+        console.error('Erreur exécution demande:', error);
+        showToast('Erreur lors de l\'exécution de la demande.');
+      }
+    },
+    'Exécuter la demande',
+    'Exécuter',
+    'btn-danger'
+  );
+}
+
+async function rejectDeleteRequest(requestId) {
+  askConfirm(
+    'Rejeter cette demande de suppression ?',
+    async () => {
+      try {
+        const session = getSession();
+        const { error } = await db.from('report_delete_requests').update({
+          status: 'rejected',
+          processed_by_email: session?.user || null,
+          processed_at: new Date().toISOString(),
+          decision_note: 'Demande rejetée par RNSE'
+        }).eq('id', requestId);
+        if (error) throw error;
+        showToast('✓ Demande rejetée.');
+        await loadAllReports();
+      } catch (error) {
+        console.error('Erreur rejet demande:', error);
+        showToast('Erreur lors du rejet de la demande.');
+      }
+    },
+    'Rejeter la demande',
+    'Rejeter',
+    'btn-secondary'
   );
 }
 </script>

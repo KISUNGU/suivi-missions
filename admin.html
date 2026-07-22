@@ -801,6 +801,7 @@ const SIGNATORY_STORAGE_KEY = 'PNDA_EXPORT_SIGNATORY';
 const REPORT_SYNC_KEY = 'PNDA_REPORTS_SYNC';
 const REPORT_SYNC_CHANNEL = 'pnda-reports-sync';
 let REPORTS_CACHE = [];
+let DELETE_REQUESTS_CACHE = [];
 let importedReports = [];
 let activeTab = 'general';
 let currentStatusFilter = '';
@@ -957,6 +958,19 @@ function isRafOrRnseReport(report) {
   return rapporteurRole === 'admin' || rapporteurRole === 'super_admin';
 }
 
+function canDeleteDirectly(session = getSession()) {
+  return session?.role === 'admin' || session?.role === 'super_admin';
+}
+
+function canRequestDelete(session = getSession()) {
+  return session?.role === 'comptable';
+}
+
+function getPendingDeleteRequestByReportId(reportId) {
+  if (!reportId) return null;
+  return DELETE_REQUESTS_CACHE.find((request) => request.report_id === reportId && request.status === 'pending') || null;
+}
+
 function buildTabs() {
   const tabs = document.getElementById('tabs');
   tabs.innerHTML = '';
@@ -1056,7 +1070,9 @@ async function refreshDashboard(force = false) {
   _refreshInFlight = true;
   try {
     await refreshReportsCache();
+    await refreshDeleteRequestsCache();
     populateFilterProvinceOptions();
+    renderDeleteRequestsNotice();
     renderSummaryCards();
     renderPanels();
     updateActiveTab();
@@ -1187,6 +1203,92 @@ function canonicalizeProvinceName(value, label = '') {
 
 async function refreshReportsCache() { 
   REPORTS_CACHE = await getAllReports(); 
+}
+
+async function refreshDeleteRequestsCache() {
+  const session = getSession();
+  try {
+    let query = db.from('report_delete_requests')
+      .select('*')
+      .eq('status', 'pending')
+      .order('requested_at', { ascending: false })
+      .limit(500);
+
+    if (!canDeleteDirectly(session)) {
+      query = query.eq('requested_by_email', session?.user || '');
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    DELETE_REQUESTS_CACHE = data || [];
+  } catch (error) {
+    const message = String(error?.message || '').toLowerCase();
+    if (message.includes('report_delete_requests') && message.includes('does not exist')) {
+      DELETE_REQUESTS_CACHE = [];
+      return;
+    }
+    console.error('Erreur lecture demandes de suppression:', error);
+    DELETE_REQUESTS_CACHE = [];
+  }
+}
+
+function renderDeleteRequestsNotice() {
+  const tabs = document.getElementById('tabs');
+  if (!tabs || !tabs.parentNode) return;
+
+  let notice = document.getElementById('delete-requests-notice');
+  if (!notice) {
+    notice = document.createElement('div');
+    notice.id = 'delete-requests-notice';
+    notice.className = 'd-none mb-3';
+    tabs.parentNode.insertBefore(notice, tabs);
+  }
+
+  const pending = DELETE_REQUESTS_CACHE.filter((request) => request.status === 'pending');
+  if (!pending.length) {
+    notice.className = 'd-none mb-3';
+    notice.innerHTML = '';
+    return;
+  }
+
+  if (canDeleteDirectly(getSession())) {
+    notice.className = 'alert alert-warning d-flex align-items-center gap-2 mb-3';
+    notice.innerHTML = `<i class="bi bi-bell-fill"></i><span><strong>${pending.length}</strong> demande(s) de suppression en attente d'exécution.</span>`;
+    return;
+  }
+
+  notice.className = 'alert alert-info d-flex align-items-center gap-2 mb-3';
+  notice.innerHTML = `<i class="bi bi-hourglass-split"></i><span>Vous avez <strong>${pending.length}</strong> demande(s) de suppression en attente de validation RAF/RNSE.</span>`;
+}
+
+function buildDeleteActionHtml(reportId, importId = '') {
+  const session = getSession();
+
+  if (!reportId && importId) {
+    return `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteReport('','${escapeHtml(importId)}')" title="Retirer du tableau local"><i class="bi bi-trash3-fill"></i></button>`;
+  }
+
+  const pendingRequest = getPendingDeleteRequestByReportId(reportId);
+  if (canDeleteDirectly(session)) {
+    if (pendingRequest) {
+      const requestId = escapeHtml(pendingRequest.id || '');
+      return `
+        <span class="badge bg-warning text-dark me-1" title="Demande en attente">Demande</span>
+        <button class="btn btn-sm btn-outline-danger me-1" onclick="event.stopPropagation();executeDeleteRequest('${requestId}','${escapeHtml(reportId)}')" title="Exécuter la suppression"><i class="bi bi-check2-square"></i></button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation();rejectDeleteRequest('${requestId}')" title="Rejeter la demande"><i class="bi bi-x-square"></i></button>
+      `;
+    }
+    return `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteReport('${escapeHtml(reportId)}','${escapeHtml(importId)}')" title="Supprimer"><i class="bi bi-trash3-fill"></i></button>`;
+  }
+
+  if (canRequestDelete(session)) {
+    if (pendingRequest) {
+      return `<button class="btn btn-sm btn-outline-secondary" disabled title="Demande en attente RAF/RNSE"><i class="bi bi-hourglass-split"></i></button>`;
+    }
+    return `<button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation();requestReportDeletion('${escapeHtml(reportId)}')" title="Demander la suppression"><i class="bi bi-send"></i></button>`;
+  }
+
+  return '';
 }
 
 function getReportProvinceName(report) {
@@ -1607,8 +1709,10 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
               const litige   = calculateReportLitige(report);
               const isUnread = !report.is_read;
               const st = report.statut || 'activee';
-              const rid = escapeHtml(report.id || '');
+              const reportId = report.id || '';
+              const rid = escapeHtml(reportId);
               const importId = escapeHtml(report.importId || '');
+              const deleteActionHtml = buildDeleteActionHtml(reportId, report.importId || '');
               
               return `
                 <tr class="report-row report-row-clickable${isUnread ? ' unread' : ''}" data-report-idx="${idx}" data-report-id="${rid}" data-province="${escapeHtml(province.name)}">
@@ -1624,7 +1728,7 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
                     ${isUnread && isSuperAdmin ? `<button class="btn btn-outline-success btn-sm me-1" onclick="event.stopPropagation();markAsRead('${rid}')" title="Marquer comme lu"><i class="bi bi-check2-circle"></i></button>` : ''}
                     ${st === 'activee' ? `<button class="btn btn-sm btn-outline-secondary me-1" onclick="event.stopPropagation();updateReportStatut('${rid}','realisee')" title="Marquer réalisée"><i class="bi bi-flag-fill"></i></button>` : ''}
                     ${st === 'realisee' ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="event.stopPropagation();updateReportStatut('${rid}','activee')" title="Remettre en Activée"><i class="bi bi-arrow-counterclockwise"></i></button>` : ''}
-                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteReport('${rid}','${importId}')" title="Supprimer"><i class="bi bi-trash3-fill"></i></button>
+                    ${deleteActionHtml}
                     <i class="bi bi-chevron-down text-muted small ms-1 chevron-icon"></i>
                   </td>
                 </tr>
@@ -1751,6 +1855,12 @@ async function updateReportStatut(reportId, newStatut) {
 }
 
 async function deleteReport(reportId, importId = '') {
+  const session = getSession();
+  if (reportId && !canDeleteDirectly(session)) {
+    showToast('Suppression directe réservée au RAF/RNSE. Utilisez la demande de suppression.');
+    return;
+  }
+
   askConfirm(
     reportId
       ? 'Supprimer définitivement ce rapport et toutes ses missions ? Cette action est irréversible.'
@@ -1770,11 +1880,13 @@ async function deleteReport(reportId, importId = '') {
         const { error } = await db.from('reports').delete().eq('id', reportId);
         if (error) throw error;
         removeReportFromLocalState(reportId, importId);
+        DELETE_REQUESTS_CACHE = DELETE_REQUESTS_CACHE.filter((request) => request.report_id !== reportId);
         renderSummaryCards();
         renderPanels();
         updateActiveTab();
         updateWorkflowBadges();
         updateWorkflowPanel();
+        renderDeleteRequestsNotice();
         showToast('✓ Rapport supprimé.');
         await refreshDashboard(true);
       } catch (e) {
@@ -1783,12 +1895,128 @@ async function deleteReport(reportId, importId = '') {
         const denied = e?.code === '42501' || /policy|permission|forbidden|not allowed|violates/i.test(message);
         showToast(
           denied
-            ? 'Suppression refusée par Supabase pour ce rapport. Si c’est un rapport RAF/RNSE visible par UNCP, exécutez la migration v22 avant de réessayer.'
+            ? 'Suppression refusée par Supabase. Vérifiez que la migration v26 est appliquée et que vous êtes connecté en RAF/RNSE.'
             : 'Erreur lors de la suppression : ' + (e?.message || String(e))
         );
       }
     },
     'Supprimer le rapport'
+  );
+}
+
+async function requestReportDeletion(reportId) {
+  const session = getSession();
+  if (!canRequestDelete(session)) {
+    showToast('Seuls les comptables peuvent émettre une demande de suppression.');
+    return;
+  }
+  const report = REPORTS_CACHE.find((item) => item.id === reportId);
+  if (!report) {
+    showToast('Rapport introuvable.');
+    return;
+  }
+
+  askConfirm(
+    'Envoyer une demande de suppression au RAF/RNSE pour ce rapport ?',
+    async () => {
+      try {
+        const { error } = await db.from('report_delete_requests').insert({
+          report_id: reportId,
+          province: report.meta?.province || report.province || getReportProvinceName(report) || null,
+          province_label: report.meta?.province_label || report.province_label || getReportProvinceLabel(report) || null,
+          rapporteur: report.meta?.rapporteur || report.rapporteur || null,
+          requested_by_email: session?.user || '',
+          requested_by_role: session?.role || 'comptable',
+          reason: 'Demande depuis le tableau de bord',
+          status: 'pending'
+        });
+        if (error) throw error;
+        showToast('✓ Demande de suppression envoyée au RAF/RNSE.');
+        await refreshDashboard(true);
+      } catch (error) {
+        const message = String(error?.message || '');
+        if (error?.code === '23505' || message.toLowerCase().includes('duplicate')) {
+          showToast('Une demande de suppression est déjà en attente pour ce rapport.');
+          await refreshDashboard(true);
+          return;
+        }
+        if (message.toLowerCase().includes('report_delete_requests') && message.toLowerCase().includes('does not exist')) {
+          showToast('Migration v26 non appliquée: table de demandes introuvable.');
+          return;
+        }
+        console.error('Erreur demande suppression:', error);
+        showToast('Erreur lors de l\'envoi de la demande.');
+      }
+    },
+    'Demande de suppression',
+    'Envoyer',
+    'btn-warning'
+  );
+}
+
+async function executeDeleteRequest(requestId, reportId) {
+  const session = getSession();
+  if (!canDeleteDirectly(session)) {
+    showToast('Seuls RAF/RNSE peuvent exécuter cette demande.');
+    return;
+  }
+
+  askConfirm(
+    'Exécuter cette demande et supprimer définitivement le rapport ?',
+    async () => {
+      try {
+        const { error: deleteError } = await db.from('reports').delete().eq('id', reportId);
+        if (deleteError) throw deleteError;
+
+        await db.from('report_delete_requests').update({
+          status: 'executed',
+          processed_by_email: session?.user || null,
+          processed_at: new Date().toISOString(),
+          decision_note: 'Suppression exécutée par RAF/RNSE'
+        }).eq('id', requestId);
+
+        removeReportFromLocalState(reportId, '');
+        showToast('✓ Demande exécutée, rapport supprimé.');
+        await refreshDashboard(true);
+      } catch (error) {
+        console.error('Erreur exécution demande:', error);
+        showToast('Erreur lors de l\'exécution de la demande.');
+      }
+    },
+    'Exécuter la demande',
+    'Exécuter',
+    'btn-danger'
+  );
+}
+
+async function rejectDeleteRequest(requestId) {
+  const session = getSession();
+  if (!canDeleteDirectly(session)) {
+    showToast('Seuls RAF/RNSE peuvent rejeter cette demande.');
+    return;
+  }
+
+  askConfirm(
+    'Rejeter cette demande de suppression ?',
+    async () => {
+      try {
+        const { error } = await db.from('report_delete_requests').update({
+          status: 'rejected',
+          processed_by_email: session?.user || null,
+          processed_at: new Date().toISOString(),
+          decision_note: 'Demande rejetée par RAF/RNSE'
+        }).eq('id', requestId);
+        if (error) throw error;
+        showToast('✓ Demande de suppression rejetée.');
+        await refreshDashboard(true);
+      } catch (error) {
+        console.error('Erreur rejet demande:', error);
+        showToast('Erreur lors du rejet de la demande.');
+      }
+    },
+    'Rejeter la demande',
+    'Rejeter',
+    'btn-secondary'
   );
 }
 
