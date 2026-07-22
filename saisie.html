@@ -295,6 +295,7 @@ const _bsToast = new bootstrap.Toast(_toastEl, { delay: 3500 });
 function showToast(msg) { document.getElementById('toast-body').textContent = msg; _bsToast.show(); }
 function esc(v) { return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtCur(v) { return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v || 0)); }
+function roundMoney(v) { return Math.round(Number(v || 0) * 100) / 100; }
 
 let SESSION = null;
 let TERRITOIRES = [];
@@ -550,7 +551,7 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
       <div class="col-md-2">
         <label class="form-label-sm">Avance versée</label>
         <div class="input-group input-group-sm">
-          <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="0" onchange="recalcRow('${id}')">
+          <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="0" readonly title="Calcul automatique à 80% du FM">
           <button type="button" class="btn btn-outline-secondary" onclick="setAvance80('${id}')" title="Recalculer à 80% du FM">80%</button>
         </div>
       </div>
@@ -795,10 +796,14 @@ function recalcRow(rowId) {
     fm = nuitees * taux + fraisVoyage;
   }
 
-  const avance = Number(row.querySelector('.f-avance').value || 0);
-  const total = fm + fj;
-  const solde = fm - avance;
-  const percu = avance + fj;
+  // Le workflow métier impose une avance de 80% du FM et un solde de 20% du FM.
+  const avance = roundMoney(fm * 0.8);
+  const solde = roundMoney(fm - avance);
+  const total = roundMoney(fm + fj);
+  const percu = roundMoney(avance + fj);
+
+  const avanceInput = row.querySelector('.f-avance');
+  if (avanceInput) avanceInput.value = avance.toFixed(2);
 
   row.querySelector('.row-montant').textContent = fmtCur(fm);
   row.querySelector('.row-autres-sum').textContent = fmtCur(fj);
@@ -820,7 +825,7 @@ function setAvance80(rowId) {
     : Number(row.querySelector('.f-nuitees').value || 0) * Number(row.querySelector('.f-taux').value || 0);
   const fm = perdiem + fraisVoyage;
 
-  const avance = Math.round(fm * 0.8 * 100) / 100;
+  const avance = roundMoney(fm * 0.8);
   row.querySelector('.f-avance').value = avance.toFixed(2);
   recalcRow(rowId);
 }
@@ -831,19 +836,21 @@ function recalcTotals() {
   document.querySelectorAll('.mission-row').forEach(row => {
     const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
     const fj = Number(row.querySelector('.f-autres')?.value || 0);
-    const avance = Number(row.querySelector('.f-avance')?.value || 0);
     const perdiem = isPerdiemBreakdownActive(row)
       ? computePerdiemBreakdown(row).totalMontant
       : Number(row.querySelector('.f-nuitees')?.value || 0) * Number(row.querySelector('.f-taux')?.value || 0);
-    const fm = perdiem + fraisVoyage;
-    const total = fm + fj;
+    const fm = roundMoney(perdiem + fraisVoyage);
+    const avance = roundMoney(fm * 0.8);
+    const solde = roundMoney(fm - avance);
+    const total = roundMoney(fm + fj);
+    const percu = roundMoney(avance + fj);
 
     totFM += fm;
     totFJ += fj;
     totTotal += total;
     totAvance += avance;
-    totSolde += fm - avance;
-    totPercu += avance + fj;
+    totSolde += solde;
+    totPercu += percu;
   });
 
   document.getElementById('tot-montant').textContent = fmtCur(totFM);
@@ -912,7 +919,6 @@ function collectMissions() {
     const dateFin    = row.querySelector('.f-date-fin').value;
     const nuitees = Number(row.querySelector('.f-nuitees').value || 0);
     const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
-    const avance  = Number(row.querySelector('.f-avance').value || 0);
     const observation = row.querySelector('.f-observation')?.value.trim() || '';
 
     const breakdownActive = isPerdiemBreakdownActive(row);
@@ -929,15 +935,16 @@ function collectMissions() {
     const taux = breakdownActive
       ? (nuitees > 0 ? Math.round((perdiemMontant / nuitees) * 100) / 100 : 0)
       : Number(row.querySelector('.f-taux').value || 0);
-    const fm = Math.round(((breakdownActive ? perdiemMontant : nuitees * taux) + fraisVoyage) * 100) / 100;
+    const fm = roundMoney((breakdownActive ? perdiemMontant : nuitees * taux) + fraisVoyage);
+    const avance  = roundMoney(fm * 0.8);
 
     const details = Array.from(row.querySelectorAll('.autres-frais-item')).map((item) => ({
       libelle: item.querySelector('.f-item-libelle').value.trim(),
       montant: Number(item.querySelector('.f-item-montant').value || 0)
     })).filter((d) => d.libelle || d.montant);
     const fj = details.reduce((s, d) => s + Number(d.montant || 0), 0);
-    const total = fm + fj;
-    const solde = fm - avance;
+    const total = roundMoney(fm + fj);
+    const solde = roundMoney(fm - avance);
 
     missions.push({
       numero,
