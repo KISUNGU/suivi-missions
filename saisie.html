@@ -574,12 +574,14 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
       <div class="col-md-2">
         <label class="form-label-sm">Taux per diem (USD)</label>
         <input type="number" min="0" step="0.01" class="form-control form-control-sm f-taux" value="0" onchange="setAvance80('${id}'); onGroupFieldChange('${id}')">
-        <button type="button" class="btn btn-link btn-sm p-0 mt-1 f-perdiem-toggle-btn" onclick="togglePerdiemBreakdown('${id}')" title="À activer si le taux per diem diffère selon le lieu visité durant la mission">
-          <i class="bi bi-signpost-split"></i> Taux variable selon le lieu&nbsp;?
-        </button>
-        <button type="button" class="btn btn-link btn-sm p-0 mt-1 f-repas-soir-toggle-btn" onclick="toggleRepasSoir('${id}')" title="Activer si la mission comprend des repas du soir (calculés sur base des nuitées)">
-          <i class="bi bi-moon-stars"></i> Repas du soir&nbsp;?
-        </button>
+        <div class="d-flex gap-1 mt-1">
+          <button type="button" class="btn btn-outline-secondary btn-sm f-perdiem-toggle-btn flex-fill" onclick="togglePerdiemBreakdown('${id}')" title="À activer si le taux per diem diffère selon le lieu visité durant la mission">
+            <i class="bi bi-signpost-split"></i> Taux variable&nbsp;?
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm f-repas-soir-toggle-btn flex-fill" onclick="toggleRepasSoir('${id}')" title="Activer si la mission comprend des repas du soir (calculés sur base des nuitées)">
+            <i class="bi bi-moon-stars"></i> Repas soir&nbsp;?
+          </button>
+        </div>
       </div>
       <div class="col-md-2">
         <label class="form-label-sm">Frais du jour de voyage (USD)</label>
@@ -726,8 +728,8 @@ function setRepasSoirEnabledByRow(row, enabled, clearRateIfDisabled = true) {
   wrap.classList.toggle('d-none', !isOn);
   if (!isOn && clearRateIfDisabled) rateInput.value = 0;
   btn.innerHTML = isOn
-    ? '<i class="bi bi-x-circle"></i> Retirer repas du soir'
-    : '<i class="bi bi-moon-stars"></i> Repas du soir&nbsp;?';
+    ? '<i class="bi bi-x-circle"></i> Retirer repas'
+    : '<i class="bi bi-moon-stars"></i> Repas soir&nbsp;?';
 }
 
 function toggleRepasSoir(rowId) {
@@ -794,7 +796,7 @@ function togglePerdiemBreakdown(rowId) {
   if (activating) {
     tauxInput.disabled = true;
     tauxInput.classList.add('bg-light');
-    btn.innerHTML = '<i class="bi bi-x-circle"></i> Utiliser un taux unique';
+    btn.innerHTML = '<i class="bi bi-x-circle"></i> Taux unique';
     if (!box.querySelector('.perdiem-item')) {
       const debut = row.querySelector('.f-date-debut').value;
       const fin = row.querySelector('.f-date-fin').value;
@@ -805,7 +807,7 @@ function togglePerdiemBreakdown(rowId) {
     box.querySelector('.perdiem-items').innerHTML = '';
     tauxInput.disabled = false;
     tauxInput.classList.remove('bg-light');
-    btn.innerHTML = '<i class="bi bi-signpost-split"></i> Taux variable selon le lieu&nbsp;?';
+    btn.innerHTML = '<i class="bi bi-signpost-split"></i> Taux variable&nbsp;?';
   }
   recalcRow(rowId);
 }
@@ -856,7 +858,7 @@ function recalcRow(rowId) {
   const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
   const repasSoirEnabled = isRepasSoirEnabled(row);
   const repasSoirTaux = Number(row.querySelector('.f-repas-soir-taux')?.value || 0);
-  const repasSoirMontant = repasSoirEnabled ? (nuitees * repasSoirTaux) : 0;
+  const repasSoirMontant = repasSoirEnabled ? roundMoney(nuitees * repasSoirTaux) : 0;
 
   let fm;
   if (isPerdiemBreakdownActive(row)) {
@@ -899,7 +901,7 @@ function setAvance80(rowId) {
   const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
   const nuitees = Number(row.querySelector('.f-nuitees')?.value || 0);
   const repasSoirMontant = isRepasSoirEnabled(row)
-    ? nuitees * Number(row.querySelector('.f-repas-soir-taux')?.value || 0)
+    ? roundMoney(nuitees * Number(row.querySelector('.f-repas-soir-taux')?.value || 0))
     : 0;
   const perdiem = isPerdiemBreakdownActive(row)
     ? computePerdiemBreakdown(row).totalMontant
@@ -918,7 +920,7 @@ function recalcTotals() {
     const fraisVoyage = Number(row.querySelector('.f-frais-voyage')?.value || 0);
     const nuitees = Number(row.querySelector('.f-nuitees')?.value || 0);
     const repasSoirMontant = isRepasSoirEnabled(row)
-      ? nuitees * Number(row.querySelector('.f-repas-soir-taux')?.value || 0)
+      ? roundMoney(nuitees * Number(row.querySelector('.f-repas-soir-taux')?.value || 0))
       : 0;
     const fj = Number(row.querySelector('.f-autres')?.value || 0);
     const perdiem = isPerdiemBreakdownActive(row)
