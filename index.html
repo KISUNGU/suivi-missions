@@ -1142,7 +1142,7 @@ function getCanonicalSessionProvinces(session) {
 }
 
 function getAdminProvinces(session) {
-  if (session?.role === 'super_admin') return REFERENCE.provinces;
+  if (session?.role === 'admin' || session?.role === 'super_admin') return REFERENCE.provinces;
   const userProvs = getCanonicalSessionProvinces(session);
   if (Array.isArray(userProvs) && userProvs.length) {
     return REFERENCE.provinces.filter((p) => userProvs.includes(p.name));
@@ -1593,7 +1593,7 @@ async function getStoredReports() {
     const session = getSession();
     let query = db.from('reports').select('*').order('saved_at', { ascending: false }).limit(500);
     
-    if (session?.role !== 'super_admin') {
+    if (session?.role === 'comptable') {
       const userProvs = getCanonicalSessionProvinces(session);
       if (Array.isArray(userProvs) && userProvs.length) {
         query = query.in('province', userProvs);
