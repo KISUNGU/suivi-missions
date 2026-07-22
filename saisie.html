@@ -1071,6 +1071,16 @@ async function submitReport() {
     const typedProvince = document.getElementById('f-province').value.trim();
     provinceMatch = matchProvince(typedProvince);
     if (!provinceMatch) { showFormError('Province invalide : veuillez sélectionner une province de la liste proposée.'); return; }
+
+    const isStaff = ['admin', 'super_admin'].includes(SESSION?.role || '');
+    if (!isStaff) {
+      const userProvinces = getCanonicalSessionProvinces();
+      const selectedProvince = canonicalizeProvinceName(provinceMatch.name);
+      if (userProvinces.length && !userProvinces.includes(selectedProvince)) {
+        showFormError('Province non autorisée pour votre profil. Sélectionnez uniquement une province affectée à votre compte.');
+        return;
+      }
+    }
   }
 
   const missions = collectMissions();
