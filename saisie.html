@@ -379,12 +379,17 @@ async function loadProvincesAllowed() {
     PROVINCES_ALLOWED = core.filter((p) => userProvinces.includes(canonicalizeProvinceName(p.name)));
   }
 
-  // L'option "Autre" est toujours disponible et active la saisie libre.
+  // L'option "Autre" (province libre) n'est proposée qu'aux comptes sans
+  // périmètre de province restreint (admin/super_admin). Un compte limité à
+  // une ou plusieurs provinces (ex: comptable UNCP scoped ['UN']) ne doit pas
+  // pouvoir taper une destination/ville en guise de province : c'est ce qui a
+  // rendu 49 rapports invisibles (province="KANANGA", "Tshikapa & Kikwit"...
+  // au lieu de "UN") — la ville doit être saisie dans le champ Territoire.
   const select = document.getElementById('f-province');
   if (select) {
     select.innerHTML = '<option value="" disabled selected>-- Sélectionner --</option>' +
       PROVINCES_ALLOWED.map((p) => `<option value="${esc(p.name)}">${esc(PROVINCE_LABEL_OVERRIDES[p.name] || p.label || p.name)}</option>`).join('') +
-      `<option value="${AUTRE_VALUE}">Autre</option>`;
+      (isStaff ? `<option value="${AUTRE_VALUE}">Autre</option>` : '');
 
     if (PROVINCES_ALLOWED.length === 1) {
       select.value = PROVINCES_ALLOWED[0].name;
