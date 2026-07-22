@@ -1246,13 +1246,17 @@ async function refreshDashboard() {
   updateWorkflowPanel();
 }
 
-function updateWorkflowBadges() {
-  const stats = {
-    en_attente: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'en_attente').length,
-    activee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'activee').length,
-    realisee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'realisee').length,
-    retournee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'retournee').length
+function computeWorkflowStats(reports) {
+  return {
+    en_attente: reports.filter(r => (r.statut || 'activee') === 'en_attente').length,
+    activee: reports.filter(r => (r.statut || 'activee') === 'activee').length,
+    realisee: reports.filter(r => (r.statut || 'activee') === 'realisee').length,
+    retournee: reports.filter(r => (r.statut || 'activee') === 'retournee').length
   };
+}
+
+function updateWorkflowBadges() {
+  const stats = computeWorkflowStats(getFilteredReports({ ignoreStatus: true }));
   
   Object.entries(stats).forEach(([status, count]) => {
     const badge = document.getElementById(`badge-${status}`);
@@ -1267,12 +1271,7 @@ function updateWorkflowBadges() {
 }
 
 function updateWorkflowPanel() {
-  const stats = {
-    en_attente: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'en_attente').length,
-    activee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'activee').length,
-    realisee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'realisee').length,
-    retournee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'retournee').length
-  };
+  const stats = computeWorkflowStats(getFilteredReports({ ignoreStatus: true }));
   
   const wfEnAttente = document.getElementById('workflow-en-attente');
   const wfActivee = document.getElementById('workflow-activee');
@@ -1359,14 +1358,15 @@ function getReportPriority(report) {
   return 1;
 }
 
-function getFilteredReports() {
+function getFilteredReports(options = {}) {
+  const ignoreStatus = !!options.ignoreStatus;
   const selectedProvince = getFilterValue('province');
   const rapporteurFilter = getFilterValue('rapporteur').trim().toLowerCase();
   const chefFilter = getFilterValue('chef').trim().toLowerCase();
   const missionFilter = getFilterValue('mission').trim().toLowerCase();
   const startDate = getFilterValue('start-date');
   const endDate = getFilterValue('end-date');
-  const statutFilter = currentStatusFilter || getFilterValue('statut') || '';
+  const statutFilter = ignoreStatus ? '' : (currentStatusFilter || getFilterValue('statut') || '');
   
   return REPORTS_CACHE.filter((report) => {
     const provinceName = getReportProvinceName(report);
@@ -1601,17 +1601,14 @@ function removeReportFromLocalState(reportId, importId = '') {
 // ─── RENDER FUNCTIONS ─────────────────────────────────────────────────────────
 function renderSummaryCards() {
   const reports = getFilteredReports();
-  const allReports = REPORTS_CACHE;
+  const reportsForStats = getFilteredReports({ ignoreStatus: true });
   const missions = reports.flatMap((report) => report.missions || []);
   const totalGeneral = missions.reduce((sum, m) => sum + Number(m.total_usd || 0), 0);
   
   document.getElementById('stat-reports').textContent = reports.length;
   document.getElementById('stat-total').textContent = formatCurrency(totalGeneral);
   
-  const enAttente = allReports.filter((r) => (r.statut || 'activee') === 'en_attente').length;
-  const activee = allReports.filter((r) => (r.statut || 'activee') === 'activee').length;
-  const realisee = allReports.filter((r) => (r.statut || 'activee') === 'realisee').length;
-  const retournee = allReports.filter((r) => (r.statut || 'activee') === 'retournee').length;
+  const { en_attente: enAttente, activee, realisee, retournee } = computeWorkflowStats(reportsForStats);
   
   document.getElementById('stat-en-attente').textContent = enAttente;
   document.getElementById('stat-activee').textContent = activee;
@@ -1949,7 +1946,14 @@ async function updateReportStatut(reportId, newStatut) {
         if (error) throw error;
         showToast(`✓ Rapport marqué « ${labels[newStatut]} ».`);
         await refreshDashboard();
-      } catch (e) { console.error(e); showToast('Erreur lors de la mise à jour.'); }
+      } catch (e) {
+        console.error(e);
+        const msg = String(e?.message || e?.hint || '').toLowerCase();
+        const isRls = msg.includes('row-level security') || msg.includes('permission denied');
+        showToast(isRls
+          ? 'Mise à jour refusée par les règles d’accès (RLS). Exécutez la migration v24 pour autoriser l’activation UNCP des rapports RAF/RNSE.'
+          : 'Erreur lors de la mise à jour.');
+      }
     },
     'Changer le statut', labels[newStatut] || newStatut, okClasses[newStatut] || 'btn-primary'
   );
@@ -2448,9 +2452,13 @@ async function activerMission(reportId) {
       } catch (e) {
         console.error(e);
         const isConflict = e?.code === '23505' || String(e?.message || '').toLowerCase().includes('duplicate');
+        const isRls = String(e?.message || e?.hint || '').toLowerCase().includes('row-level security')
+          || String(e?.message || e?.hint || '').toLowerCase().includes('permission denied');
         showToast(isConflict
           ? 'Ce numéro de bordereau existe déjà. Réessayez (le compteur va se resynchroniser).'
-          : ("Erreur lors de l'activation : " + (e?.message || e?.hint || 'inconnue')));
+          : isRls
+            ? 'Activation refusée par les règles d’accès (RLS). Exécutez la migration v24 pour autoriser l’activation UNCP des rapports RAF/RNSE.'
+            : ("Erreur lors de l'activation : " + (e?.message || e?.hint || 'inconnue')));
       }
     },
     'Activer la mission', 'Activer', 'btn-success'
