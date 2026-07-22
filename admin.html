@@ -1648,10 +1648,10 @@ function buildGeneralPanel(reports = getFilteredReports()) {
                   <th>Statut</th>
                 </tr>
               </thead>
-              <tbody>${reports.length ? reports.slice(0, 10).map((report) => {
-                const chefMission = r.chef_mission || r.meta?.rapporteur || '—';
-                const missionLabel = (r.missions && r.missions.length)
-                  ? r.missions.map(m => m.nature).join(', ')
+              <tbody>${reports.length ? reports.map((report) => {
+                const chefMission = report.chef_mission || report.meta?.rapporteur || '—';
+                const missionLabel = (report.missions && report.missions.length)
+                  ? report.missions.map(m => m.nature).join(', ')
                   : '—';
                 const rm = report.missions || [];
                 const rTotal = rm.reduce((s,m) => s + Number(m.total_usd||0), 0);

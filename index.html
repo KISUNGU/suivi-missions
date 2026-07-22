@@ -1807,7 +1807,7 @@ function buildGeneralPanel(reports = getFilteredReports()) {
                   <th>Statut</th>
                 </tr>
               </thead>
-              <tbody>${reports.length ? reports.slice(0, 10).map((report) => {
+              <tbody>${reports.length ? reports.map((report) => {
                 const missionnaireName = resolveMissionnaireName(report);
                 const chefMission = report.chef_mission || missionnaireName || '—';
                 const missionLabel = (report.missions && report.missions.length)
