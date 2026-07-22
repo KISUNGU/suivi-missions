@@ -1521,14 +1521,9 @@ function populateFilterProvinceOptions() {
       if (province.name === currentValue) option.selected = true;
       select.appendChild(option);
     });
-    if (!isSuperAdmin && provinces.length) {
-      select.value = currentValue || provinces[0].name;
-    }
   });
 
-  if (!isSuperAdmin && provinces.length) {
-    syncFilterValue('province', currentValue || provinces[0].name);
-  }
+  if (!isSuperAdmin) syncFilterValue('province', currentValue || '');
 }
 
 function getPersistedImportedReports() {

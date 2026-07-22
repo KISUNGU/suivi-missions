@@ -1365,7 +1365,6 @@ function populateFilterProvinceOptions() {
     if (province.name === currentValue) option.selected = true;
     select.appendChild(option);
   });
-  if (!isSuperAdmin && provinces.length) select.value = provinces[0].name;
 }
 
 function getPersistedImportedReports() {
