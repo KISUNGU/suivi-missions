@@ -1495,10 +1495,7 @@ function getFilteredReports(options = {}) {
     const reportDate = getReportDateValue(report);
     const reportStatut = report.statut || 'activee';
     
-    if (selectedProvince && provinceName !== selectedProvince) {
-      const bypass = selectedProvince === 'UN' && isUncpComptableSession(getSession()) && isRafOrRnseReport(report);
-      if (!bypass) return false;
-    }
+    if (selectedProvince && provinceName !== selectedProvince) return false;
     if (rapporteurFilter && !reporteur.includes(rapporteurFilter)) return false;
     if (chefFilter && !chefMission.includes(chefFilter)) return false;
     if (missionFilter && !missionText.includes(missionFilter)) return false;
@@ -1599,21 +1596,7 @@ async function getStoredReports() {
     if (session?.role !== 'super_admin') {
       const userProvs = getCanonicalSessionProvinces(session);
       if (Array.isArray(userProvs) && userProvs.length) {
-        if (session?.role === 'comptable' && isUncpComptableSession(session)) {
-          const provList = userProvs.map((p) => `"${p}"`).join(',');
-          query = query.or([
-            `province.in.(${provList})`,
-            'province.ilike.%kinshasa%',
-            'province.ilike.%uncp%',
-            'province_label.ilike.%UNCP%',
-            'rapporteur_role.in.(admin,super_admin)'
-          ].join(','));
-        } else {
-          query = query.in('province', userProvs);
-          if (session?.role === 'comptable') {
-            query = query.not('rapporteur_role', 'in', '(admin,super_admin)');
-          }
-        }
+        query = query.in('province', userProvs);
       }
     }
     const { data, error } = await query;
@@ -1831,12 +1814,7 @@ function buildGeneralPanel(reports = getFilteredReports()) {
 function buildProvincePanel(province, reportsSource = getFilteredReports()) {
   const session = getSession();
   const isSuperAdmin = session?.role === 'super_admin';
-  const isUncpComptable = isUncpComptableSession(session);
-  const reports = reportsSource.filter((report) => {
-    if (isRafOrRnseReport(report)) return province.name === 'UN' && isUncpComptable;
-    if (getReportProvinceName(report) === province.name) return true;
-    return false;
-  });
+  const reports = reportsSource.filter((report) => getReportProvinceName(report) === province.name);
   const missions = reports.flatMap((report) => report.missions || []);
   const totalMontant = missions.reduce((s, m) => s + Number(m.montant_usd || 0), 0);
   const totalAutres  = missions.reduce((s, m) => s + Number(m.autres_frais_usd || 0), 0);

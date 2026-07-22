@@ -1344,10 +1344,7 @@ function getFilteredReports() {
     const reportDate = getReportDateValue(report);
     const reportStatut = report.statut || 'activee';
     
-    if (selectedProvince && provinceName !== selectedProvince) {
-      const bypass = selectedProvince === 'UN' && isUncpComptableSession(getSession()) && isRafOrRnseReport(report);
-      if (!bypass) return false;
-    }
+    if (selectedProvince && provinceName !== selectedProvince) return false;
     if (rapporteurFilter && !reporteur.includes(rapporteurFilter)) return false;
     if (startDate && reportDate && reportDate < startDate) return false;
     if (endDate && reportDate && reportDate > endDate) return false;
@@ -1436,25 +1433,7 @@ async function getStoredReports() {
     if (session?.role !== 'super_admin') {
       const userProvs = getCanonicalSessionProvinces(session);
       if (Array.isArray(userProvs) && userProvs.length) {
-        if (session?.role === 'comptable' && isUncpComptableSession(session)) {
-          // Le compte UNCP voit aussi les rapports élaborés par le RAF (admin)
-          // et le RNSE (super_admin), quelle que soit la province choisie.
-          // Il récupère aussi les rapports saisis avec l'alias libre "Kinshasa"
-          // ou un libellé UNCP non canonique, déjà autorisés par la RLS.
-          const provList = userProvs.map((p) => `"${p}"`).join(',');
-          query = query.or([
-            `province.in.(${provList})`,
-            'province.ilike.%kinshasa%',
-            'province.ilike.%uncp%',
-            'province_label.ilike.%UNCP%',
-            'rapporteur_role.in.(admin,super_admin)'
-          ].join(','));
-        } else {
-          query = query.in('province', userProvs);
-          if (session?.role === 'comptable') {
-            query = query.not('rapporteur_role', 'in', '(admin,super_admin)');
-          }
-        }
+        query = query.in('province', userProvs);
       }
       // provinces NULL/vide (ex: admin, comptes UNCP historiques) => pas de filtre
       // supplémentaire côté client ; les RLS Supabase bornent déjà l'accès réel.
@@ -1671,15 +1650,7 @@ function buildGeneralPanel(reports = getFilteredReports()) {
 function buildProvincePanel(province, reportsSource = getFilteredReports()) {
   const session = getSession();
   const isSuperAdmin = session?.role === 'super_admin';
-  const isUncpComptable = isUncpComptableSession(session);
-  const reports = reportsSource.filter((report) => {
-    // Un rapport saisi par le RAF/RNSE n'apparaît jamais dans une province
-    // provinciale, même si son champ province est mal renseigné : il ne
-    // s'affiche que dans l'onglet UN, et seulement pour le comptable UNCP.
-    if (isRafOrRnseReport(report)) return province.name === 'UN' && isUncpComptable;
-    if (getReportProvinceName(report) === province.name) return true;
-    return false;
-  });
+  const reports = reportsSource.filter((report) => getReportProvinceName(report) === province.name);
   const missions = reports.flatMap((report) => report.missions || []);
   const totalMontant = missions.reduce((s, m) => s + Number(m.montant_usd || 0), 0);
   const totalAutres  = missions.reduce((s, m) => s + Number(m.autres_frais_usd || 0), 0);
