@@ -1477,6 +1477,25 @@ function getReportDateValue(report) {
   return report?.savedAt || report?.meta?.date_generation || ''; 
 }
 
+function reportMatchesPeriod(report, startDate, endDate) {
+  if (!startDate && !endDate) return true;
+  const missions = report?.missions || [];
+  if (!missions.length) {
+    const reportDate = getReportDateValue(report);
+    if (startDate && reportDate && reportDate < startDate) return false;
+    if (endDate && reportDate && reportDate > endDate) return false;
+    return true;
+  }
+  return missions.some((mission) => {
+    const debut = mission?.date_debut || '';
+    const fin = mission?.date_fin || '';
+    if (!debut && !fin) return true;
+    if (startDate && fin && fin < startDate) return false;
+    if (endDate && debut && debut > endDate) return false;
+    return true;
+  });
+}
+
 function getReportFingerprint(report) {
   return JSON.stringify({ meta: report.meta, missions: report.missions });
 }
@@ -1525,15 +1544,13 @@ function getFilteredReports(options = {}) {
       || (report?.missions || []).map((mission) => `${mission?.nature || ''} ${mission?.objectif || ''}`).join(' ')
       || ''
     ).toLowerCase();
-    const reportDate = getReportDateValue(report);
     const reportStatut = report.statut || 'activee';
     
     if (selectedProvince && provinceName !== selectedProvince) return false;
     if (rapporteurFilter && !reporteur.includes(rapporteurFilter)) return false;
     if (chefFilter && !chefMission.includes(chefFilter)) return false;
     if (missionFilter && !missionText.includes(missionFilter)) return false;
-    if (startDate && reportDate && reportDate < startDate) return false;
-    if (endDate && reportDate && reportDate > endDate) return false;
+    if (!reportMatchesPeriod(report, startDate, endDate)) return false;
     if (statutFilter && reportStatut !== statutFilter) return false;
     return true;
   });
