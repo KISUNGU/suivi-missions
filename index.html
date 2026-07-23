@@ -1070,8 +1070,10 @@ function getFilterElementIds(key) {
 
 function getFilterValue(key) {
   const dashboardEl = document.getElementById(`dashboard-filter-${key}`);
-  if (dashboardEl && dashboardEl.value) return dashboardEl.value;
-  return document.getElementById(`filter-${key}`)?.value || '';
+  const fallbackEl = document.getElementById(`filter-${key}`);
+  if (dashboardEl) return dashboardEl.value;
+  if (fallbackEl) return fallbackEl.value;
+  return '';
 }
 
 function syncFilterValue(key, value, sourceId = '') {
@@ -1529,34 +1531,58 @@ function getFilteredReports(options = {}) {
   const startDate = getFilterValue('start-date');
   const endDate = getFilterValue('end-date');
   const statutFilter = ignoreStatus ? '' : (currentStatusFilter || getFilterValue('statut') || '');
-  
+
+  function normalizeText(value) {
+    return String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function normalizeArray(values) {
+    return values
+      .filter(Boolean)
+      .map(normalizeText)
+      .join(' ');
+  }
+
   return REPORTS_CACHE.filter((report) => {
     const provinceName = getReportProvinceName(report);
-    const reporteur = String(
-      report?.meta?.rapporteur
-      || report?.rapporteur
-      || report?.missions?.find((mission) => mission?.missionnaire_nom)?.missionnaire_nom
-      || ''
-    ).toLowerCase();
-    const chefMission = String(
-      report?.chef_mission
-      || report?.missions?.find((mission) => mission?.chef_mission)?.chef_mission
-      || report?.missions?.map((mission) => mission?.missionnaire_nom).filter(Boolean).join(' ')
-      || report?.meta?.rapporteur
-      || report?.rapporteur
-      || ''
-    ).toLowerCase();
-    const missionText = String(
-      report?.mission_intitule
-      || (report?.missions || []).map((mission) => `${mission?.missionnaire_nom || ''} ${mission?.missionnaire_titre || ''} ${mission?.nature || ''} ${mission?.objectif || ''}`).join(' ')
-      || ''
-    ).toLowerCase();
+    const missions = report?.missions || [];
+
+    const reporteurRaw = [
+      report?.meta?.rapporteur,
+      report?.rapporteur,
+      missions.find((mission) => mission?.missionnaire_nom)?.missionnaire_nom
+    ];
+    const reporteur = normalizeArray(reporteurRaw);
+
+    const chefMissionRaw = [
+      report?.chef_mission,
+      missions.find((mission) => mission?.chef_mission)?.chef_mission,
+      ...missions.map((mission) => mission?.missionnaire_nom),
+      report?.meta?.rapporteur,
+      report?.rapporteur
+    ];
+    const chefMission = normalizeArray(chefMissionRaw);
+
+    const missionTextRaw = [
+      report?.mission_intitule,
+      ...missions.flatMap((mission) => [
+        mission?.missionnaire_nom,
+        mission?.missionnaire_titre,
+        mission?.nature,
+        mission?.objectif
+      ])
+    ];
+    const missionText = normalizeArray(missionTextRaw);
+
     const reportStatut = report.statut || 'activee';
-    
+
     if (selectedProvince && provinceName !== selectedProvince) return false;
-    if (rapporteurFilter && !reporteur.includes(rapporteurFilter)) return false;
-    if (chefFilter && !chefMission.includes(chefFilter)) return false;
-    if (missionFilter && !missionText.includes(missionFilter)) return false;
+    if (rapporteurFilter && !reporteur.includes(normalizeText(rapporteurFilter))) return false;
+    if (chefFilter && !chefMission.includes(normalizeText(chefFilter))) return false;
+    if (missionFilter && !missionText.includes(normalizeText(missionFilter))) return false;
     if (!reportMatchesPeriod(report, startDate, endDate)) return false;
     if (statutFilter && reportStatut !== statutFilter) return false;
     return true;
