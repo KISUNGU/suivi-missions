@@ -1389,6 +1389,7 @@ function getFilteredReports() {
   const startDate = document.getElementById('filter-start-date').value;
   const endDate = document.getElementById('filter-end-date').value;
   const statutFilter = currentStatusFilter || document.getElementById('filter-statut')?.value || '';
+
   
   return REPORTS_CACHE.filter((report) => {
     const provinceName = getReportProvinceName(report);
