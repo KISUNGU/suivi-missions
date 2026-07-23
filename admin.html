@@ -1746,7 +1746,7 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-hover table-sm mb-0">
-            <thead><tr><th>Date</th><th>Rapporteur</th><th>Trimestre</th><th>Missions</th><th>Total USD</th><th>Litige USD</th><th>Statut</th><th>Lu</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Date</th><th>Chef de mission</th><th>Trimestre</th><th>Missions</th><th>Total USD</th><th>Litige USD</th><th>Statut</th><th>Lu</th><th>Actions</th></tr></thead>
             <tbody>${reports.length ? reports.map((report, idx) => {
               const rm = report.missions || [];
               const rTotal   = rm.reduce((s,m) => s + Number(m.total_usd||0), 0);
@@ -1757,11 +1757,16 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
               const rid = escapeHtml(reportId);
               const importId = escapeHtml(report.importId || '');
               const deleteActionHtml = buildDeleteActionHtml(reportId, report.importId || '');
-              
+              const chefMissionName = report?.chef_mission
+                || rm.find((mission) => mission?.chef_mission)?.chef_mission
+                || rm.find((mission) => mission?.missionnaire_nom)?.missionnaire_nom
+                || report.meta?.rapporteur
+                || '—';
+
               return `
                 <tr class="report-row report-row-clickable${isUnread ? ' unread' : ''}" data-report-idx="${idx}" data-report-id="${rid}" data-province="${escapeHtml(province.name)}">
                   <td>${formatDate(report.savedAt)}</td>
-                  <td>${escapeHtml(report.meta?.rapporteur || '—')}</td>
+                  <td>${escapeHtml(chefMissionName)}</td>
                   <td>${escapeHtml(((report.meta?.trimestre||'')+' '+(report.meta?.annee||'')).trim()||'—')}</td>
                   <td><span class="badge bg-secondary">${rm.length}</span></td>
                   <td class="text-end fw-bold">${formatCurrency(rTotal)}</td>
