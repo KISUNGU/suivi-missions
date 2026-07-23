@@ -1541,6 +1541,7 @@ function getFilteredReports(options = {}) {
     const chefMission = String(
       report?.chef_mission
       || report?.missions?.find((mission) => mission?.chef_mission)?.chef_mission
+      || report?.missions?.map((mission) => mission?.missionnaire_nom).filter(Boolean).join(' ')
       || report?.meta?.rapporteur
       || report?.rapporteur
       || ''
