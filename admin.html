@@ -1393,7 +1393,12 @@ function getFilteredReports() {
   
   return REPORTS_CACHE.filter((report) => {
     const provinceName = getReportProvinceName(report);
-    const reporteur = String(report?.meta?.rapporteur || '').toLowerCase();
+    const reporteur = String(
+      report?.meta?.rapporteur
+      || report?.rapporteur
+      || report?.missions?.find((mission) => mission?.missionnaire_nom)?.missionnaire_nom
+      || ''
+    ).toLowerCase();
     const reportStatut = report.statut || 'activee';
     
     if (selectedProvince && provinceName !== selectedProvince) return false;

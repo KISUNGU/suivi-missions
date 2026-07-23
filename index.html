@@ -1532,16 +1532,22 @@ function getFilteredReports(options = {}) {
   
   return REPORTS_CACHE.filter((report) => {
     const provinceName = getReportProvinceName(report);
-    const reporteur = String(report?.meta?.rapporteur || '').toLowerCase();
+    const reporteur = String(
+      report?.meta?.rapporteur
+      || report?.rapporteur
+      || report?.missions?.find((mission) => mission?.missionnaire_nom)?.missionnaire_nom
+      || ''
+    ).toLowerCase();
     const chefMission = String(
       report?.chef_mission
       || report?.missions?.find((mission) => mission?.chef_mission)?.chef_mission
       || report?.meta?.rapporteur
+      || report?.rapporteur
       || ''
     ).toLowerCase();
     const missionText = String(
       report?.mission_intitule
-      || (report?.missions || []).map((mission) => `${mission?.nature || ''} ${mission?.objectif || ''}`).join(' ')
+      || (report?.missions || []).map((mission) => `${mission?.missionnaire_nom || ''} ${mission?.missionnaire_titre || ''} ${mission?.nature || ''} ${mission?.objectif || ''}`).join(' ')
       || ''
     ).toLowerCase();
     const reportStatut = report.statut || 'activee';
