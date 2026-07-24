@@ -305,97 +305,98 @@
     table th, table td { padding: 2px 3px !important; white-space: normal !important; word-break: break-word; }
     .report-detail-table { font-size: 6.5pt !important; }
     .report-detail-table th, .report-detail-table td { padding: 1px 2px !important; }
-    thead { display: table-header-group; } /* répète l'en-tête sur chaque page */
+    thead { display: table-header-group; }
     tr { break-inside: avoid; }
     .table-responsive { overflow: visible !important; }
     @page { size: A4 landscape; margin: 0.8cm; }
   }
-/* ── WORKFLOW BADGES ─────────────────────────────────────── */
-.workflow-badge-btn {
-  transition: transform 0.15s ease;
-}
-.workflow-badge-btn:hover {
-  transform: scale(1.08);
-}
-.status-filter-active {
-  opacity: 0.6;
-  background: rgba(255,255,255,0.1);
-  border-radius: 50%;
-}
 
-/* ─── STATUT BADGES ───────────────────────────────────────── */
-.statut-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.statut-badge.en-attente { 
-  background: #fff3cd; 
-  color: #856404; 
-  border: 1px solid #ffeeba; 
-}
-.statut-badge.activee { 
-  background: #d1ecf1; 
-  color: #0c5460; 
-  border: 1px solid #bee5eb; 
-}
-.statut-badge.realisee { 
-  background: #d4edda; 
-  color: #155724; 
-  border: 1px solid #c3e6cb; 
-}
-.statut-badge.retournee { 
-  background: #f8d7da; 
-  color: #721c24; 
-  border: 1px solid #f5c6cb; 
-}
+  /* ── WORKFLOW BADGES ─────────────────────────────────────── */
+  .workflow-badge-btn {
+    transition: transform 0.15s ease;
+  }
+  .workflow-badge-btn:hover {
+    transform: scale(1.08);
+  }
+  .status-filter-active {
+    opacity: 0.6;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+  }
 
-/* ─── WORKFLOW PANEL ──────────────────────────────────────── */
-#workflow-panel .display-6 {
-  font-size: 2rem;
-}
-@media (max-width: 767.98px) {
+  /* ─── STATUT BADGES ───────────────────────────────────────── */
+  .statut-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .statut-badge.en-attente { 
+    background: #fff3cd; 
+    color: #856404; 
+    border: 1px solid #ffeeba; 
+  }
+  .statut-badge.activee { 
+    background: #d1ecf1; 
+    color: #0c5460; 
+    border: 1px solid #bee5eb; 
+  }
+  .statut-badge.realisee { 
+    background: #d4edda; 
+    color: #155724; 
+    border: 1px solid #c3e6cb; 
+  }
+  .statut-badge.retournee { 
+    background: #f8d7da; 
+    color: #721c24; 
+    border: 1px solid #f5c6cb; 
+  }
+
+  /* ─── WORKFLOW PANEL ──────────────────────────────────────── */
   #workflow-panel .display-6 {
-    font-size: 1.5rem;
+    font-size: 2rem;
   }
-}
+  @media (max-width: 767.98px) {
+    #workflow-panel .display-6 {
+      font-size: 1.5rem;
+    }
+  }
 
-/* Ajoute cette règle pour gérer 7 cartes */
-@media (min-width: 768px) and (max-width: 1200px) {
-  #summary-grid > [class*="col-"] {
-    width: 25%; /* 4 cartes par ligne sur tablette */
+  /* Responsive pour 7 cartes */
+  @media (min-width: 768px) and (max-width: 1200px) {
+    #summary-grid > [class*="col-"] {
+      width: 25%;
+    }
   }
-}
-@media (min-width: 1200px) {
-  #summary-grid > [class*="col-"] {
-    width: 14.28%; /* 7 cartes par ligne sur desktop */
+  @media (min-width: 1200px) {
+    #summary-grid > [class*="col-"] {
+      width: 14.28%;
+    }
   }
-}
 
-/* ─── RESPONSIVE ADJUSTMENTS ──────────────────────────────── */
-@media (max-width: 991.98px) {
-  #workflow-badges {
-    order: 3;
-    width: 100%;
-    justify-content: center;
-    margin-top: 5px;
+  /* ─── RESPONSIVE ADJUSTMENTS ──────────────────────────────── */
+  @media (max-width: 991.98px) {
+    #workflow-badges {
+      order: 3;
+      width: 100%;
+      justify-content: center;
+      margin-top: 5px;
+    }
+    .top-navbar .ms-auto {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
   }
-  .top-navbar .ms-auto {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-}
 
-/* ─── STAT CARD COLORS ────────────────────────────────────── */
-.stat-value.text-warning { color: #856404 !important; }
-.stat-value.text-info { color: #0c5460 !important; }
-.stat-value.text-success { color: #155724 !important; }
-.stat-value.text-danger { color: #721c24 !important; }
+  /* ─── STAT CARD COLORS ────────────────────────────────────── */
+  .stat-value.text-warning { color: #856404 !important; }
+  .stat-value.text-info { color: #0c5460 !important; }
+  .stat-value.text-success { color: #155724 !important; }
+  .stat-value.text-danger { color: #721c24 !important; }
 </style>
 </head>
 <body>
@@ -592,17 +593,6 @@
             </div>
           </div>
         </div>
-        <!-- <div class="col-6 col-md-2">
-          <div class="card h-100">
-            <div class="card-body d-flex justify-content-between align-items-center">
-              <div>
-                <div class="text-muted small fw-semibold text-uppercase stat-label-admin">Missions</div>
-                <span class="stat-value" id="stat-missions">—</span>
-              </div>
-              <i class="bi bi-list-check stat-icon icon-blue"></i>
-            </div>
-          </div>
-        </div> -->
 
         <div class="col-6 col-md-2">
           <div class="card h-100">
@@ -938,7 +928,8 @@ const SIGNATORY_STORAGE_KEY = 'PNDA_EXPORT_SIGNATORY';
 const REPORT_SYNC_KEY = 'PNDA_REPORTS_SYNC';
 const REPORT_SYNC_CHANNEL = 'pnda-reports-sync';
 let REPORTS_CACHE = [];
-let PROFILES_DIRECTORY = {}; // email (minuscules) -> display_name enregistré dans profiles
+let PROFILES_DIRECTORY = {};
+let DELETE_REQUESTS_CACHE = [];
 let importedReports = [];
 let activeTab = 'general';
 let currentStatusFilter = '';
@@ -955,7 +946,7 @@ initialize();
 
 async function initialize() {
   const session = await PndaAuth.hydrateSession(db, ['admin', 'super_admin', 'comptable']);
-  if (!session) return; // l'écran de connexion PndaAuth prend le relais
+  if (!session) return;
   await Promise.all([loadReference(), loadProfilesDirectory()]);
   TAB_ORDER = ['general', ...REFERENCE.provinces.map((province) => province.name)];
   openDashboard(session.user);
@@ -964,7 +955,7 @@ async function initialize() {
   await refreshDashboard();
 }
 
-// ── Annuaire des profils (résolution du nom réel du missionnaire) ──────────────
+// ── Annuaire des profils ──────────────────────────────────────────────────────
 async function loadProfilesDirectory() {
   try {
     const { data, error } = await db.from('profiles').select('email, display_name');
@@ -978,9 +969,6 @@ async function loadProfilesDirectory() {
   }
 }
 
-// Résout le nom d'enregistrement réel du missionnaire à partir de l'annuaire
-// profiles, au lieu du nom de compte/email brut parfois figé dans meta.rapporteur
-// au moment de la saisie du rapport.
 function resolveMissionnaireName(report) {
   const raw = (report && report.meta && report.meta.rapporteur) || '';
   if (!raw) return '—';
@@ -989,9 +977,6 @@ function resolveMissionnaireName(report) {
   return displayName || raw;
 }
 
-// Résout le nom d'affichage d'un compte (comptable/RAF) à partir de son email,
-// pour l'impression (ex. signature de l'avis sur justificatifs). Retombe sur
-// l'email brut si aucun display_name n'est enregistré dans profiles.
 function resolveAccountDisplayName(email) {
   if (!email) return '';
   const key = String(email).trim().toLowerCase();
@@ -1085,8 +1070,10 @@ function getFilterElementIds(key) {
 
 function getFilterValue(key) {
   const dashboardEl = document.getElementById(`dashboard-filter-${key}`);
-  if (dashboardEl && dashboardEl.value) return dashboardEl.value;
-  return document.getElementById(`filter-${key}`)?.value || '';
+  const fallbackEl = document.getElementById(`filter-${key}`);
+  if (dashboardEl) return dashboardEl.value;
+  if (fallbackEl) return fallbackEl.value;
+  return '';
 }
 
 function syncFilterValue(key, value, sourceId = '') {
@@ -1148,23 +1135,43 @@ function logoutAdmin() {
   PndaAuth.logout(db);
 }
 
+function getCanonicalSessionProvinces(session) {
+  if (!Array.isArray(session?.provinces) || !session.provinces.length) return [];
+  const normalized = session.provinces
+    .map((province) => canonicalizeProvinceName(province, province))
+    .filter(Boolean);
+  return [...new Set(normalized)];
+}
+
 function getAdminProvinces(session) {
-  if (session?.role === 'super_admin') return REFERENCE.provinces;
-  const userProvs = session?.provinces;
+  if (session?.role === 'admin' || session?.role === 'super_admin') return REFERENCE.provinces;
+  const userProvs = getCanonicalSessionProvinces(session);
   if (Array.isArray(userProvs) && userProvs.length) {
     return REFERENCE.provinces.filter((p) => userProvs.includes(p.name));
   }
-  // provinces NULL/vide (ex: admin, comptes UNCP historiques) => accès à toutes les provinces
   return REFERENCE.provinces;
 }
 
 function isUncpComptableSession(session) {
-  return session?.role === 'comptable' && Array.isArray(session?.provinces) && session.provinces.includes('UN');
+  return session?.role === 'comptable' && getCanonicalSessionProvinces(session).includes('UN');
 }
 
 function isRafOrRnseReport(report) {
   const rapporteurRole = report.meta?.role;
   return rapporteurRole === 'admin' || rapporteurRole === 'super_admin';
+}
+
+function canDeleteDirectly(session = getSession()) {
+  return session?.role === 'admin' || session?.role === 'super_admin';
+}
+
+function canRequestDelete(session = getSession()) {
+  return session?.role === 'comptable';
+}
+
+function getPendingDeleteRequestByReportId(reportId) {
+  if (!reportId) return null;
+  return DELETE_REQUESTS_CACHE.find((request) => request.report_id === reportId && request.status === 'pending') || null;
 }
 
 function buildTabs() {
@@ -1242,13 +1249,7 @@ function getStatusBadge(status) {
   return `<span class="statut-badge ${cfg.class}"><i class="bi bi-${cfg.icon} me-1"></i>${cfg.label}</span>`;
 }
 
-// Montant réellement en litige (solde non soldé) pour un rapport :
-//  - si le solde a déjà été versé (report.solde_paye_at), plus rien n'est en
-//    litige : on renvoie 0, quel que soit l'ancien solde théorique ;
-//  - si l'avis sur justificatifs a été rendu, on retient l'écart réellement
-//    constaté (avis_ecart : + si le projet doit encore à l'agent, − si
-//    l'agent doit rembourser) plutôt que le solde théorique de 20% ;
-//  - sinon (avant justification), on retombe sur le solde théorique (20%).
+// Montant réellement en litige (solde non soldé) pour un rapport
 function calculateReportLitige(report) {
   if (report.solde_paye_at) return 0;
   return (report.missions || []).reduce((sum, mission) => {
@@ -1261,7 +1262,9 @@ function calculateReportLitige(report) {
 
 async function refreshDashboard() {
   await refreshReportsCache();
+  await refreshDeleteRequestsCache();
   populateFilterProvinceOptions();
+  renderDeleteRequestsNotice();
   renderSummaryCards();
   renderPanels();
   updateActiveTab();
@@ -1269,13 +1272,17 @@ async function refreshDashboard() {
   updateWorkflowPanel();
 }
 
-function updateWorkflowBadges() {
-  const stats = {
-    en_attente: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'en_attente').length,
-    activee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'activee').length,
-    realisee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'realisee').length,
-    retournee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'retournee').length
+function computeWorkflowStats(reports) {
+  return {
+    en_attente: reports.filter(r => (r.statut || 'activee') === 'en_attente').length,
+    activee: reports.filter(r => (r.statut || 'activee') === 'activee').length,
+    realisee: reports.filter(r => (r.statut || 'activee') === 'realisee').length,
+    retournee: reports.filter(r => (r.statut || 'activee') === 'retournee').length
   };
+}
+
+function updateWorkflowBadges() {
+  const stats = computeWorkflowStats(getFilteredReports({ ignoreStatus: true }));
   
   Object.entries(stats).forEach(([status, count]) => {
     const badge = document.getElementById(`badge-${status}`);
@@ -1290,12 +1297,7 @@ function updateWorkflowBadges() {
 }
 
 function updateWorkflowPanel() {
-  const stats = {
-    en_attente: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'en_attente').length,
-    activee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'activee').length,
-    realisee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'realisee').length,
-    retournee: REPORTS_CACHE.filter(r => (r.statut || 'activee') === 'retournee').length
-  };
+  const stats = computeWorkflowStats(getFilteredReports({ ignoreStatus: true }));
   
   const wfEnAttente = document.getElementById('workflow-en-attente');
   const wfActivee = document.getElementById('workflow-activee');
@@ -1306,54 +1308,6 @@ function updateWorkflowPanel() {
   if (wfActivee) wfActivee.textContent = stats.activee;
   if (wfRealisee) wfRealisee.textContent = stats.realisee;
   if (wfRetournee) wfRetournee.textContent = stats.retournee;
-}
-
-function getReportsSnapshotSignature(reports = REPORTS_CACHE) {
-  const summary = reports.reduce((acc, report) => {
-    const status = report?.statut || 'activee';
-    const missions = Array.isArray(report?.missions) ? report.missions : [];
-    acc.count += 1;
-    acc.missions += missions.length;
-    acc.total += missions.reduce((sum, mission) => sum + Number(mission.total_usd || 0), 0);
-    acc.solde += missions.reduce((sum, mission) => sum + Number(mission.solde_usd || 0), 0);
-    acc.statusCounts[status] = (acc.statusCounts[status] || 0) + 1;
-    const savedAt = report?.savedAt || report?.meta?.date_generation || '';
-    if (savedAt > acc.latestSavedAt) acc.latestSavedAt = savedAt;
-    return acc;
-  }, {
-    count: 0,
-    missions: 0,
-    total: 0,
-    solde: 0,
-    latestSavedAt: '',
-    statusCounts: { en_attente: 0, activee: 0, realisee: 0, retournee: 0 }
-  });
-
-  return JSON.stringify({
-    count: summary.count,
-    missions: summary.missions,
-    total: Number(summary.total.toFixed(2)),
-    solde: Number(summary.solde.toFixed(2)),
-    latestSavedAt: summary.latestSavedAt,
-    statusCounts: summary.statusCounts
-  });
-}
-
-// ─── AUTO-POLL ────────────────────────────────────────────────────────────────
-let _pollInterval = null;
-function startPolling() {
-  if (_pollInterval) {
-    clearInterval(_pollInterval);
-    _pollInterval = null;
-  }
-}
-
-function handleStorageSync(event) {
-  if (event.key === 'PNDA_SESSION' && !getSession()) { window.location.reload(); return; }
-  if ([IMPORT_STORAGE_KEY, REPORT_SYNC_KEY, 'PNDA_SESSION'].includes(event.key)) {
-    importedReports = getPersistedImportedReports();
-    refreshDashboard();
-  }
 }
 
 // ─── REPORTS ──────────────────────────────────────────────────────────────────
@@ -1390,6 +1344,125 @@ async function refreshReportsCache() {
   REPORTS_CACHE = await getAllReports(); 
 }
 
+async function refreshDeleteRequestsCache() {
+  const session = getSession();
+  try {
+    let query = db.from('report_delete_requests')
+      .select('*')
+      .eq('status', 'pending')
+      .order('requested_at', { ascending: false })
+      .limit(500);
+
+    if (!canDeleteDirectly(session)) {
+      query = query.eq('requested_by_email', session?.user || '');
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    DELETE_REQUESTS_CACHE = data || [];
+  } catch (error) {
+    const message = String(error?.message || '').toLowerCase();
+    if (message.includes('report_delete_requests') && message.includes('does not exist')) {
+      DELETE_REQUESTS_CACHE = [];
+      return;
+    }
+    console.error('Erreur lecture demandes de suppression:', error);
+    DELETE_REQUESTS_CACHE = [];
+  }
+}
+
+function renderDeleteRequestsNotice() {
+  const tabs = document.getElementById('tabs');
+  if (!tabs || !tabs.parentNode) return;
+
+  let notice = document.getElementById('delete-requests-notice');
+  if (!notice) {
+    notice = document.createElement('div');
+    notice.id = 'delete-requests-notice';
+    notice.className = 'd-none mb-3';
+    tabs.parentNode.insertBefore(notice, tabs);
+  }
+
+  const pending = DELETE_REQUESTS_CACHE.filter((request) => request.status === 'pending');
+  if (!pending.length) {
+    notice.className = 'd-none mb-3';
+    notice.innerHTML = '';
+    return;
+  }
+
+  if (canDeleteDirectly(getSession())) {
+    notice.className = 'alert alert-warning mb-3';
+    const rows = pending.slice(0, 5).map((request) => {
+      const requestId = escapeHtml(request.id || '');
+      const reportId = escapeHtml(request.report_id || '');
+      const province = escapeHtml(request.province_label || request.province || '—');
+      const rapporteur = escapeHtml(request.rapporteur || '—');
+      const demandeur = escapeHtml(request.requested_by_email || '—');
+      return `
+        <div class="d-flex justify-content-between align-items-center gap-2 py-1 border-top">
+          <div class="small">
+            <strong>${province}</strong> · ${rapporteur}
+            <span class="text-muted ms-1">(demandeur: ${demandeur})</span>
+          </div>
+          <div class="text-nowrap">
+            <button class="btn btn-sm btn-outline-danger me-1" onclick="executeDeleteRequest('${requestId}','${reportId}')" title="Exécuter la suppression">
+              <i class="bi bi-check2-square"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="rejectDeleteRequest('${requestId}')" title="Rejeter la demande">
+              <i class="bi bi-x-square"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+    const more = pending.length > 5
+      ? `<div class="small text-muted mt-1">... et ${pending.length - 5} autre(s) demande(s) (voir la liste des rapports pour tout traiter).</div>`
+      : '';
+    notice.innerHTML = `
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <i class="bi bi-bell-fill"></i>
+        <span><strong>${pending.length}</strong> demande(s) de suppression en attente d'exécution.</span>
+      </div>
+      ${rows}
+      ${more}
+    `;
+    return;
+  }
+
+  notice.className = 'alert alert-info d-flex align-items-center gap-2 mb-3';
+  notice.innerHTML = `<i class="bi bi-hourglass-split"></i><span>Vous avez <strong>${pending.length}</strong> demande(s) de suppression en attente de validation RAF/RNSE.</span>`;
+}
+
+function buildDeleteActionHtml(reportId, importId = '') {
+  const session = getSession();
+
+  if (!reportId && importId) {
+    return `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteReport('','${escapeHtml(importId)}')" title="Retirer du tableau local"><i class="bi bi-trash3-fill"></i></button>`;
+  }
+
+  const pendingRequest = getPendingDeleteRequestByReportId(reportId);
+  if (canDeleteDirectly(session)) {
+    if (pendingRequest) {
+      const requestId = escapeHtml(pendingRequest.id || '');
+      return `
+        <span class="badge bg-warning text-dark me-1" title="Demande en attente">Demande</span>
+        <button class="btn btn-sm btn-outline-danger me-1" onclick="event.stopPropagation();executeDeleteRequest('${requestId}','${escapeHtml(reportId)}')" title="Exécuter la suppression"><i class="bi bi-check2-square"></i></button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation();rejectDeleteRequest('${requestId}')" title="Rejeter la demande"><i class="bi bi-x-square"></i></button>
+      `;
+    }
+    return `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteReport('${escapeHtml(reportId)}','${escapeHtml(importId)}')" title="Supprimer"><i class="bi bi-trash3-fill"></i></button>`;
+  }
+
+  if (canRequestDelete(session)) {
+    if (pendingRequest) {
+      return `<button class="btn btn-sm btn-outline-secondary" disabled title="Demande en attente RAF/RNSE"><i class="bi bi-hourglass-split"></i></button>`;
+    }
+    return `<button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation();requestReportDeletion('${escapeHtml(reportId)}')" title="Demander la suppression"><i class="bi bi-send"></i></button>`;
+  }
+
+  return '';
+}
+
 function getReportProvinceName(report) {
   return canonicalizeProvinceName(
     report?.meta?.province || report?.province,
@@ -1404,6 +1477,25 @@ function getReportProvinceLabel(report) {
 
 function getReportDateValue(report) { 
   return report?.savedAt || report?.meta?.date_generation || ''; 
+}
+
+function reportMatchesPeriod(report, startDate, endDate) {
+  if (!startDate && !endDate) return true;
+  const missions = report?.missions || [];
+  if (!missions.length) {
+    const reportDate = getReportDateValue(report);
+    if (startDate && reportDate && reportDate < startDate) return false;
+    if (endDate && reportDate && reportDate > endDate) return false;
+    return true;
+  }
+  return missions.some((mission) => {
+    const debut = mission?.date_debut || '';
+    const fin = mission?.date_fin || '';
+    if (!debut && !fin) return true;
+    if (startDate && fin && fin < startDate) return false;
+    if (endDate && debut && debut > endDate) return false;
+    return true;
+  });
 }
 
 function getReportFingerprint(report) {
@@ -1430,60 +1522,69 @@ function getReportPriority(report) {
   return 1;
 }
 
-function getFilteredReports() {
+function getFilteredReports(options = {}) {
+  const ignoreStatus = !!options.ignoreStatus;
   const selectedProvince = getFilterValue('province');
   const rapporteurFilter = getFilterValue('rapporteur').trim().toLowerCase();
   const chefFilter = getFilterValue('chef').trim().toLowerCase();
   const missionFilter = getFilterValue('mission').trim().toLowerCase();
   const startDate = getFilterValue('start-date');
   const endDate = getFilterValue('end-date');
-  const statutFilter = currentStatusFilter || getFilterValue('statut') || '';
-  
+  const statutFilter = ignoreStatus ? '' : (currentStatusFilter || getFilterValue('statut') || '');
+
+  function normalizeText(value) {
+    return String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function normalizeArray(values) {
+    return values
+      .filter(Boolean)
+      .map(normalizeText)
+      .join(' ');
+  }
+
   return REPORTS_CACHE.filter((report) => {
     const provinceName = getReportProvinceName(report);
-    const reporteur = String(report?.meta?.rapporteur || '').toLowerCase();
-    const chefMission = String(
-      report?.chef_mission
-      || report?.missions?.find((mission) => mission?.chef_mission)?.chef_mission
-      || report?.meta?.rapporteur
-      || ''
-    ).toLowerCase();
-    const missionText = String(
-      report?.mission_intitule
-      || (report?.missions || []).map((mission) => `${mission?.nature || ''} ${mission?.objectif || ''}`).join(' ')
-      || ''
-    ).toLowerCase();
-    const reportDate = getReportDateValue(report);
+    const missions = report?.missions || [];
+
+    const reporteurRaw = [
+      report?.meta?.rapporteur,
+      report?.rapporteur,
+      missions.find((mission) => mission?.missionnaire_nom)?.missionnaire_nom
+    ];
+    const reporteur = normalizeArray(reporteurRaw);
+
+    const chefMissionRaw = [
+      report?.chef_mission,
+      missions.find((mission) => mission?.chef_mission)?.chef_mission,
+      ...missions.map((mission) => mission?.missionnaire_nom),
+      report?.meta?.rapporteur,
+      report?.rapporteur
+    ];
+    const chefMission = normalizeArray(chefMissionRaw);
+
+    const missionTextRaw = [
+      report?.mission_intitule,
+      ...missions.flatMap((mission) => [
+        mission?.missionnaire_nom,
+        mission?.missionnaire_titre,
+        mission?.nature,
+        mission?.objectif
+      ])
+    ];
+    const missionText = normalizeArray(missionTextRaw);
+
     const reportStatut = report.statut || 'activee';
-    
-    if (selectedProvince && provinceName !== selectedProvince) {
-      const bypass = selectedProvince === 'UN' && isUncpComptableSession(getSession()) && isRafOrRnseReport(report);
-      if (!bypass) return false;
-    }
-    if (rapporteurFilter && !reporteur.includes(rapporteurFilter)) return false;
-    if (chefFilter && !chefMission.includes(chefFilter)) return false;
-    if (missionFilter && !missionText.includes(missionFilter)) return false;
-    if (startDate && reportDate && reportDate < startDate) return false;
-    if (endDate && reportDate && reportDate > endDate) return false;
+
+    if (selectedProvince && provinceName !== selectedProvince) return false;
+    if (rapporteurFilter && !reporteur.includes(normalizeText(rapporteurFilter))) return false;
+    if (chefFilter && !chefMission.includes(normalizeText(chefFilter))) return false;
+    if (missionFilter && !missionText.includes(normalizeText(missionFilter))) return false;
+    if (!reportMatchesPeriod(report, startDate, endDate)) return false;
     if (statutFilter && reportStatut !== statutFilter) return false;
-    return true;
-  });
-}
-
-function applyFilters(data) {
-  const rapporteurFilter = document.getElementById('filter-rapporteur')?.value?.trim().toLowerCase()
-    || document.getElementById('filterChef')?.value?.trim().toLowerCase()
-    || '';
-  const missionFilter = document.getElementById('filterMission')?.value?.trim().toLowerCase() || '';
-
-  if (!Array.isArray(data)) return [];
-
-  return data.filter((item) => {
-    const rapporteurValue = String(item?.chef_nom || item?.meta?.rapporteur || item?.rapporteur || '').toLowerCase();
-    const missionValue = String(item?.mission_intitule || item?.nature || item?.intitule || item?.objectif || '').toLowerCase();
-
-    if (rapporteurFilter && !rapporteurValue.includes(rapporteurFilter)) return false;
-    if (missionFilter && !missionValue.includes(missionFilter)) return false;
     return true;
   });
 }
@@ -1503,14 +1604,9 @@ function populateFilterProvinceOptions() {
       if (province.name === currentValue) option.selected = true;
       select.appendChild(option);
     });
-    if (!isSuperAdmin && provinces.length) {
-      select.value = currentValue || provinces[0].name;
-    }
   });
 
-  if (!isSuperAdmin && provinces.length) {
-    syncFilterValue('province', currentValue || provinces[0].name);
-  }
+  if (!isSuperAdmin) syncFilterValue('province', currentValue || '');
 }
 
 function getPersistedImportedReports() {
@@ -1575,31 +1671,11 @@ async function getStoredReports() {
     const session = getSession();
     let query = db.from('reports').select('*').order('saved_at', { ascending: false }).limit(500);
     
-    if (session?.role !== 'super_admin') {
-      const userProvs = session?.provinces;
+    if (session?.role === 'comptable') {
+      const userProvs = getCanonicalSessionProvinces(session);
       if (Array.isArray(userProvs) && userProvs.length) {
-        if (session?.role === 'comptable' && userProvs.includes('UN')) {
-          // Le compte UNCP voit aussi les rapports élaborés par le RAF (admin)
-          // et le RNSE (super_admin), quelle que soit la province choisie.
-          // Il récupère aussi les rapports saisis avec l'alias libre "Kinshasa"
-          // ou un libellé UNCP non canonique, déjà autorisés par la RLS.
-          const provList = userProvs.map((p) => `"${p}"`).join(',');
-          query = query.or([
-            `province.in.(${provList})`,
-            'province.ilike.%kinshasa%',
-            'province.ilike.%uncp%',
-            'province_label.ilike.%UNCP%',
-            'rapporteur_role.in.(admin,super_admin)'
-          ].join(','));
-        } else {
-          query = query.in('province', userProvs);
-          if (session?.role === 'comptable') {
-            query = query.not('rapporteur_role', 'in', '(admin,super_admin)');
-          }
-        }
+        query = query.in('province', userProvs);
       }
-      // provinces NULL/vide (ex: admin, comptes UNCP historiques) => pas de filtre
-      // supplémentaire côté client ; les RLS Supabase bornent déjà l'accès réel.
     }
     const { data, error } = await query;
     if (error) throw error;
@@ -1696,18 +1772,14 @@ function removeReportFromLocalState(reportId, importId = '') {
 // ─── RENDER FUNCTIONS ─────────────────────────────────────────────────────────
 function renderSummaryCards() {
   const reports = getFilteredReports();
-  const allReports = REPORTS_CACHE;
+  const reportsForStats = getFilteredReports({ ignoreStatus: true });
   const missions = reports.flatMap((report) => report.missions || []);
   const totalGeneral = missions.reduce((sum, m) => sum + Number(m.total_usd || 0), 0);
   
   document.getElementById('stat-reports').textContent = reports.length;
-  // document.getElementById('stat-missions').textContent = missions.length; // Ligne à commenter ou supprimer
   document.getElementById('stat-total').textContent = formatCurrency(totalGeneral);
   
-  const enAttente = allReports.filter((r) => (r.statut || 'activee') === 'en_attente').length;
-  const activee = allReports.filter((r) => (r.statut || 'activee') === 'activee').length;
-  const realisee = allReports.filter((r) => (r.statut || 'activee') === 'realisee').length;
-  const retournee = allReports.filter((r) => (r.statut || 'activee') === 'retournee').length;
+  const { en_attente: enAttente, activee, realisee, retournee } = computeWorkflowStats(reportsForStats);
   
   document.getElementById('stat-en-attente').textContent = enAttente;
   document.getElementById('stat-activee').textContent = activee;
@@ -1785,7 +1857,7 @@ function buildGeneralPanel(reports = getFilteredReports()) {
                   <th>Statut</th>
                 </tr>
               </thead>
-              <tbody>${reports.length ? reports.slice(0, 10).map((report) => {
+              <tbody>${reports.length ? reports.map((report) => {
                 const missionnaireName = resolveMissionnaireName(report);
                 const chefMission = report.chef_mission || missionnaireName || '—';
                 const missionLabel = (report.missions && report.missions.length)
@@ -1820,15 +1892,7 @@ function buildGeneralPanel(reports = getFilteredReports()) {
 function buildProvincePanel(province, reportsSource = getFilteredReports()) {
   const session = getSession();
   const isSuperAdmin = session?.role === 'super_admin';
-  const isUncpComptable = isUncpComptableSession(session);
-  const reports = reportsSource.filter((report) => {
-    // Un rapport saisi par le RAF/RNSE n'apparaît jamais dans une province
-    // provinciale, même si son champ province est mal renseigné : il ne
-    // s'affiche que dans l'onglet UN, et seulement pour le comptable UNCP.
-    if (isRafOrRnseReport(report)) return province.name === 'UN' && isUncpComptable;
-    if (getReportProvinceName(report) === province.name) return true;
-    return false;
-  });
+  const reports = reportsSource.filter((report) => getReportProvinceName(report) === province.name);
   const missions = reports.flatMap((report) => report.missions || []);
   const totalMontant = missions.reduce((s, m) => s + Number(m.montant_usd || 0), 0);
   const totalAutres  = missions.reduce((s, m) => s + Number(m.autres_frais_usd || 0), 0);
@@ -1858,20 +1922,26 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-hover table-sm mb-0" id="table-province-reports-${escapeHtml(province.name)}">
-            <thead><tr><th>Date</th><th>Rapporteur</th><th>Trimestre</th><th>Missions</th><th>Total USD</th><th>Litige USD</th><th>Statut</th><th>Lu</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Date</th><th>Chef de mission</th><th>Trimestre</th><th>Missions</th><th>Total USD</th><th>Litige USD</th><th>Statut</th><th>Lu</th><th>Actions</th></tr></thead>
             <tbody>${reports.length ? reports.map((report, idx) => {
               const rm = report.missions || [];
               const rTotal   = rm.reduce((s,m) => s + Number(m.total_usd||0), 0);
               const litige   = calculateReportLitige(report);
               const isUnread = !report.is_read;
               const st = report.statut || 'activee';
-              const rid = escapeHtml(report.id || '');
+              const reportId = report.id || '';
+              const rid = escapeHtml(reportId);
               const importId = escapeHtml(report.importId || '');
-              
+              const deleteActionHtml = buildDeleteActionHtml(reportId, report.importId || '');
+              const chefMissionName = report?.chef_mission
+                || rm.find((mission) => mission?.chef_mission)?.chef_mission
+                || rm.find((mission) => mission?.missionnaire_nom)?.missionnaire_nom
+                || resolveMissionnaireName(report);
+
               return `
                 <tr class="report-row report-row-clickable${isUnread ? ' unread' : ''}" data-report-idx="${idx}" data-report-id="${rid}" data-province="${escapeHtml(province.name)}">
                   <td>${formatDate(report.savedAt)}</td>
-                  <td>${escapeHtml(resolveMissionnaireName(report))}</td>
+                  <td>${escapeHtml(chefMissionName)}</td>
                   <td>${escapeHtml(((report.meta?.trimestre||'')+' '+(report.meta?.annee||'')).trim()||'—')}</td>
                   <td><span class="badge bg-secondary">${rm.length}</span></td>
                   <td class="text-end fw-bold">${formatCurrency(rTotal)}</td>
@@ -1885,11 +1955,11 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
                     ${st === 'activee' ? `<button class="btn btn-sm btn-outline-secondary me-1" onclick="event.stopPropagation();updateReportStatut('${rid}','realisee')" title="Marquer réalisée"><i class="bi bi-flag-fill"></i></button>` : ''}
                     ${st === 'realisee' ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="event.stopPropagation();updateReportStatut('${rid}','activee')" title="Remettre en Activée"><i class="bi bi-arrow-counterclockwise"></i></button>` : ''}
                     ${st === 'realisee' && !report.justification_at ? `<button class="btn btn-sm btn-outline-info me-1" onclick="event.stopPropagation();openAvisReviewModal('${rid}')" title="Remplir docs de justification (délai 48h)"><i class="bi bi-clipboard-check-fill"></i></button>` : ''}
-                    ${st === 'realisee' && report.justification_at && !report.solde_paye_at ? `<button class="btn btn-sm btn-outline-success me-1" onclick="event.stopPropagation();enregistrerSolde('${rid}')" title="Confirmer le versement du solde 20%"><i class="bi bi-cash-coin"></i></button>` : ''}
+                    ${st === 'realisee' && report.justification_at && !report.solde_paye_at ? `<button class="btn btn-sm btn-outline-success me-1" onclick="event.stopPropagation();enregistrerSolde('${rid}')" title="Confirmer le versement du solde"><i class="bi bi-cash-coin"></i></button>` : ''}
                     ${rid ? `<button class="btn btn-sm btn-outline-primary me-1" onclick="event.stopPropagation();editReport('${rid}')" title="Modifier le rapport"><i class="bi bi-pencil-fill"></i></button>` : ''}
                     ${report.liquidation_number ? `<button class="btn btn-sm btn-outline-dark me-1" onclick="event.stopPropagation();reprintBordereau('${rid}')" title="Bordereau N°\u00a0${escapeHtml(report.liquidation_number)}"><i class="bi bi-file-earmark-text"></i></button>` : ''}
                     ${report.justification_at ? `<button class="btn btn-sm btn-outline-dark me-1" onclick="event.stopPropagation();reprintJustificationDocs('${rid}')" title="Réimprimer docs de justification"><i class="bi bi-file-earmark-check"></i></button>` : ''}
-                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteReport('${rid}','${importId}')" title="Supprimer"><i class="bi bi-trash3-fill"></i></button>
+                    ${deleteActionHtml}
                     <i class="bi bi-chevron-down text-muted small ms-1 chevron-icon"></i>
                   </td>
                 </tr>
@@ -2025,7 +2095,7 @@ async function updateReportStatut(reportId, newStatut) {
   const okClasses = { activee: 'btn-success', retournee: 'btn-warning', realisee: 'btn-secondary', en_attente: 'btn-secondary' };
   const icons     = { activee: 'bi-play-fill', retournee: 'bi-arrow-return-left', realisee: 'bi-flag-fill', en_attente: 'bi-clock' };
   askConfirm(
-    `Changer le statut de ce rapport en « <strong>${labels[newStatut] || newStatut}</strong> » ?`,
+    `Changer le statut de ce rapport en « <strong>${labels[newStatut] || newStatut}</strong> » ?`,
     async () => {
       try {
         const session = getSession();
@@ -2048,7 +2118,14 @@ async function updateReportStatut(reportId, newStatut) {
         if (error) throw error;
         showToast(`✓ Rapport marqué « ${labels[newStatut]} ».`);
         await refreshDashboard();
-      } catch (e) { console.error(e); showToast('Erreur lors de la mise à jour.'); }
+      } catch (e) {
+        console.error(e);
+        const msg = String(e?.message || e?.hint || '').toLowerCase();
+        const isRls = msg.includes('row-level security') || msg.includes('permission denied');
+        showToast(isRls
+          ? 'Mise à jour refusée par les règles d’accès (RLS). Exécutez la migration v24 pour autoriser l’activation UNCP des rapports RAF/RNSE.'
+          : 'Erreur lors de la mise à jour.');
+      }
     },
     'Changer le statut', labels[newStatut] || newStatut, okClasses[newStatut] || 'btn-primary'
   );
@@ -2161,7 +2238,7 @@ function _accompNames(rm) {
   return names;
 }
 
-// Construit le contenu (une page) du bordereau pour UN missionnaire donné.
+// ─── BORDEREAU DE LIQUIDATION ────────────────────────────────────────────────
 function buildBordereauPageHtml(report, m, rm, isLast) {
   const nom = m.missionnaire_nom || resolveMissionnaireName(report);
   const selfLabel = [m.missionnaire_nom, m.missionnaire_titre].filter(Boolean).join(' — ');
@@ -2179,14 +2256,35 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
   const totMontant = Number(m.montant_usd||0);
   const totAutres  = Number(m.autres_frais_usd||0);
   const totGeneral = Number(m.total_usd||0);
-  const avance     = Number(m.avance_usd||0);
-  const solde      = Number(m.solde_usd||0);
+  const avanceRate = Number(m.avance_rate || 0.8);
+  const avanceCalculee = Math.round(totMontant * avanceRate * 100) / 100;
+  const avance     = Number(m.avance_usd || 0) || avanceCalculee;
+  const solde      = Number(m.solde_usd || 0) || Math.round((totMontant - avance) * 100) / 100;
 
   const lbl = escapeHtml(m.territoire_label || m.territoire_name || '—');
   const fraisVoyage = Number(m.frais_voyage_usd || 0);
+  const repasSoirEnabled = !!m.repas_soir_enabled || Number(m.repas_soir_taux_usd || 0) > 0 || Number(m.repas_soir_montant_usd || 0) > 0;
+  const repasSoirTaux = Number(m.repas_soir_taux_usd || 0);
+  const repasSoirMontant = Number(
+    m.repas_soir_montant_usd !== undefined && m.repas_soir_montant_usd !== null
+      ? m.repas_soir_montant_usd
+      : (repasSoirEnabled ? Number(m.nuitees || 0) * repasSoirTaux : 0)
+  );
   const nuiteeMontant = Number(m.nuitees || 0) * Number(m.taux_per_diem || 0);
-  const lieuRows = `<tr><td>${lbl}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tr">${_docFmt(nuiteeMontant)}</td></tr>`
-    + (fraisVoyage ? `<tr><td>Frais du jour de voyage</td><td class="tc">—</td><td class="tc">—</td><td class="tr">${_docFmt(fraisVoyage)}</td></tr>` : '');
+  const perdiemBreakdown = Array.isArray(m.perdiem_breakdown)
+    ? m.perdiem_breakdown.filter((it) => (it.lieu || '').trim() || Number(it.nuitees || 0) > 0)
+    : [];
+  const perdiemRows = perdiemBreakdown.length
+    ? perdiemBreakdown.map((it) => {
+        const periode = (it.date_debut && it.date_fin) ? ` <span style="font-size:7.5pt;color:#444">(${_docDate(it.date_debut)} au ${_docDate(it.date_fin)})</span>` : '';
+        return `<tr><td>${escapeHtml(it.lieu || lbl)}${periode}</td><td class="tc">${it.nuitees || 0}</td><td class="tc">${_docFmt(it.taux)}</td><td class="tr">${_docFmt(Number(it.nuitees || 0) * Number(it.taux || 0))}</td></tr>`;
+      }).join('')
+    : `<tr><td>${lbl}</td><td class="tc">${m.nuitees||0}</td><td class="tc">${_docFmt(m.taux_per_diem)}</td><td class="tr">${_docFmt(nuiteeMontant)}</td></tr>`;
+  const lieuRows = perdiemRows
+    + (fraisVoyage ? `<tr><td>Frais du jour de voyage</td><td class="tc">—</td><td class="tc">—</td><td class="tr">${_docFmt(fraisVoyage)}</td></tr>` : '')
+    + ((repasSoirEnabled && repasSoirMontant > 0)
+      ? `<tr><td>Repas du soir</td><td class="tc">${m.nuitees || 0}</td><td class="tc">${_docFmt(repasSoirTaux)}</td><td class="tr">${_docFmt(repasSoirMontant)}</td></tr>`
+      : '');
 
   const detailsList = Array.isArray(m.autres_frais_details) && m.autres_frais_details.length
     ? m.autres_frais_details.filter((d) => (d.libelle || '').trim() || Number(d.montant || 0) > 0)
@@ -2228,7 +2326,7 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
     ${autresRows}
     <tr class="bold bg"><td colspan="4">Total frais à justifier</td><td class="tr">${_docFmt(totAutres)}</td></tr>
     <tr class="bold bg"><td colspan="4">Montant total</td><td class="tr">${_docFmt(totGeneral)}</td></tr>
-    <tr><td colspan="4"> Avance versée (80% FM)</td><td class="tr bold">${_docFmt(avance)}</td></tr>
+    <tr><td colspan="4"> Avance versée (${Math.round(avanceRate * 100)}% FM)</td><td class="tr bold">${_docFmt(avance)}</td></tr>
     <tr><td colspan="4">Solde à payer au retour de la mission</td><td class="tr">${_docFmt(solde)}</td></tr>
     <tr class="bold bg"><td colspan="4">Total perçu (FM + FJ)</td><td class="tr">${_docFmt(avance + totAutres)}</td></tr>
   </tbody>
@@ -2245,8 +2343,6 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
 </div>`;
 }
 
-// Assemble le bordereau complet : une page par missionnaire (chef de mission
-// et personnes accompagnées), imprimées à la suite dans une seule fenêtre.
 function buildBordereauHtml(report) {
   const rm = (report.missions || []);
   const num = report.liquidation_number || '___/____';
@@ -2258,24 +2354,25 @@ ${pages}
 </body></html>`;
 }
 
-// Construit une page "AVIS SUR JUSTIFICATIFS PROVISION" (formulaire simple,
-// sans tableau) pour UN missionnaire donné — mêmes montants que sur son
-// propre bordereau de liquidation.
+// ─── AVIS SUR JUSTIFICATIFS PROVISION ──────────────────────────────────────
 function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   const nom      = m.missionnaire_nom || resolveMissionnaireName(report);
   const direction = m.missionnaire_entite || report.meta?.province_label || report.meta?.province || '';
   const num      = report.fld_number || '___/___/____';
   const motif    = m.nature || '';
 
-  const totProvision = Number(m.avis_montant_percu !== undefined && m.avis_montant_percu !== null ? m.avis_montant_percu : (m.avance_usd || 0));
-  const totJustifie  = Number(m.total_usd || 0);
-  const ecart = m.avis_ecart !== undefined && m.avis_ecart !== null ? Number(m.avis_ecart) : (totJustifie - totProvision);
-  const sens  = m.avis_sens || (ecart > 0 ? 'projet_rembourse' : (ecart < 0 ? 'agent_rembourse' : 'aucun'));
+  const avanceBase = Number(m.prevu_avance_usd || m.avance_usd || 0);
+  const totPercu = Number(
+    m.avis_montant_percu !== undefined && m.avis_montant_percu !== null
+      ? m.avis_montant_percu
+      : avanceBase
+  );
+  const totJustifie = Number(m.total_usd || 0);
+  const totValable = totJustifie;
+  const remboursementEcart = totValable - totPercu;
+  const sens  = m.avis_sens || (remboursementEcart > 0 ? 'projet_rembourse' : (remboursementEcart < 0 ? 'agent_rembourse' : 'aucun'));
   const favorable = m.avis_comptable ? m.avis_comptable === 'favorable' : true;
 
-  // Détail des autres frais à justifier, avec case déjà cochée si le montant
-  // déclaré a été validé tel quel dans la modale du comptable (décochée s'il
-  // a été corrigé).
   const autresItems = Array.isArray(m.autres_frais_details) ? m.autres_frais_details : [];
   const autresItemsHtml = autresItems.length
     ? `<div style="margin:8px 0">
@@ -2284,21 +2381,20 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
 </div>`
     : '';
 
+
   let remboursementLabel;
   let remboursementMontant;
   if (sens === 'projet_rembourse') {
     remboursementLabel = `A REMBOURSER A&nbsp;: ${escapeHtml(nom)}`;
-    remboursementMontant = Math.abs(ecart);
+    remboursementMontant = Math.abs(remboursementEcart);
   } else if (sens === 'agent_rembourse') {
-    remboursementLabel = `A REMBOURSER PAR&nbsp;: ${escapeHtml(nom)}`;
-    remboursementMontant = Math.abs(ecart);
+    remboursementLabel = 'A REMBOURSER A&nbsp;: PROJET';
+    remboursementMontant = Math.abs(remboursementEcart);
   } else {
-    remboursementLabel = 'A REMBOURSER&nbsp;:';
+    remboursementLabel = 'A REMBOURSER A&nbsp;: NEANT';
     remboursementMontant = 0;
   }
-  const remboursementNote = sens === 'agent_rembourse'
-    ? (favorable ? ' (remboursement confirmé)' : ' (en attente de confirmation)')
-    : '';
+  const remboursementNote = '';
 
   const comptableName = resolveAccountDisplayName(report.justification_by) || '';
   const dateAvis = report.justification_at ? _docDate(report.justification_at) : _docDate(new Date());
@@ -2313,8 +2409,9 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
 <div class="avis-field"><span class="avis-label">MOTIF&nbsp;:</span><span class="avis-value">${escapeHtml(motif)}</span></div>
 <div class="avis-field"><span class="avis-label">FINANCEMENT&nbsp;:</span><span class="avis-value">PNDA</span></div>
 
-<div class="avis-amount-row"><span>MONTANT DE LA PROVISION RESTANT A JUSTIFIER&nbsp;:</span><span class="avis-box">${_docFmt(totProvision)}</span></div>
+<div class="avis-amount-row"><span>AVANCE PERDIEM PERCUE&nbsp;:</span><span class="avis-box">${_docFmt(totPercu)}</span></div>
 <div class="avis-amount-row"><span>MONTANT DES JUSTIFICATIFS PRESENTES&nbsp;:</span><span class="avis-box">${_docFmt(totJustifie)}</span></div>
+<div class="avis-amount-row"><span>SOLDE A REMBOURSER AU MISSIONNAIRE&nbsp;:</span><span class="avis-box">${_docFmt(remboursementMontant)}</span></div>
 ${autresItemsHtml}
 
 <hr style="border:none;border-top:2px solid #000;margin:18px 0">
@@ -2322,7 +2419,7 @@ ${autresItemsHtml}
 <p class="avis-title-avis">AVIS</p>
 <p style="margin:4px 0 10px"><strong>Avis du Comptable</strong>${!favorable ? '&nbsp;<span style="text-decoration:underline">(SOUS RÉSERVE)</span>' : ''}</p>
 
-<div class="avis-amount-row"><span>Justificatifs valables pour (montant)&nbsp;:</span><span class="avis-box">${_docFmt(totJustifie)}</span></div>
+<div class="avis-amount-row"><span>Justificatifs valables pour (montant)&nbsp;:</span><span class="avis-box">${_docFmt(totValable)}</span></div>
 <div class="avis-amount-row"><span>${remboursementLabel}${remboursementNote}</span><span class="avis-box">${_docFmt(remboursementMontant)}</span></div>
 
 ${m.avis_observation ? `<p style="margin:8px 0"><strong>Observation&nbsp;:</strong> ${escapeHtml(m.avis_observation)}</p>` : ''}
@@ -2342,8 +2439,6 @@ ${m.avis_observation ? `<p style="margin:8px 0"><strong>Observation&nbsp;:</stro
 </div>`;
 }
 
-// Assemble l'avis complet : une page par missionnaire, imprimées à la suite
-// dans une seule fenêtre (même principe que buildBordereauHtml).
 function buildAvisJustificatifsHtml(report) {
   const rm = report.missions || [];
   const num = report.fld_number || '___/___/____';
@@ -2355,11 +2450,187 @@ ${pages}
 </body></html>`;
 }
 
+// ─── JUSTIFICATION DE LA MISSION ──────────────────────────────────────────────
+function buildJustificationMissionPageHtml(report, m, rm, isLast) {
+  const libelleMission = m.territoire_label || m.destination_province_label || m.nature || '—';
+  const dateDepart = _docDate(m.date_debut);
+  const dateRetour = _docDate(m.date_fin);
+  const taux = Number(m.taux_per_diem || 0);
+  const joursPrevus = Number(m.nuitees || 0);
+  const joursReels = (m.jours_reels !== undefined && m.jours_reels !== null) ? Number(m.jours_reels) : joursPrevus;
+  const nbrePers = Number(m.participants || 1);
+
+  const prevuMontant = (m.prevu_montant_usd !== undefined && m.prevu_montant_usd !== null) ? Number(m.prevu_montant_usd) : Number(m.montant_usd || 0);
+  const payeMontant = Number(m.avance_usd || 0);
+  const realiseMontant = Number(m.montant_usd || 0);
+  const ecartMontant = Math.round((payeMontant - realiseMontant) * 100) / 100;
+  const pctPaye = prevuMontant > 0 ? Math.round((payeMontant / prevuMontant) * 100) : 0;
+  const fraisVoyage = Number(m.frais_voyage_usd || 0);
+  const repasSoirEnabled = !!m.repas_soir_enabled || Number(m.repas_soir_taux_usd || 0) > 0 || Number(m.repas_soir_montant_usd || 0) > 0;
+  const repasSoirTaux = Number(m.repas_soir_taux_usd || 0);
+  const repasSoirMontant = Number(
+    m.repas_soir_montant_usd !== undefined && m.repas_soir_montant_usd !== null
+      ? m.repas_soir_montant_usd
+      : (repasSoirEnabled ? joursPrevus * repasSoirTaux : 0)
+  );
+
+  const perdiemBreakdown = Array.isArray(m.perdiem_breakdown)
+    ? m.perdiem_breakdown.filter((it) => (it.lieu || '').trim() || Number(it.nuitees || 0) > 0)
+    : [];
+  const perdiemRows = perdiemBreakdown.length
+    ? perdiemBreakdown.map((it) => {
+        const label = 'Per diem' + (it.lieu ? ' — ' + escapeHtml(it.lieu) : '');
+        const periode = (it.date_debut && it.date_fin) ? ` <span style="font-size:7.5pt;color:#444">(${_docDate(it.date_debut)} au ${_docDate(it.date_fin)})</span>` : '';
+        const pv = Number(it.nuitees || 0) * Number(it.taux || 0);
+        return `<tr><td class="nb"></td><td>${label}${periode}</td><td class="tc">${_docFmt(it.taux)}</td><td class="tc">${it.nuitees||0}</td><td class="tc">${it.nuitees||0}</td><td class="tc">${nbrePers}</td>
+      <td class="tr">${_docFmt(pv)}</td><td class="tr">—</td><td class="tr">—</td><td class="tr">—</td></tr>`;
+      }).join('')
+      + (fraisVoyage ? `<tr><td class="nb"></td><td>Frais du jour de voyage</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">${nbrePers}</td>
+      <td class="tr">${_docFmt(fraisVoyage)}</td><td class="tr">—</td><td class="tr">—</td><td class="tr">—</td></tr>` : '')
+      + ((repasSoirEnabled && repasSoirMontant > 0)
+        ? `<tr><td class="nb"></td><td>Repas du soir</td><td class="tc">${_docFmt(repasSoirTaux)}</td><td class="tc">${joursPrevus}</td><td class="tc">${joursReels}</td><td class="tc">${nbrePers}</td>
+      <td class="tr">${_docFmt(repasSoirMontant)}</td><td class="tr">—</td><td class="tr">—</td><td class="tr">—</td></tr>`
+        : '')
+    : `<tr><td class="nb"></td><td>Per diem</td><td class="tc">${_docFmt(taux)}</td><td class="tc">${joursPrevus}</td><td class="tc">${joursReels}</td><td class="tc">${nbrePers}</td>
+      <td class="tr">${_docFmt(prevuMontant)}</td><td class="tr">${pctPaye}%<br>${_docFmt(payeMontant)}</td><td class="tr">${_docFmt(realiseMontant)}</td><td class="tr">${_docFmt(ecartMontant)}</td></tr>`
+      + ((repasSoirEnabled && repasSoirMontant > 0)
+        ? `<tr><td class="nb"></td><td>Repas du soir</td><td class="tc">${_docFmt(repasSoirTaux)}</td><td class="tc">${joursPrevus}</td><td class="tc">${joursReels}</td><td class="tc">${nbrePers}</td>
+      <td class="tr">${_docFmt(repasSoirMontant)}</td><td class="tr">—</td><td class="tr">—</td><td class="tr">—</td></tr>`
+        : '');
+
+  let prevuDetails = Array.isArray(m.prevu_autres_frais_details) && m.prevu_autres_frais_details.length
+    ? m.prevu_autres_frais_details : resolveAutresFraisDetails(m);
+  let realiseDetails = resolveAutresFraisDetails(m);
+  if (!prevuDetails.length && !realiseDetails.length) {
+    // Garder la rubrique visible dans la justification, meme sans montant saisi.
+    prevuDetails = [{ libelle: 'Autres frais', montant: 0 }];
+    realiseDetails = [{ libelle: 'Autres frais', montant: 0 }];
+  }
+  const detailCount = Math.max(prevuDetails.length, realiseDetails.length);
+  let s2Prevu = 0, s2Paye = 0, s2Realise = 0, s2Ecart = 0;
+  const detailRows = [];
+  for (let i = 0; i < detailCount; i++) {
+    const pv = Number(prevuDetails[i]?.montant || 0);
+    const rl = Number(realiseDetails[i]?.montant || 0);
+    const libelle = realiseDetails[i]?.libelle || prevuDetails[i]?.libelle || 'Frais';
+    const ec = Math.round((pv - rl) * 100) / 100;
+    s2Prevu += pv; s2Paye += pv; s2Realise += rl; s2Ecart += ec;
+    const firstCell = i === 0 ? '<td class="bold">Provision à justifier</td>' : '<td class="nb"></td>';
+    detailRows.push(`<tr>${firstCell}<td>${escapeHtml(libelle)}</td><td colspan="4" class="tc">—</td><td class="tr">${_docFmt(pv)}</td><td class="tr">${_docFmt(pv)}</td><td class="tr">${_docFmt(rl)}</td><td class="tr">${_docFmt(ec)}</td></tr>`);
+  }
+
+  const totPrevu = prevuMontant + s2Prevu;
+  const totPaye = payeMontant + s2Paye;
+  const totRealise = realiseMontant + s2Realise;
+  const totEcart = Math.round((totPaye - totRealise) * 100) / 100;
+
+  return `<div class="just-page"${isLast ? '' : ' style="page-break-after:always"'}>
+    <div style="text-align:center;font-size:9pt;line-height:1.5;margin-bottom:8px">
+      République Démocratique du Congo &nbsp;•&nbsp; MINISTÈRE DE L'AGRICULTURE<br>
+      <strong>PROGRAMME NATIONAL DE DÉVELOPPEMENT AGRICOLE &laquo;PNDA&raquo;</strong><br>
+      Unité Nationale de Coordination du Projet
+    </div>
+
+    <h1>JUSTIFICATION DE LA MISSION</h1>
+
+    <table>
+      <thead>
+        <tr>
+          <th>MISSION</th>
+          <th>${escapeHtml(libelleMission)}</th>
+          <th>TAUX</th>
+          <th>NOMBRE DE<br>JOURS PREVUS</th>
+          <th>NOMBRE DE<br>JOURS REELS</th>
+          <th>NBRE<br>PERS.</th>
+          <th>MONTANT<br>PREVU</th>
+          <th>MONTANT<br>PAYE</th>
+          <th>MONTANT<br>REALISE</th>
+          <th>ECART</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="bold">Date départ</td><td>${escapeHtml(dateDepart)}</td><td colspan="8" class="nb"></td></tr>
+        <tr><td class="bold">Date retour</td><td>${escapeHtml(dateRetour)}</td><td colspan="8" class="nb"></td></tr>
+
+        ${perdiemRows}
+
+        <tr class="bold bg"><td class="nb"></td><td>S/Total 1</td><td colspan="4" class="nb"></td>
+          <td class="tr">${_docFmt(prevuMontant)}</td>
+          <td class="tr">${_docFmt(payeMontant)}</td>
+          <td class="tr">${_docFmt(realiseMontant)}</td>
+          <td class="tr">${_docFmt(ecartMontant)}</td>
+        </tr>
+
+        ${detailRows.join('')}
+
+        <tr class="bold bg"><td class="nb"></td><td>S/Total 2</td><td colspan="4" class="nb"></td>
+          <td class="tr">${_docFmt(s2Prevu)}</td>
+          <td class="tr">${_docFmt(s2Paye)}</td>
+          <td class="tr">${_docFmt(s2Realise)}</td>
+          <td class="tr">${_docFmt(s2Ecart)}</td>
+        </tr>
+
+        <tr class="bold bg"><td class="nb"></td><td>Montant total</td><td colspan="4" class="nb"></td>
+          <td class="tr">${_docFmt(totPrevu)}</td>
+          <td class="tr">${_docFmt(totPaye)}</td>
+          <td class="tr">${_docFmt(totRealise)}</td>
+          <td class="tr">${_docFmt(totEcart)}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:10px">
+      <div class="avis-amount-row" style="max-width:260px">
+        <span><strong>Montant justifié&nbsp;:</strong></span>
+        <span class="avis-box">${_docFmt(totRealise)}</span>
+      </div>
+    </div>
+
+    <p style="margin:26px 0 4px"><em>Correspondance&nbsp;:</em></p>
+
+    <div style="display:flex;justify-content:space-between;margin-top:20px">
+      <div style="min-width:220px">
+        <p style="margin:3px 0"><strong>Nom &amp; Signature du missionnaire</strong></p>
+        <div class="sig-line" style="margin:5px 0"></div>
+        <p style="margin:3px 0">${escapeHtml(m.missionnaire_nom || resolveMissionnaireName(report))}</p>
+      </div>
+      <div style="min-width:220px;text-align:right">
+        <p style="margin:3px 0"><strong>Signature du Comptable</strong></p>
+        <div class="sig-line" style="margin:5px 0 5px auto"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildJustificationMissionHtml(report) {
+  const rm = report.missions || [];
+  const pages = rm.length
+    ? rm.map((m, i) => buildJustificationMissionPageHtml(report, m, rm, i === rm.length - 1)).join('')
+    : buildJustificationMissionPageHtml(report, {}, [], true);
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Justification de la mission</title>${_baseStyle()}</head><body>
+${pages}
+</body></html>`;
+}
+
+function buildAvisAndJustificationHtml(report) {
+  const rm = report.missions || [];
+  const num = report.fld_number || '___/___/____';
+  const avisPages = rm.length
+    ? rm.map((m) => buildAvisJustificatifsPageHtml(report, m, rm, false)).join('')
+    : buildAvisJustificatifsPageHtml(report, {}, [], false);
+  const justifPages = rm.length
+    ? rm.map((m, i) => buildJustificationMissionPageHtml(report, m, rm, i === rm.length - 1)).join('')
+    : buildJustificationMissionPageHtml(report, {}, [], true);
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Avis FLD ${escapeHtml(num)}</title>${_baseStyle()}</head><body>
+${avisPages}${justifPages}
+</body></html>`;
+}
+
 async function activerMission(reportId) {
   const report = REPORTS_CACHE.find(r => r.id === reportId);
   if (!report) return;
   askConfirm(
-    'Activer cette mission et générer le <strong>Bordereau de Liquidation</strong> ?',
+    'Activer cette mission et générer le <strong>Bordereau de Liquidation</strong> ?',
     async () => {
       try {
         const session  = getSession();
@@ -2372,10 +2643,6 @@ async function activerMission(reportId) {
         if (!liqNumber) {
           const { data: seq, error: seqErr } = await db.rpc('next_liquidation_seq', { p_province: province, p_year: annee });
           if (seqErr) throw seqErr;
-          // Le compteur "seq" est incrémenté séparément par province : on doit
-          // inclure le code province dans le numéro pour rester unique parmi
-          // TOUS les rapports (l'index unique liquidation_number est global,
-          // sinon deux provinces génèrent toutes les deux "0001/<année>").
           liqNumber = String(seq).padStart(4, '0') + '/' + provinceCode + '/' + annee;
         }
         const { error } = await db.from('reports').update({
@@ -2383,16 +2650,20 @@ async function activerMission(reportId) {
           liquidation_number: liqNumber, liquidation_printed_at: now, liquidation_printed_by: email
         }).eq('id', reportId);
         if (error) throw error;
-        showToast('✓ Mission activée — Bordereau N° ' + liqNumber);
+        showToast('✓ Mission activée — Bordereau N° ' + liqNumber);
         await refreshDashboard();
         const updated = { ...report, statut: 'activee', activated_at: now, liquidation_number: liqNumber };
         openPrintWindow(buildBordereauHtml(updated));
       } catch (e) {
         console.error(e);
         const isConflict = e?.code === '23505' || String(e?.message || '').toLowerCase().includes('duplicate');
+        const isRls = String(e?.message || e?.hint || '').toLowerCase().includes('row-level security')
+          || String(e?.message || e?.hint || '').toLowerCase().includes('permission denied');
         showToast(isConflict
           ? 'Ce numéro de bordereau existe déjà. Réessayez (le compteur va se resynchroniser).'
-          : ("Erreur lors de l'activation : " + (e?.message || e?.hint || 'inconnue')));
+          : isRls
+            ? 'Activation refusée par les règles d’accès (RLS). Exécutez la migration v24 pour autoriser l’activation UNCP des rapports RAF/RNSE.'
+            : ("Erreur lors de l'activation : " + (e?.message || e?.hint || 'inconnue')));
       }
     },
     'Activer la mission', 'Activer', 'btn-success'
@@ -2407,18 +2678,26 @@ function reprintBordereau(reportId) {
 function reprintJustificationDocs(reportId) {
   const report = REPORTS_CACHE.find(r => r.id === reportId);
   if (!report) return;
-  openPrintWindow(buildAvisJustificatifsHtml(report));
+  openPrintWindow(buildAvisAndJustificationHtml(report));
 }
 
 // ── JUSTIFICATIFS / CLÔTURE ──────────────────────────────────────────────
 function renderJustificationBlock(report, rm) {
   const jat  = report.justification_at;
   const spat = report.solde_paye_at;
-  const totalSoldeR  = rm.reduce((s, m) => s + Number(m.solde_usd  || 0), 0);
-  const totalAvanceR = rm.reduce((s, m) => s + Number(m.avance_usd || 0), 0);
+  const totalAvanceR = rm.reduce((s, m) => {
+    const fm = Number(m.montant_usd || 0);
+    const rate = Number(m.avance_rate || 0.8);
+    return s + (Number(m.avance_usd || 0) || Math.round(fm * rate * 100) / 100);
+  }, 0);
+  const totalSoldeR  = rm.reduce((s, m) => {
+    const fm = Number(m.montant_usd || 0);
+    const rate = Number(m.avance_rate || 0.8);
+    const avance = Number(m.avance_usd || 0) || Math.round(fm * rate * 100) / 100;
+    return s + (Number(m.solde_usd || 0) || Math.round((fm - avance) * 100) / 100);
+  }, 0);
   const totalR       = rm.reduce((s, m) => s + Number(m.total_usd  || 0), 0);
 
-  // Délai 48h : fin de la dernière mission
   let latestDateFin = null;
   rm.forEach((m) => {
     if (m.date_fin) {
@@ -2440,8 +2719,8 @@ function renderJustificationBlock(report, rm) {
       : '';
     return '<div class="mt-2 pt-2 border-top small">'
       + '<span class="badge bg-secondary"><i class="bi bi-clipboard me-1"></i>Justificatifs non encore reçus</span>' + deadlineBadge
-      + '<span class="ms-3 text-muted">Avance versée (80%) : <strong>' + formatCurrency(totalAvanceR) + ' USD</strong>'
-      + ' — Solde (20%) à verser : <strong class="text-warning">' + formatCurrency(totalSoldeR) + ' USD</strong></span>'
+      + '<span class="ms-3 text-muted">Avance versée : <strong>' + formatCurrency(totalAvanceR) + ' USD</strong>'
+      + ' — Solde à verser : <strong class="text-warning">' + formatCurrency(totalSoldeR) + ' USD</strong></span>'
       + '</div>';
   }
 
@@ -2454,7 +2733,7 @@ function renderJustificationBlock(report, rm) {
     ? '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Solde versé le <strong>' + fmtDt(spat) + '</strong>'
       + (report.solde_paye_by ? ' par <em>' + escapeHtml(report.solde_paye_by) + '</em>' : '')
       + ' — <strong>' + formatCurrency(totalSoldeR) + ' USD</strong></span>'
-    : '<span class="text-warning"><i class="bi bi-hourglass-split me-1"></i>Solde (20%) en attente : <strong>' + formatCurrency(totalSoldeR) + ' USD</strong></span>';
+    : '<span class="text-warning"><i class="bi bi-hourglass-split me-1"></i>Solde en attente : <strong>' + formatCurrency(totalSoldeR) + ' USD</strong></span>';
 
   return '<div class="mt-2 pt-2 border-top small">'
     + '<div class="d-flex gap-4 flex-wrap">'
@@ -2462,7 +2741,7 @@ function renderJustificationBlock(report, rm) {
     + 'Justificatifs reçus le <strong>' + fmtDtH(jat) + '</strong>' + delaiB + jByStr + '</div>'
     + '<div>' + soldeHtml + '</div>'
     + '</div>'
-    + '<div class="mt-1 text-muted">Récapitulatif : Avance (80%) : <strong>' + formatCurrency(totalAvanceR) + ' USD</strong>'
+    + '<div class="mt-1 text-muted">Récapitulatif : Avance versée : <strong>' + formatCurrency(totalAvanceR) + ' USD</strong>'
     + ' · Total mission : <strong>' + formatCurrency(totalR) + ' USD</strong></div>'
     + '</div>';
 }
@@ -2474,10 +2753,6 @@ document.getElementById('avisReviewAcceptBtn').addEventListener('click', () => {
   if (_avisReviewOkCallback) _avisReviewOkCallback();
 });
 
-// Retourne la liste détaillée des "frais à justifier" d'une mission (libellé +
-// montant déclaré). Si aucun détail n'a été saisi mais qu'un total existe (ex.
-// anciens rapports), on reconstitue une ligne unique "Autres frais" — même
-// logique que pour l'impression du bordereau/avis.
 function resolveAutresFraisDetails(m) {
   const totAutres = Number(m.autres_frais_usd || 0);
   return Array.isArray(m.autres_frais_details) && m.autres_frais_details.length
@@ -2485,21 +2760,15 @@ function resolveAutresFraisDetails(m) {
     : (totAutres > 0 ? [{ libelle: 'Autres frais', montant: totAutres }] : []);
 }
 
-// Retourne TOUS les éléments à justifier d'une mission : le montant de
-// mission (per diem) validé lors de l'activation en première ligne, suivi
-// des frais annexes. Les deux catégories sont désormais cochables/corrigibles
-// de la même façon dans la modale d'avis.
 function resolveAvisItems(m) {
-  const items = [{ libelle: 'Frais de mission (per diem)', montant: Number(m.montant_usd || 0), isPerDiem: true }];
+  const fmBase = Number(m.prevu_montant_usd || m.montant_usd || 0);
+  const items = [{ libelle: 'Frais de mission (per diem)', montant: fmBase, isPerDiem: true }];
   resolveAutresFraisDetails(m).forEach((d) => {
     items.push({ libelle: d.libelle || 'Frais', montant: Number(d.montant || 0), isPerDiem: false });
   });
   return items;
 }
 
-// Recalcule le "Montant justifié" d'une mission à partir de la somme de tous
-// les éléments cochés/corrigés (per diem + frais annexes), puis met à jour
-// l'avis automatique (favorable / sous réserve) de la ligne.
 function recalcAvisMontantJustifie(missionIdx) {
   const items = document.querySelectorAll(`.avis-item-montant[data-idx="${missionIdx}"]`);
   let sum = 0;
@@ -2509,12 +2778,6 @@ function recalcAvisMontantJustifie(missionIdx) {
   updateAvisDecision(missionIdx);
 }
 
-// Compare le montant justifié (retenu ci-dessus) au montant perçu (avance
-// déjà versée) pour déterminer automatiquement l'avis :
-//  - justifié > perçu  → le projet rembourse l'agent → favorable automatique
-//  - justifié = perçu  → solde nul → favorable automatique
-//  - justifié < perçu  → l'agent doit rembourser → favorable seulement si
-//    le comptable confirme (case à cocher) que l'agent remboursera.
 function updateAvisDecision(missionIdx) {
   const totalInput  = document.querySelector(`.avis-justifie-input[data-idx="${missionIdx}"]`);
   const percuInput  = document.querySelector(`.avis-percu-input[data-idx="${missionIdx}"]`);
@@ -2531,15 +2794,15 @@ function updateAvisDecision(missionIdx) {
   let favorable, ecartTxt;
   if (ecart > 0) {
     favorable = true;
-    ecartTxt = "Le projet rembourse l'agent : " + _docFmt(ecart) + ' USD';
+    ecartTxt = 'A rembourser a : Missionnaire — ' + _docFmt(Math.abs(ecart)) + ' USD';
     if (confirmWrap) confirmWrap.classList.add('d-none');
   } else if (ecart < 0) {
     favorable = !!(confirmChk && confirmChk.checked);
-    ecartTxt = "L'agent doit rembourser : " + _docFmt(Math.abs(ecart)) + ' USD';
+    ecartTxt = 'A rembourser a : Projet — ' + _docFmt(Math.abs(ecart)) + ' USD';
     if (confirmWrap) confirmWrap.classList.remove('d-none');
   } else {
     favorable = true;
-    ecartTxt = 'Solde nul — aucun remboursement';
+    ecartTxt = 'A rembourser a : Neant — 0,00 USD';
     if (confirmWrap) confirmWrap.classList.add('d-none');
   }
   if (ecartLabel) ecartLabel.textContent = ecartTxt;
@@ -2550,9 +2813,6 @@ function updateAvisDecision(missionIdx) {
   }
 }
 
-// Ouvre la modale d'avis (favorable / sous réserve) permettant au comptable
-// de vérifier — et au besoin corriger — les montants justifiés avant que les
-// documents imprimables ne soient générés.
 function openAvisReviewModal(reportId) {
   const report = REPORTS_CACHE.find((r) => r.id === reportId);
   if (!report) return;
@@ -2585,7 +2845,12 @@ function openAvisReviewModal(reportId) {
           <input type="number" step="0.01" class="form-control form-control-sm avis-item-montant" style="max-width:110px" data-idx="${i}" data-item-idx="${j}" value="${Number(it.montant || 0)}" disabled>
         </div>`).join('');
     const justifieInit = items.reduce((s, it) => s + Number(it.montant || 0), 0);
-    const percu = Number(m.avance_usd || 0);
+    const percu = Number(
+      m.avis_montant_percu !== undefined && m.avis_montant_percu !== null
+        ? m.avis_montant_percu
+        : Number(m.prevu_avance_usd || m.avance_usd || 0)
+    );
+    const soldeBase = Number(m.prevu_montant_usd || m.montant_usd || 0) - percu;
     return `<div class="border rounded p-2 mb-2">
       <div class="fw-bold small mb-1">${escapeHtml(nom)}${m.missionnaire_titre ? ' — ' + escapeHtml(m.missionnaire_titre) : ''}</div>
       <div class="mt-1">
@@ -2594,7 +2859,7 @@ function openAvisReviewModal(reportId) {
       </div>
       <div class="row g-2 mt-1">
         <div class="col-6">
-          <label class="form-label small mb-0 text-muted">Montant perçu — avance (USD)</label>
+          <label class="form-label small mb-0 text-muted">Avance perdiem perçue (USD)</label>
           <input class="form-control form-control-sm avis-percu-input" data-idx="${i}" value="${percu.toFixed(2)}" disabled>
         </div>
         <div class="col-6">
@@ -2602,6 +2867,7 @@ function openAvisReviewModal(reportId) {
           <input type="number" step="0.01" class="form-control form-control-sm avis-justifie-input" data-idx="${i}" value="${justifieInit.toFixed(2)}" disabled>
         </div>
       </div>
+      <div class="col-12 small text-muted mt-1">Solde à rembourser&nbsp;: <strong>${_docFmt(soldeBase)} USD</strong></div>
       <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
         <span class="badge avis-decision-badge" data-idx="${i}">…</span>
         <span class="small text-muted avis-ecart-label" data-idx="${i}"></span>
@@ -2625,9 +2891,6 @@ function openAvisReviewModal(reportId) {
     ${rows}
   `;
 
-  // Cocher/décocher un élément à justifier active/désactive son champ montant
-  // (corrigible uniquement quand décoché) et recalcule le total justifié +
-  // l'avis automatique.
   document.querySelectorAll('.avis-item-check').forEach((chk) => {
     chk.addEventListener('change', () => {
       const idx = chk.dataset.idx;
@@ -2644,15 +2907,12 @@ function openAvisReviewModal(reportId) {
     chk.addEventListener('change', () => updateAvisDecision(chk.dataset.idx));
   });
 
-  // Calcul initial de l'avis pour chaque missionnaire (badge + libellé d'écart).
   rm.forEach((_, i) => updateAvisDecision(i));
 
   _avisReviewOkCallback = () => finalizeJustificatifs(reportId);
   _avisReviewModal.show();
 }
 
-// Enregistre l'avis (favorable/sous réserve) et les montants éventuellement
-// corrigés, puis ouvre l'impression de l'avis pour chaque missionnaire.
 async function finalizeJustificatifs(reportId) {
   const report = REPORTS_CACHE.find((r) => r.id === reportId);
   if (!report) return;
@@ -2672,7 +2932,11 @@ async function finalizeJustificatifs(reportId) {
     const autresFraisUsd = finalDetails.reduce((s, d) => s + Number(d.montant || 0), 0);
     const totalJustifie  = perDiemFinal + autresFraisUsd;
 
-    const percu = Number(m.avance_usd || 0);
+    const percu = Number(
+      m.avis_montant_percu !== undefined && m.avis_montant_percu !== null
+        ? m.avis_montant_percu
+        : Number(m.prevu_avance_usd || m.avance_usd || 0)
+    );
     const ecart = Math.round((totalJustifie - percu) * 100) / 100;
     const sens  = ecart > 0 ? 'projet_rembourse' : (ecart < 0 ? 'agent_rembourse' : 'aucun');
     const confirmChk = document.querySelector(`.avis-confirm-check[data-idx="${i}"]`);
@@ -2682,6 +2946,10 @@ async function finalizeJustificatifs(reportId) {
 
     return {
       ...m,
+      prevu_montant_usd: Number(m.prevu_montant_usd || m.montant_usd || 0),
+      prevu_autres_frais_details: m.prevu_autres_frais_details || items.slice(1).map((it) => ({ libelle: it.libelle, montant: it.montant })),
+      prevu_total_usd: Number(m.prevu_total_usd || m.total_usd || 0),
+      prevu_avance_usd: Number(m.prevu_avance_usd || m.avance_usd || 0),
       montant_usd: perDiemFinal,
       autres_frais_details: finalDetails,
       autres_frais_usd: autresFraisUsd,
@@ -2718,7 +2986,7 @@ async function finalizeJustificatifs(reportId) {
     showToast('✓ Avis accepté — justificatifs enregistrés — ' + fldNumber);
     await refreshDashboard();
     const updated = { ...report, justification_at: nowIso, fld_number: fldNumber, missions: editedMissions };
-    openPrintWindow(buildAvisJustificatifsHtml(updated));
+    openPrintWindow(buildAvisAndJustificationHtml(updated));
   } catch (e) { console.error(e); showToast('Erreur lors de l\'enregistrement.'); }
 }
 
@@ -2727,7 +2995,7 @@ async function enregistrerSolde(reportId) {
   const rm = report?.missions || [];
   const totalSolde = rm.reduce((s, m) => s + Number(m.solde_usd || 0), 0);
   askConfirm(
-    'Confirmer le versement du solde <strong>' + formatCurrency(totalSolde) + ' USD</strong> (20%) au missionnaire ?',
+    'Confirmer le versement du solde <strong>' + formatCurrency(totalSolde) + ' USD</strong> au missionnaire ?',
     async () => {
       try {
         const session = getSession();
@@ -2736,15 +3004,21 @@ async function enregistrerSolde(reportId) {
           solde_paye_by: session?.user?.email || session?.user || null
         }).eq('id', reportId);
         if (error) throw error;
-        showToast('✓ Versement du solde (20%) enregistré.');
+        showToast('✓ Versement du solde enregistré.');
         await refreshDashboard();
-      } catch (e) { console.error(e); showToast('Erreur lors de l’enregistrement.'); }
+      } catch (e) { console.error(e); showToast('Erreur lors de l\'enregistrement.'); }
     },
     'Versement solde', 'Confirmer', 'btn-success'
   );
 }
 
 async function deleteReport(reportId, importId = '') {
+  const session = getSession();
+  if (reportId && !canDeleteDirectly(session)) {
+    showToast('Suppression directe réservée au RAF/RNSE. Utilisez la demande de suppression.');
+    return;
+  }
+
   askConfirm(
     reportId
       ? 'Supprimer définitivement ce rapport et toutes ses missions ? Cette action est irréversible.'
@@ -2764,11 +3038,13 @@ async function deleteReport(reportId, importId = '') {
         const { error } = await db.from('reports').delete().eq('id', reportId);
         if (error) throw error;
         removeReportFromLocalState(reportId, importId);
+        DELETE_REQUESTS_CACHE = DELETE_REQUESTS_CACHE.filter((request) => request.report_id !== reportId);
         renderSummaryCards();
         renderPanels();
         updateActiveTab();
         updateWorkflowBadges();
         updateWorkflowPanel();
+        renderDeleteRequestsNotice();
         showToast('✓ Rapport supprimé.');
         await refreshDashboard();
       } catch (e) {
@@ -2777,12 +3053,128 @@ async function deleteReport(reportId, importId = '') {
         const denied = e?.code === '42501' || /policy|permission|forbidden|not allowed|violates/i.test(message);
         showToast(
           denied
-            ? 'Suppression refusée par Supabase pour ce rapport. Si c’est un rapport RAF/RNSE visible par UNCP, exécutez la migration v22 avant de réessayer.'
+            ? 'Suppression refusée par Supabase. Vérifiez que la migration v26 est appliquée et que vous êtes connecté en RAF/RNSE.'
             : 'Erreur lors de la suppression : ' + (e?.message || String(e))
         );
       }
     },
     'Supprimer le rapport'
+  );
+}
+
+async function requestReportDeletion(reportId) {
+  const session = getSession();
+  if (!canRequestDelete(session)) {
+    showToast('Seuls les comptables peuvent émettre une demande de suppression.');
+    return;
+  }
+  const report = REPORTS_CACHE.find((item) => item.id === reportId);
+  if (!report) {
+    showToast('Rapport introuvable.');
+    return;
+  }
+
+  askConfirm(
+    'Envoyer une demande de suppression au RAF/RNSE pour ce rapport ?',
+    async () => {
+      try {
+        const { error } = await db.from('report_delete_requests').insert({
+          report_id: reportId,
+          province: report.meta?.province || report.province || getReportProvinceName(report) || null,
+          province_label: report.meta?.province_label || report.province_label || getReportProvinceLabel(report) || null,
+          rapporteur: report.meta?.rapporteur || report.rapporteur || null,
+          requested_by_email: session?.user || '',
+          requested_by_role: session?.role || 'comptable',
+          reason: 'Demande depuis le tableau de bord',
+          status: 'pending'
+        });
+        if (error) throw error;
+        showToast('✓ Demande de suppression envoyée au RAF/RNSE.');
+        await refreshDashboard();
+      } catch (error) {
+        const message = String(error?.message || '');
+        if (error?.code === '23505' || message.toLowerCase().includes('duplicate')) {
+          showToast('Une demande de suppression est déjà en attente pour ce rapport.');
+          await refreshDashboard();
+          return;
+        }
+        if (message.toLowerCase().includes('report_delete_requests') && message.toLowerCase().includes('does not exist')) {
+          showToast('Migration v26 non appliquée: table de demandes introuvable.');
+          return;
+        }
+        console.error('Erreur demande suppression:', error);
+        showToast('Erreur lors de l\'envoi de la demande.');
+      }
+    },
+    'Demande de suppression',
+    'Envoyer',
+    'btn-warning'
+  );
+}
+
+async function executeDeleteRequest(requestId, reportId) {
+  const session = getSession();
+  if (!canDeleteDirectly(session)) {
+    showToast('Seuls RAF/RNSE peuvent exécuter cette demande.');
+    return;
+  }
+
+  askConfirm(
+    'Exécuter cette demande et supprimer définitivement le rapport ?',
+    async () => {
+      try {
+        const { error: deleteError } = await db.from('reports').delete().eq('id', reportId);
+        if (deleteError) throw deleteError;
+
+        await db.from('report_delete_requests').update({
+          status: 'executed',
+          processed_by_email: session?.user || null,
+          processed_at: new Date().toISOString(),
+          decision_note: 'Suppression exécutée par RAF/RNSE'
+        }).eq('id', requestId);
+
+        removeReportFromLocalState(reportId, '');
+        showToast('✓ Demande exécutée, rapport supprimé.');
+        await refreshDashboard();
+      } catch (error) {
+        console.error('Erreur exécution demande:', error);
+        showToast('Erreur lors de l\'exécution de la demande.');
+      }
+    },
+    'Exécuter la demande',
+    'Exécuter',
+    'btn-danger'
+  );
+}
+
+async function rejectDeleteRequest(requestId) {
+  const session = getSession();
+  if (!canDeleteDirectly(session)) {
+    showToast('Seuls RAF/RNSE peuvent rejeter cette demande.');
+    return;
+  }
+
+  askConfirm(
+    'Rejeter cette demande de suppression ?',
+    async () => {
+      try {
+        const { error } = await db.from('report_delete_requests').update({
+          status: 'rejected',
+          processed_by_email: session?.user || null,
+          processed_at: new Date().toISOString(),
+          decision_note: 'Demande rejetée par RAF/RNSE'
+        }).eq('id', requestId);
+        if (error) throw error;
+        showToast('✓ Demande de suppression rejetée.');
+        await refreshDashboard();
+      } catch (error) {
+        console.error('Erreur rejet demande:', error);
+        showToast('Erreur lors du rejet de la demande.');
+      }
+    },
+    'Rejeter la demande',
+    'Rejeter',
+    'btn-secondary'
   );
 }
 
@@ -2904,7 +3296,7 @@ async function saveEditedReport() {
     await refreshDashboard();
   } catch (e) {
     console.error(e);
-    showToast('Erreur lors de la sauvegarde : ' + (e?.message || String(e)));
+    showToast('Erreur lors de la sauvegarde : ' + (e?.message || String(e)));
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Enregistrer les modifications';
@@ -3020,7 +3412,7 @@ async function exportExcelWorkbook() {
   subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4EFD9' } };
   sheet.getRow(2).height = 18;
 
-  sheet.getRow(3).height = 5; // espaceur
+  sheet.getRow(3).height = 5;
 
   // ── En-têtes (ligne 4) ──
   const headerRow = sheet.getRow(4);
@@ -3068,7 +3460,7 @@ async function exportExcelWorkbook() {
   });
   totalRow.height = 20;
 
-  // ── Bloc signature (comptable / responsable de l'export) ──
+  // ── Bloc signature ──
   const roleLabels = (typeof PndaAuth !== 'undefined' && PndaAuth.ROLE_LABELS) || { comptable: 'Comptable', admin: 'Administrateur', super_admin: 'Super-administrateur' };
   const signatoryName = session?.displayName || session?.user?.email || session?.user || '—';
   const signatoryRole = roleLabels[session?.role] || 'Comptable';
@@ -3124,186 +3516,11 @@ async function exportExcelWorkbook() {
   showToast('✓ Export Excel généré.');
 }
 
-function buildGeneralSheetRows(signatory = {}, reports = getFilteredReports()) {
-  const missions = reports.flatMap((r) => r.missions || []);
-  const provinceRows = REFERENCE.provinces.map((p) => summarizeProvince(p.name, reports));
-  return [
-    ...buildWorkbookHeaderRows('Tableau de bord général', 7),
-    [{ value: 'PNDA-SE - Tableau de bord général', style: 'title', mergeAcross: 6 }],
-    [{ value: 'Date export', style: 'subtitle' }, { value: new Date().toLocaleDateString('fr-FR'), style: 'date' }],
-    [{ value: 'Utilisateur', style: 'subtitle' }, { value: document.getElementById('session-user').textContent || '—', style: 'text' }],
-    [],
-    [{ value: 'Indicateur', style: 'header' }, { value: 'Valeur', style: 'header' }],
-    [{ value: 'Rapports consolidés', style: 'text' }, { value: reports.length, type: 'Number', style: 'integer' }],
-    [{ value: 'Missions consolidées', style: 'text' }, { value: missions.length, type: 'Number', style: 'integer' }],
-    [{ value: 'En attente', style: 'text' }, { value: reports.filter(r => (r.statut||'activee') === 'en_attente').length, type: 'Number', style: 'integer' }],
-    [{ value: 'Activées', style: 'text' }, { value: reports.filter(r => (r.statut||'activee') === 'activee').length, type: 'Number', style: 'integer' }],
-    [{ value: 'Réalisées', style: 'text' }, { value: reports.filter(r => (r.statut||'activee') === 'realisee').length, type: 'Number', style: 'integer' }],
-    [{ value: 'Litige total USD', style: 'text' }, { value: reports.reduce((s, r) => s + calculateReportLitige(r), 0), type: 'Number', style: 'currency' }],
-    [],
-    [{ value: 'Consolidation par province', style: 'title', mergeAcross: 6 }],
-    [{ value: 'Province', style: 'header' }, { value: 'Rapports', style: 'header' }, { value: 'Missions', style: 'header' }, { value: 'Montant USD', style: 'header' }, { value: 'Autres frais', style: 'header' }, { value: 'Total USD', style: 'header' }, { value: 'Solde USD', style: 'header' }],
-    ...provinceRows.map((row) => [
-      { value: row.label, style: 'text' }, { value: row.reports, type: 'Number', style: 'integer' },
-      { value: row.missions, type: 'Number', style: 'integer' }, { value: row.montant, type: 'Number', style: 'currency' },
-      { value: row.autresFrais, type: 'Number', style: 'currency' }, { value: row.total, type: 'Number', style: 'currency' },
-      { value: row.solde, type: 'Number', style: 'currency' }
-    ]),
-    [],
-    [{ value: 'Derniers rapports', style: 'title', mergeAcross: 6 }],
-    [{ value: 'Date', style: 'header' }, { value: 'Province', style: 'header' }, { value: 'Rapporteur', style: 'header' }, { value: 'Missions', style: 'header' }, { value: 'Total USD', style: 'header' }, { value: 'Litige USD', style: 'header' }, { value: 'Statut', style: 'header' }],
-    ...reports.slice(0, 20).map((r) => [
-      { value: formatDate(r.savedAt), style: 'date' }, 
-      { value: getReportProvinceLabel(r) || '—', style: 'text' },
-      { value: r.meta?.rapporteur || '—', style: 'text' },
-      { value: r.missions?.length || 0, type: 'Number', style: 'integer' },
-      { value: (r.missions || []).reduce((s, m) => s + Number(m.total_usd || 0), 0), type: 'Number', style: 'currency' },
-      { value: calculateReportLitige(r), type: 'Number', style: 'currency' },
-      { value: getStatusLabel(r.statut || 'activee').replace(/[⏳⚡✓↩]/g, '').trim(), style: 'text' }
-    ]),
-    [], ...buildSignatureRows(signatory, 7)
-  ];
-}
-
-function buildProvinceSheetRows(province, signatory = {}, reportsSource = getFilteredReports()) {
-  const reports = reportsSource.filter((r) => getReportProvinceName(r) === province.name);
-  const missions = reports.flatMap((r) => (r.missions || []).map((m) => ({ ...m, __report: r })));
-  return [
-    ...buildWorkbookHeaderRows(`Province - ${province.label}`, 17),
-    [{ value: `Province - ${province.label}`, style: 'title', mergeAcross: 16 }],
-    [{ value: 'Rapports', style: 'subtitle' }, { value: reports.length, type: 'Number', style: 'integer' }],
-    [{ value: 'Missions', style: 'subtitle' }, { value: missions.length, type: 'Number', style: 'integer' }],
-    [],
-    [{ value: 'Rapports', style: 'title', mergeAcross: 6 }],
-    [{ value: 'Date', style: 'header' }, { value: 'Rapporteur', style: 'header' }, { value: 'Trimestre', style: 'header' }, { value: 'Année', style: 'header' }, { value: 'Total USD', style: 'header' }, { value: 'Litige USD', style: 'header' }, { value: 'Statut', style: 'header' }],
-    ...reports.map((r) => [
-      { value: formatDate(r.savedAt), style: 'date' }, { value: r.meta?.rapporteur || '—', style: 'text' },
-      { value: r.meta?.trimestre || '—', style: 'text' }, { value: r.meta?.annee || '—', style: 'integer' },
-      { value: (r.missions || []).reduce((s, m) => s + Number(m.total_usd || 0), 0), type: 'Number', style: 'currency' },
-      { value: calculateReportLitige(r), type: 'Number', style: 'currency' },
-      { value: getStatusLabel(r.statut || 'activee').replace(/[⏳⚡✓↩]/g, '').trim(), style: 'text' }
-    ]),
-    [],
-    [{ value: 'Détail des missions', style: 'title', mergeAcross: 17 }],
-    [{ value:'Début',style:'header' },{ value:'Fin prévue',style:'header' },{ value:'Numero',style:'header' },{ value:'Nature',style:'header' },{ value:'Objectif',style:'header' },
-     { value:'Prov. dest.',style:'header' },{ value:'Territoire',style:'header' },{ value:'Secteur',style:'header' },
-     { value:'Rapporteur',style:'header' },{ value:'Participants',style:'header' },{ value:'Nuitées',style:'header' },{ value:'Taux/nuit',style:'header' },
-     { value:'Montant USD',style:'header' },{ value:'Autres frais',style:'header' },{ value:'Total USD',style:'header' },
-     { value:'Avance USD',style:'header' },{ value:'Solde USD',style:'header' },{ value:'Observation',style:'header' }],
-    ...missions.map((m) => [
-      { value: m.date_debut || formatDate(m.__report.savedAt), style: 'date' },
-      { value: m.date_fin || '—', style: 'date' },
-      { value: m.numero || '—', style: 'text' }, { value: m.nature || '—', style: 'text' },
-      { value: m.objectif || '—', style: 'text' },
-      { value: m.destination_province_label || '—', style: 'text' }, { value: m.territoire_label || '—', style: 'text' }, { value: m.secteur_label || '—', style: 'text' },
-      { value: m.__report.meta?.rapporteur || '—', style: 'text' },
-      { value: Number(m.participants || 0), type: 'Number', style: 'integer' },
-      { value: Number(m.nuitees || 0), type: 'Number', style: 'integer' },
-      { value: Number(m.taux_per_diem || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.montant_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.autres_frais_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.total_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.avance_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.solde_usd || 0), type: 'Number', style: 'currency' },
-      { value: buildObservationText(m), style: 'text' }
-    ]),
-    [], ...buildSignatureRows(signatory, 18)
-  ];
-}
-
-function buildAllMissionsSheetRows(signatory = {}, reports = getFilteredReports()) {
-  const missions = reports.flatMap((r) => (r.missions || []).map((m) => ({ ...m, __report: r })));
-  return [
-    ...buildWorkbookHeaderRows('Toutes les missions', 21),
-    [{ value: 'Toutes les missions', style: 'title', mergeAcross: 20 }],
-    [{ value:'Province',style:'header' },{ value:'Rapporteur',style:'header' },{ value:'Trimestre',style:'header' },{ value:'Année',style:'header' },{ value:'Numero',style:'header' },{ value:'Nature',style:'header' },{ value:'Objectif',style:'header' },
-     { value:'Prov. dest.',style:'header' },{ value:'Territoire',style:'header' },{ value:'Secteur',style:'header' },
-     { value:'Début',style:'header' },{ value:'Fin prévue',style:'header' },{ value:'Participants',style:'header' },
-     { value:'Nuitées',style:'header' },{ value:'Taux/nuit',style:'header' },
-     { value:'Montant USD',style:'header' },{ value:'Autres frais',style:'header' },{ value:'Total USD',style:'header' },
-     { value:'Avance USD',style:'header' },{ value:'Solde USD',style:'header' },{ value:'Statut',style:'header' },{ value:'Observation',style:'header' }],
-    ...missions.map((m) => [
-      { value: getReportProvinceLabel(m.__report) || '—', style: 'text' },
-      { value: m.__report.meta?.rapporteur || '—', style: 'text' },
-      { value: m.__report.meta?.trimestre || '—', style: 'text' },
-      { value: m.__report.meta?.annee || '—', style: 'integer' },
-      { value: m.numero || '—', style: 'text' },
-      { value: m.nature || '—', style: 'text' }, { value: m.objectif || '—', style: 'text' },
-      { value: m.destination_province_label || '—', style: 'text' }, { value: m.territoire_label || '—', style: 'text' }, { value: m.secteur_label || '—', style: 'text' },
-      { value: m.date_debut || '—', style: 'text' }, { value: m.date_fin || '—', style: 'text' },
-      { value: Number(m.participants || 0), type: 'Number', style: 'integer' },
-      { value: Number(m.nuitees || 0), type: 'Number', style: 'integer' },
-      { value: Number(m.taux_per_diem || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.montant_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.autres_frais_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.total_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.avance_usd || 0), type: 'Number', style: 'currency' },
-      { value: Number(m.solde_usd || 0), type: 'Number', style: 'currency' },
-      { value: getStatusLabel(m.__report.statut || 'activee').replace(/[⏳⚡✓↩]/g, '').trim(), style: 'text' },
-      { value: buildObservationText(m), style: 'text' }
-    ]),
-    [], ...buildSignatureRows(signatory, 22)
-  ];
-}
-
-function buildWorkbookHeaderRows(sheetTitle, totalColumns) {
-  const trailingColumns = Math.max(totalColumns - 2, 0);
-  return [
-    [{ value: 'PNDA', style: 'logoMark' }, { value: 'PNDA-SE', style: 'brandTitle', mergeAcross: trailingColumns }],
-    [{ value: `Programme National de Développement Agricole - ${sheetTitle}`, style: 'brandSubtitle', mergeAcross: Math.max(totalColumns - 1, 0) }],
-    []
-  ];
-}
-
-function buildWorksheetOptionsXml() {
-  return [
-    '<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">',
-    '<PageSetup><Layout x:Orientation="Landscape"/>',
-    '<PageMargins x:Bottom="0.45" x:Left="0.25" x:Right="0.25" x:Top="0.35"/></PageSetup>',
-    '<FitToPage/><Print><ValidPrinterInfo/><PaperSizeIndex>9</PaperSizeIndex>',
-    '<FitWidth>1</FitWidth><FitHeight>0</FitHeight></Print>',
-    '<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal>',
-    '<TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane>',
-    '</WorksheetOptions>'
-  ].join('');
-}
-
-function buildSignatureRows(signatory, totalColumns) {
-  const name = signatory.name || '................................';
-  const position = signatory.position || '................................';
-  const location = signatory.location || '........................';
-  const exportDate = new Date().toLocaleDateString('fr-FR');
-  const mergeAcross = Math.max(totalColumns - 2, 0);
-  return [
-    [{ value: `Fait à ${location}, le ${exportDate}`, style: 'subtitle', mergeAcross }],
-    [{ value: 'Signature', style: 'subtitle', mergeAcross }],
-    [{ value: '_______________________________', style: 'text', mergeAcross }],
-    [],
-    [{ value: `Nom: ${name}`, style: 'text', mergeAcross }],
-    [{ value: `Poste: ${position}`, style: 'text', mergeAcross }]
-  ];
-}
-
-function sheetNameForProvince(label) { return label.replace(/[\\/*?:\[\]]/g, '_').slice(0, 31); }
-function sheetName(value) { return String(value || 'Sheet1').replace(/[\\/*?:\[\]]/g, '_').slice(0, 31); }
-
-function xmlEscape(value) {
-  return String(value ?? '')
-  .replaceAll('&', '&amp;')
-  .replaceAll('<', '&lt;')
-  .replaceAll('>', '&gt;')
-  .replaceAll('"', '&quot;')
-  .replaceAll("'", '&apos;');
-}
-
 // ─── UTILITIES ────────────────────────────────────────────────────────────────
 function formatCurrency(value) {
   return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
 }
 
-// Combine les libellés des "frais à justifier" (réunions, transport local, etc.)
-// saisis pour la mission avec la remarque libre, pour affichage dans la colonne
-// "Observation" (tableau comptable + exports Excel/CSV).
 function buildObservationText(m) {
   const details = Array.isArray(m.autres_frais_details)
     ? m.autres_frais_details.filter((d) => (d.libelle || '').trim() || Number(d.montant || 0) > 0)
@@ -3367,9 +3584,6 @@ async function shareHtmlTable(tableId, title) {
   }
 }
 
-// Parse une cellule texte (telle qu'affichée dans le tableau HTML, format FR)
-// en nombre si possible, pour produire un vrai fichier Excel avec des cellules
-// numériques formatées (et non du texte brut comme le ferait un export CSV).
 function parseCellNumberFR(text) {
   const clean = String(text ?? '').replace(/[\u00a0\s]/g, '');
   if (!clean || !/^-?\d+(,\d+)?$/.test(clean)) return null;
@@ -3387,7 +3601,6 @@ async function exportHtmlTableToExcel(tableId, filename, title) {
   const bodyRows = Array.from(table.querySelectorAll('tbody > tr')).filter((tr) => !tr.classList.contains('is-hidden') && !tr.classList.contains('report-detail'));
   let dataRows = bodyRows.map((tr) => Array.from(tr.querySelectorAll('td')).map((cell) => cell.textContent.trim().replace(/\s+/g, ' ')));
 
-  // Colonnes purement interactives (boutons d'action) sans intérêt dans un export.
   const skipIdx = headers.reduce((acc, h, i) => { if (/^actions?$/i.test(h)) acc.push(i); return acc; }, []);
   if (skipIdx.length) {
     headers = headers.filter((_, i) => !skipIdx.includes(i));
@@ -3405,7 +3618,6 @@ async function exportHtmlTableToExcel(tableId, filename, title) {
     views: [{ state: 'frozen', ySplit: 4 }]
   });
 
-  // ── Bandeau titre ──
   sheet.mergeCells(1, 1, 1, colCount);
   const titleCell = sheet.getCell(1, 1);
   titleCell.value = title || 'Export PNDA-SE';
@@ -3414,7 +3626,6 @@ async function exportHtmlTableToExcel(tableId, filename, title) {
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF123524' } };
   sheet.getRow(1).height = 26;
 
-  // ── Sous-titre ──
   sheet.mergeCells(2, 1, 2, colCount);
   const session = getSession();
   const subCell = sheet.getCell(2, 1);
@@ -3424,9 +3635,8 @@ async function exportHtmlTableToExcel(tableId, filename, title) {
   subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4EFD9' } };
   sheet.getRow(2).height = 18;
 
-  sheet.getRow(3).height = 5; // espaceur
+  sheet.getRow(3).height = 5;
 
-  // ── En-têtes (ligne 4) ──
   const headerRow = sheet.getRow(4);
   headers.forEach((h, i) => { headerRow.getCell(i + 1).value = h; });
   headerRow.eachCell((cell) => {
@@ -3437,13 +3647,11 @@ async function exportHtmlTableToExcel(tableId, filename, title) {
   });
   headerRow.height = 26;
 
-  // ── Détection des colonnes numériques (si toutes les valeurs non vides sont des nombres) ──
   const numericCols = Array.from({ length: colCount }, (_, c) => {
     const values = dataRows.map((r) => r[c]).filter((v) => v !== undefined && v !== '' && v !== '—');
     return values.length > 0 && values.every((v) => parseCellNumberFR(v) !== null);
   });
 
-  // ── Données ──
   dataRows.forEach((r, idx) => {
     const row = sheet.getRow(5 + idx);
     const isBand = idx % 2 === 1;
@@ -3465,13 +3673,11 @@ async function exportHtmlTableToExcel(tableId, filename, title) {
     row.commit();
   });
 
-  // ── Largeur des colonnes (auto, selon le contenu) ──
   for (let c = 0; c < colCount; c++) {
     const lengths = [headers[c] || ''].concat(dataRows.map((r) => r[c] || '')).map((v) => String(v).length);
     sheet.getColumn(c + 1).width = Math.min(Math.max(...lengths, 8) + 2, 40);
   }
 
-  // ── Filtre + impression ──
   sheet.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4, column: colCount } };
   sheet.pageSetup.printTitlesRow = '4:4';
 
