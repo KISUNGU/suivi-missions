@@ -1415,7 +1415,7 @@ function generateAvisJustificatifsPDF(reportId) {
         ? m.avis_montant_percu
         : (m.provision !== undefined && m.provision !== null
             ? m.provision
-            : (Number(m.avance_usd || 0) + Number(m.autres_frais_usd || 0)))
+            : (m.total_usd || 0))
     );
     const montantJustificatifs = Number(
       m.justificatifs !== undefined && m.justificatifs !== null
