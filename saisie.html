@@ -598,18 +598,14 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
         <input type="hidden" class="f-repas-soir-enabled" value="0">
       </div>
       <div class="col-md-2">
-        <label class="form-label-sm">Taux avance</label>
-        <select class="form-select form-select-sm f-avance-rate" onchange="setAvance80('${id}')">
-          <option value="0.8" selected>80% (défaut)</option>
-          <option value="1">100%</option>
-        </select>
-      </div>
-      <div class="col-md-2">
         <label class="form-label-sm">Avance versée</label>
         <div class="input-group input-group-sm">
           <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="0" readonly title="Calcul automatique selon le taux d'avance">
-          <button type="button" class="btn btn-outline-secondary" onclick="setAvance80('${id}')" title="Recalculer selon le taux">↻</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm f-avance-100-toggle flex-fill" onclick="toggleAvance100('${id}')" title="Activer si l'avance versée est de 100% du FM au lieu de 80%">
+            <i class="bi bi-cash-stack"></i> Avance 100%&nbsp;?
+          </button>
         </div>
+        <input type="hidden" class="f-avance-rate" value="0.8">
       </div>
     </div>
     <div class="perdiem-breakdown-box border rounded p-2 mt-2 d-none">
@@ -669,7 +665,8 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
     wrap.querySelector('.f-repas-soir-taux').value = Number(m.repas_soir_taux_usd || 0);
     setRepasSoirEnabledByRow(wrap, !!m.repas_soir_enabled || Number(m.repas_soir_taux_usd || 0) > 0, false);
     wrap.querySelector('.f-avance').value = m.avance_usd || 0;
-    wrap.querySelector('.f-avance-rate').value = Number(m.avance_rate || 0.8);
+    setAvance100EnabledByRow(wrap, Number(m.avance_rate || 0.8) === 1);
+    setTimeout(() => setAvance80(id), 0);
     wrap.querySelector('.f-observation').value = m.observation || '';
 
     if (Array.isArray(m.perdiem_breakdown) && m.perdiem_breakdown.length) {
@@ -726,16 +723,42 @@ function removeAutresFraisItem(btn, rowId) {
 function copyGroupFieldsInto(wrap, groupId) {
   const source = document.querySelector(`.mission-row[data-group="${groupId}"]`);
   if (!source || source === wrap) return;
-  ['f-date-debut', 'f-date-fin', 'f-taux', 'f-nuitees', 'f-frais-voyage', 'f-repas-soir-taux', 'f-repas-soir-enabled'].forEach((cls) => {
+  ['f-date-debut', 'f-date-fin', 'f-taux', 'f-nuitees', 'f-frais-voyage', 'f-repas-soir-taux', 'f-repas-soir-enabled', 'f-avance-rate'].forEach((cls) => {
     const srcEl = source.querySelector('.' + cls);
     const dstEl = wrap.querySelector('.' + cls);
     if (srcEl && dstEl) dstEl.value = srcEl.value;
   });
   setRepasSoirEnabledByRow(wrap, isRepasSoirEnabled(wrap), false);
+  setAvance100EnabledByRow(wrap, isAvance100(wrap));
 }
 
 function isRepasSoirEnabled(row) {
   return Number(row?.querySelector('.f-repas-soir-enabled')?.value || 0) === 1;
+}
+
+function isAvance100(row) {
+  return Number(row?.querySelector('.f-avance-rate')?.value || 0.8) === 1;
+}
+
+function setAvance100EnabledByRow(row, enabled) {
+  if (!row) return;
+  const hidden = row.querySelector('.f-avance-rate');
+  const btn = row.querySelector('.f-avance-100-toggle');
+  if (!hidden || !btn) return;
+
+  const isOn = !!enabled;
+  hidden.value = isOn ? '1' : '0.8';
+  btn.innerHTML = isOn
+    ? '<i class="bi bi-x-circle"></i> Avance 80%'
+    : '<i class="bi bi-cash-stack"></i> Avance 100%&nbsp;?';
+}
+
+function toggleAvance100(rowId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  setAvance100EnabledByRow(row, !isAvance100(row));
+  setAvance80(rowId);
+  onGroupFieldChange(rowId);
 }
 
 function setRepasSoirEnabledByRow(row, enabled, clearRateIfDisabled = true) {
