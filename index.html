@@ -2377,7 +2377,7 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   let remboursementLabel;
   let remboursementMontant;
   if (sens === 'projet_rembourse') {
-    remboursementLabel = 'A REMBOURSER A&nbsp;: MISSIONNAIRE';
+    remboursementLabel = `A REMBOURSER A&nbsp;: ${escapeHtml(nom)}`;
     remboursementMontant = Math.abs(remboursementEcart);
   } else if (sens === 'agent_rembourse') {
     remboursementLabel = 'A REMBOURSER A&nbsp;: PROJET';

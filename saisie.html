@@ -1423,7 +1423,7 @@ function generateAvisJustificatifsPDF(reportId) {
     const montantValable = montantJustificatifs;
     const montantRemboursement = montantValable - montantProvision;
     const remboursementCible = montantRemboursement > 0
-      ? 'Missionnaire'
+      ? (m.missionnaire_nom || 'Missionnaire')
       : (montantRemboursement < 0 ? 'Projet' : 'Neant');
 
     doc.text(`Montant de la provision a justifier : ${fmtCur(montantProvision)}`, margin, y);
