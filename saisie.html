@@ -1409,11 +1409,27 @@ function generateAvisJustificatifsPDF(reportId) {
     doc.text(`Financement : PNDA`, margin, y);
     y += 10;
 
-    // Montants
-    doc.text(`Montant de la provision à justifier : ${fmtCur(m.provision || 0)}`, margin, y);
+    // Montants (regle metier)
+    const montantProvision = Number(
+      m.avis_montant_percu !== undefined && m.avis_montant_percu !== null
+        ? m.avis_montant_percu
+        : (m.provision !== undefined && m.provision !== null ? m.provision : (m.avance_usd || 0))
+    );
+    const montantJustificatifs = Number(
+      m.justificatifs !== undefined && m.justificatifs !== null
+        ? m.justificatifs
+        : (m.total_usd || 0)
+    );
+    const montantValable = montantJustificatifs;
+    const montantRemboursement = montantValable - montantProvision;
+    const remboursementCible = montantRemboursement > 0
+      ? 'Missionnaire'
+      : (montantRemboursement < 0 ? 'Projet' : 'Neant');
+
+    doc.text(`Montant de la provision a justifier : ${fmtCur(montantProvision)}`, margin, y);
     y += 7;
 
-    doc.text(`Montant des justificatifs présentés : ${fmtCur(m.justificatifs || 0)}`, margin, y);
+    doc.text(`Montant des justificatifs presentes : ${fmtCur(montantJustificatifs)}`, margin, y);
     y += 12;
 
     // ─────────────────────────────────────────────
@@ -1427,14 +1443,10 @@ function generateAvisJustificatifsPDF(reportId) {
     doc.text("Avis du Comptable", margin, y);
     y += 7;
 
-    doc.text(
-      `Justificatifs valables pour montant : ${fmtCur(m.justificatifs_valides || 0)}`,
-      margin,
-      y
-    );
+    doc.text(`Justificatifs valables pour (montant) : ${fmtCur(montantValable)}`, margin, y);
     y += 7;
 
-    doc.text(`A rembourser à : ${m.missionnaire_nom || ""}`, margin, y);
+    doc.text(`A rembourser a : ${remboursementCible} (${fmtCur(Math.abs(montantRemboursement))})`, margin, y);
     y += 12;
 
     // ─────────────────────────────────────────────
