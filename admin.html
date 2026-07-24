@@ -1740,14 +1740,14 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
         <p class="text-muted small mb-0">${reports.length} rapport(s) · ${missions.length} mission(s) · Total: ${formatCurrency(totalGeneral)} USD</p>
       </div>
     </div>
-
+    
 
     <div class="card mb-3">
       <div class="card-header py-3"><h6><i class="bi bi-folder2-open me-2"></i>Rapports de la province</h6></div>
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-hover table-sm mb-0">
-            <thead><tr><th>Date</th><th>Chef de mission</th><th>Trimestre 2</th><th>Missions</th><th>Total USD</th><th>Litige USD</th><th>Statut</th><th>Lu</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Date</th><th>Chef de mission</th><th>Trimestre</th><th>Missions</th><th>Total USD</th><th>Litige USD</th><th>Statut</th><th>Lu</th><th>Actions</th></tr></thead>
             <tbody>${reports.length ? reports.map((report, idx) => {
               const rm = report.missions || [];
               const rTotal   = rm.reduce((s,m) => s + Number(m.total_usd||0), 0);

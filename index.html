@@ -2361,8 +2361,9 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
 
   const totProvision = Number(m.avis_montant_percu !== undefined && m.avis_montant_percu !== null ? m.avis_montant_percu : (m.avance_usd || 0));
   const totJustifie  = Number(m.total_usd || 0);
-  const ecart = m.avis_ecart !== undefined && m.avis_ecart !== null ? Number(m.avis_ecart) : (totJustifie - totProvision);
-  const sens  = m.avis_sens || (ecart > 0 ? 'projet_rembourse' : (ecart < 0 ? 'agent_rembourse' : 'aucun'));
+  const totValable = totJustifie;
+  const remboursementEcart = totValable - totProvision;
+  const sens  = m.avis_sens || (remboursementEcart > 0 ? 'projet_rembourse' : (remboursementEcart < 0 ? 'agent_rembourse' : 'aucun'));
   const favorable = m.avis_comptable ? m.avis_comptable === 'favorable' : true;
 
   const autresItems = Array.isArray(m.autres_frais_details) ? m.autres_frais_details : [];
@@ -2376,18 +2377,16 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   let remboursementLabel;
   let remboursementMontant;
   if (sens === 'projet_rembourse') {
-    remboursementLabel = `A REMBOURSER A&nbsp;: ${escapeHtml(nom)}`;
-    remboursementMontant = Math.abs(ecart);
+    remboursementLabel = 'A REMBOURSER A&nbsp;: MISSIONNAIRE';
+    remboursementMontant = Math.abs(remboursementEcart);
   } else if (sens === 'agent_rembourse') {
-    remboursementLabel = `A REMBOURSER PAR&nbsp;: ${escapeHtml(nom)}`;
-    remboursementMontant = Math.abs(ecart);
+    remboursementLabel = 'A REMBOURSER A&nbsp;: PROJET';
+    remboursementMontant = Math.abs(remboursementEcart);
   } else {
-    remboursementLabel = 'A REMBOURSER&nbsp;:';
+    remboursementLabel = 'A REMBOURSER A&nbsp;: NEANT';
     remboursementMontant = 0;
   }
-  const remboursementNote = sens === 'agent_rembourse'
-    ? (favorable ? ' (remboursement confirmé)' : ' (en attente de confirmation)')
-    : '';
+  const remboursementNote = '';
 
   const comptableName = resolveAccountDisplayName(report.justification_by) || '';
   const dateAvis = report.justification_at ? _docDate(report.justification_at) : _docDate(new Date());
@@ -2411,7 +2410,7 @@ ${autresItemsHtml}
 <p class="avis-title-avis">AVIS</p>
 <p style="margin:4px 0 10px"><strong>Avis du Comptable</strong>${!favorable ? '&nbsp;<span style="text-decoration:underline">(SOUS RÉSERVE)</span>' : ''}</p>
 
-<div class="avis-amount-row"><span>Justificatifs valables pour (montant)&nbsp;:</span><span class="avis-box">${_docFmt(totJustifie)}</span></div>
+<div class="avis-amount-row"><span>Justificatifs valables pour (montant)&nbsp;:</span><span class="avis-box">${_docFmt(totValable)}</span></div>
 <div class="avis-amount-row"><span>${remboursementLabel}${remboursementNote}</span><span class="avis-box">${_docFmt(remboursementMontant)}</span></div>
 
 ${m.avis_observation ? `<p style="margin:8px 0"><strong>Observation&nbsp;:</strong> ${escapeHtml(m.avis_observation)}</p>` : ''}
@@ -2776,15 +2775,15 @@ function updateAvisDecision(missionIdx) {
   let favorable, ecartTxt;
   if (ecart > 0) {
     favorable = true;
-    ecartTxt = "Le projet rembourse l'agent : " + _docFmt(ecart) + ' USD';
+    ecartTxt = 'A rembourser a : Missionnaire — ' + _docFmt(Math.abs(ecart)) + ' USD';
     if (confirmWrap) confirmWrap.classList.add('d-none');
   } else if (ecart < 0) {
     favorable = !!(confirmChk && confirmChk.checked);
-    ecartTxt = "L'agent doit rembourser : " + _docFmt(Math.abs(ecart)) + ' USD';
+    ecartTxt = 'A rembourser a : Projet — ' + _docFmt(Math.abs(ecart)) + ' USD';
     if (confirmWrap) confirmWrap.classList.remove('d-none');
   } else {
     favorable = true;
-    ecartTxt = 'Solde nul — aucun remboursement';
+    ecartTxt = 'A rembourser a : Neant — 0,00 USD';
     if (confirmWrap) confirmWrap.classList.add('d-none');
   }
   if (ecartLabel) ecartLabel.textContent = ecartTxt;
