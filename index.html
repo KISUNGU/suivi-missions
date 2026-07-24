@@ -2361,12 +2361,13 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   const num      = report.fld_number || '___/___/____';
   const motif    = m.nature || '';
 
+  const avanceBase = Number(m.prevu_avance_usd || m.avance_usd || 0);
   const totPercu = Number(
     m.avis_montant_percu !== undefined && m.avis_montant_percu !== null
       ? m.avis_montant_percu
-      : Number(m.prevu_avance_usd || m.avance_usd || 0)
+      : avanceBase
   );
-  const totJustifie = Number(m.prevu_total_usd || m.total_usd || 0);
+  const totJustifie = Number(m.total_usd || 0);
   const totValable = totJustifie;
   const remboursementEcart = totValable - totPercu;
   const sens  = m.avis_sens || (remboursementEcart > 0 ? 'projet_rembourse' : (remboursementEcart < 0 ? 'agent_rembourse' : 'aucun'));
@@ -2408,8 +2409,9 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
 <div class="avis-field"><span class="avis-label">MOTIF&nbsp;:</span><span class="avis-value">${escapeHtml(motif)}</span></div>
 <div class="avis-field"><span class="avis-label">FINANCEMENT&nbsp;:</span><span class="avis-value">PNDA</span></div>
 
-<div class="avis-amount-row"><span>MONTANT DE L'AVANCE PERCUE A JUSTIFIER&nbsp;:</span><span class="avis-box">${_docFmt(totPercu)}</span></div>
+<div class="avis-amount-row"><span>MONTANT DE LA PROVISION RESTANT A JUSTIFIER&nbsp;:</span><span class="avis-box">${_docFmt(totPercu)}</span></div>
 <div class="avis-amount-row"><span>MONTANT DES JUSTIFICATIFS PRESENTES&nbsp;:</span><span class="avis-box">${_docFmt(totJustifie)}</span></div>
+<div class="avis-amount-row"><span>SOLDE A REMBOURSER (20% MISSION + FJ)&nbsp;:</span><span class="avis-box">${_docFmt(remboursementMontant)}</span></div>
 ${autresItemsHtml}
 
 <hr style="border:none;border-top:2px solid #000;margin:18px 0">
@@ -2759,7 +2761,8 @@ function resolveAutresFraisDetails(m) {
 }
 
 function resolveAvisItems(m) {
-  const items = [{ libelle: 'Frais de mission (per diem)', montant: Number(m.montant_usd || 0), isPerDiem: true }];
+  const fmBase = Number(m.prevu_montant_usd || m.montant_usd || 0);
+  const items = [{ libelle: 'Frais de mission (per diem)', montant: fmBase, isPerDiem: true }];
   resolveAutresFraisDetails(m).forEach((d) => {
     items.push({ libelle: d.libelle || 'Frais', montant: Number(d.montant || 0), isPerDiem: false });
   });
@@ -2847,6 +2850,7 @@ function openAvisReviewModal(reportId) {
         ? m.avis_montant_percu
         : Number(m.prevu_avance_usd || m.avance_usd || 0)
     );
+    const soldeBase = Number(m.prevu_montant_usd || m.montant_usd || 0) - percu;
     return `<div class="border rounded p-2 mb-2">
       <div class="fw-bold small mb-1">${escapeHtml(nom)}${m.missionnaire_titre ? ' — ' + escapeHtml(m.missionnaire_titre) : ''}</div>
       <div class="mt-1">
@@ -2855,7 +2859,7 @@ function openAvisReviewModal(reportId) {
       </div>
       <div class="row g-2 mt-1">
         <div class="col-6">
-          <label class="form-label small mb-0 text-muted">Avance Perçue (USD)</label>
+          <label class="form-label small mb-0 text-muted">Provision restant à justifier (USD)</label>
           <input class="form-control form-control-sm avis-percu-input" data-idx="${i}" value="${percu.toFixed(2)}" disabled>
         </div>
         <div class="col-6">
@@ -2863,6 +2867,7 @@ function openAvisReviewModal(reportId) {
           <input type="number" step="0.01" class="form-control form-control-sm avis-justifie-input" data-idx="${i}" value="${justifieInit.toFixed(2)}" disabled>
         </div>
       </div>
+      <div class="col-12 small text-muted mt-1">Base solde (20% mission)&nbsp;: <strong>${_docFmt(soldeBase)} USD</strong></div>
       <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
         <span class="badge avis-decision-badge" data-idx="${i}">…</span>
         <span class="small text-muted avis-ecart-label" data-idx="${i}"></span>
