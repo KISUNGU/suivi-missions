@@ -601,8 +601,10 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
         <label class="form-label-sm">Avance versée</label>
         <div class="input-group input-group-sm">
           <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="0" readonly title="Calcul automatique selon le taux d'avance">
-          <button type="button" class="btn btn-outline-secondary btn-sm f-avance-100-toggle flex-fill" onclick="toggleAvance100('${id}')" title="Activer si l'avance versée est de 100% du FM au lieu de 80%">
-            <i class="bi bi-cash-stack"></i> Avance 100%&nbsp;?
+          <input type="number" min="0" max="100" step="1" class="form-control form-control-sm f-avance-rate-pct" value="80" onchange="onAvanceRatePctChange('${id}')" title="Pourcentage de l'avance sur le FM">
+          <span class="input-group-text">%</span>
+          <button type="button" class="btn btn-outline-secondary btn-sm f-avance-manual-toggle" onclick="toggleAvanceManual('${id}')" title="Activer la saisie manuelle du taux d'avance">
+            <i class="bi bi-pencil"></i>
           </button>
         </div>
         <input type="hidden" class="f-avance-rate" value="0.8">
@@ -665,7 +667,8 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
     wrap.querySelector('.f-repas-soir-taux').value = Number(m.repas_soir_taux_usd || 0);
     setRepasSoirEnabledByRow(wrap, !!m.repas_soir_enabled || Number(m.repas_soir_taux_usd || 0) > 0, false);
     wrap.querySelector('.f-avance').value = m.avance_usd || 0;
-    setAvance100EnabledByRow(wrap, Number(m.avance_rate || 0.8) === 1);
+    setAvanceRate(wrap, Number(m.avance_rate || 0.8));
+    setAvanceManualByRow(wrap, false);
     setTimeout(() => setAvance80(id), 0);
     wrap.querySelector('.f-observation').value = m.observation || '';
 
@@ -729,34 +732,57 @@ function copyGroupFieldsInto(wrap, groupId) {
     if (srcEl && dstEl) dstEl.value = srcEl.value;
   });
   setRepasSoirEnabledByRow(wrap, isRepasSoirEnabled(wrap), false);
-  setAvance100EnabledByRow(wrap, isAvance100(wrap));
+  setAvanceRate(wrap, getAvanceRate(source));
+  setAvanceManualByRow(wrap, false);
 }
 
 function isRepasSoirEnabled(row) {
   return Number(row?.querySelector('.f-repas-soir-enabled')?.value || 0) === 1;
 }
 
-function isAvance100(row) {
-  return Number(row?.querySelector('.f-avance-rate')?.value || 0.8) === 1;
+function getAvanceRate(row) {
+  return Number(row?.querySelector('.f-avance-rate')?.value || 0.8);
 }
 
-function setAvance100EnabledByRow(row, enabled) {
+function setAvanceRate(row, rate) {
   if (!row) return;
+  const clamped = Math.max(0, Math.min(1, rate));
   const hidden = row.querySelector('.f-avance-rate');
-  const btn = row.querySelector('.f-avance-100-toggle');
-  if (!hidden || !btn) return;
-
-  const isOn = !!enabled;
-  hidden.value = isOn ? '1' : '0.8';
-  btn.innerHTML = isOn
-    ? '<i class="bi bi-x-circle"></i> Avance 80%'
-    : '<i class="bi bi-cash-stack"></i> Avance 100%&nbsp;?';
+  const pctInput = row.querySelector('.f-avance-rate-pct');
+  if (hidden) hidden.value = clamped;
+  if (pctInput) pctInput.value = Math.round(clamped * 100);
 }
 
-function toggleAvance100(rowId) {
+function isAvanceManual(row) {
+  return row?.querySelector('.f-avance-rate-pct')?.readOnly === false;
+}
+
+function setAvanceManualByRow(row, manual) {
+  if (!row) return;
+  const pctInput = row.querySelector('.f-avance-rate-pct');
+  const btn = row.querySelector('.f-avance-manual-toggle');
+  if (!pctInput || !btn) return;
+
+  pctInput.readOnly = !manual;
+  pctInput.classList.toggle('bg-light', !manual);
+  btn.innerHTML = manual
+    ? '<i class="bi bi-x-circle"></i>'
+    : '<i class="bi bi-pencil"></i>';
+  btn.title = manual ? 'Désactiver la saisie manuelle du taux' : 'Activer la saisie manuelle du taux d\'avance';
+}
+
+function toggleAvanceManual(rowId) {
   const row = document.getElementById(rowId);
   if (!row) return;
-  setAvance100EnabledByRow(row, !isAvance100(row));
+  setAvanceManualByRow(row, !isAvanceManual(row));
+}
+
+function onAvanceRatePctChange(rowId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  const pctInput = row.querySelector('.f-avance-rate-pct');
+  const pct = Number(pctInput?.value ?? 80);
+  setAvanceRate(row, pct / 100);
   setAvance80(rowId);
   onGroupFieldChange(rowId);
 }
