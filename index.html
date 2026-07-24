@@ -2364,9 +2364,9 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   const totPercu = Number(
     m.avis_montant_percu !== undefined && m.avis_montant_percu !== null
       ? m.avis_montant_percu
-      : Number(m.avance_usd || 0)
+      : Number(m.prevu_avance_usd || m.avance_usd || 0)
   );
-  const totJustifie  = Number(m.total_usd || 0);
+  const totJustifie = Number(m.prevu_total_usd || m.total_usd || 0);
   const totValable = totJustifie;
   const remboursementEcart = totValable - totPercu;
   const sens  = m.avis_sens || (remboursementEcart > 0 ? 'projet_rembourse' : (remboursementEcart < 0 ? 'agent_rembourse' : 'aucun'));
@@ -2379,6 +2379,7 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   ${autresItems.map((d) => `<div style="margin:2px 0 2px 12px">${d.checked === false ? '☐' : '☑'}&nbsp; ${escapeHtml(d.libelle || 'Frais')} — ${_docFmt(d.montant)} USD</div>`).join('')}
 </div>`
     : '';
+
 
   let remboursementLabel;
   let remboursementMontant;
@@ -2844,7 +2845,7 @@ function openAvisReviewModal(reportId) {
     const percu = Number(
       m.avis_montant_percu !== undefined && m.avis_montant_percu !== null
         ? m.avis_montant_percu
-        : Number(m.avance_usd || 0)
+        : Number(m.prevu_avance_usd || m.avance_usd || 0)
     );
     return `<div class="border rounded p-2 mb-2">
       <div class="fw-bold small mb-1">${escapeHtml(nom)}${m.missionnaire_titre ? ' — ' + escapeHtml(m.missionnaire_titre) : ''}</div>
@@ -2854,7 +2855,7 @@ function openAvisReviewModal(reportId) {
       </div>
       <div class="row g-2 mt-1">
         <div class="col-6">
-          <label class="form-label small mb-0 text-muted">Provision restant à justifier (USD)</label>
+          <label class="form-label small mb-0 text-muted">Avance Perçue (USD)</label>
           <input class="form-control form-control-sm avis-percu-input" data-idx="${i}" value="${percu.toFixed(2)}" disabled>
         </div>
         <div class="col-6">
@@ -2929,7 +2930,7 @@ async function finalizeJustificatifs(reportId) {
     const percu = Number(
       m.avis_montant_percu !== undefined && m.avis_montant_percu !== null
         ? m.avis_montant_percu
-        : Number(m.avance_usd || 0)
+        : Number(m.prevu_avance_usd || m.avance_usd || 0)
     );
     const ecart = Math.round((totalJustifie - percu) * 100) / 100;
     const sens  = ecart > 0 ? 'projet_rembourse' : (ecart < 0 ? 'agent_rembourse' : 'aucun');
@@ -2940,9 +2941,10 @@ async function finalizeJustificatifs(reportId) {
 
     return {
       ...m,
-      prevu_montant_usd: Number(m.montant_usd || 0),
-      prevu_autres_frais_details: items.slice(1).map((it) => ({ libelle: it.libelle, montant: it.montant })),
-      prevu_total_usd: Number(m.total_usd || 0),
+      prevu_montant_usd: Number(m.prevu_montant_usd || m.montant_usd || 0),
+      prevu_autres_frais_details: m.prevu_autres_frais_details || items.slice(1).map((it) => ({ libelle: it.libelle, montant: it.montant })),
+      prevu_total_usd: Number(m.prevu_total_usd || m.total_usd || 0),
+      prevu_avance_usd: Number(m.prevu_avance_usd || m.avance_usd || 0),
       montant_usd: perDiemFinal,
       autres_frais_details: finalDetails,
       autres_frais_usd: autresFraisUsd,
