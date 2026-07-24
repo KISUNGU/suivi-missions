@@ -2364,7 +2364,7 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   const totPercu = Number(
     m.avis_montant_percu !== undefined && m.avis_montant_percu !== null
       ? m.avis_montant_percu
-      : (Number(m.avance_usd || 0) + Number(m.autres_frais_usd || 0))
+      : Number(m.avance_usd || 0)
   );
   const totJustifie  = Number(m.total_usd || 0);
   const totValable = totJustifie;
@@ -2844,7 +2844,7 @@ function openAvisReviewModal(reportId) {
     const percu = Number(
       m.avis_montant_percu !== undefined && m.avis_montant_percu !== null
         ? m.avis_montant_percu
-        : (Number(m.avance_usd || 0) + Number(m.autres_frais_usd || 0))
+        : Number(m.avance_usd || 0)
     );
     return `<div class="border rounded p-2 mb-2">
       <div class="fw-bold small mb-1">${escapeHtml(nom)}${m.missionnaire_titre ? ' — ' + escapeHtml(m.missionnaire_titre) : ''}</div>
@@ -2929,7 +2929,7 @@ async function finalizeJustificatifs(reportId) {
     const percu = Number(
       m.avis_montant_percu !== undefined && m.avis_montant_percu !== null
         ? m.avis_montant_percu
-        : (Number(m.avance_usd || 0) + Number(m.autres_frais_usd || 0))
+        : Number(m.avance_usd || 0)
     );
     const ecart = Math.round((totalJustifie - percu) * 100) / 100;
     const sens  = ecart > 0 ? 'projet_rembourse' : (ecart < 0 ? 'agent_rembourse' : 'aucun');
