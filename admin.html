@@ -1050,8 +1050,8 @@ function getStatusBadge(status) {
 //    litige : on renvoie 0, quel que soit l'ancien solde théorique ;
 //  - si l'avis sur justificatifs a été rendu, on retient l'écart réellement
 //    constaté (avis_ecart : + si le projet doit encore à l'agent, − si
-//    l'agent doit rembourser) plutôt que le solde théorique de 20% ;
-//  - sinon (avant justification), on retombe sur le solde théorique (20%).
+//    l'agent doit rembourser) plutôt que le solde théorique ;
+//  - sinon (avant justification), on retombe sur le solde théorique.
 function calculateReportLitige(report) {
   if (report.solde_paye_at) return 0;
   return (report.missions || []).reduce((sum, mission) => {

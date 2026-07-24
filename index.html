@@ -1955,7 +1955,7 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
                     ${st === 'activee' ? `<button class="btn btn-sm btn-outline-secondary me-1" onclick="event.stopPropagation();updateReportStatut('${rid}','realisee')" title="Marquer réalisée"><i class="bi bi-flag-fill"></i></button>` : ''}
                     ${st === 'realisee' ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="event.stopPropagation();updateReportStatut('${rid}','activee')" title="Remettre en Activée"><i class="bi bi-arrow-counterclockwise"></i></button>` : ''}
                     ${st === 'realisee' && !report.justification_at ? `<button class="btn btn-sm btn-outline-info me-1" onclick="event.stopPropagation();openAvisReviewModal('${rid}')" title="Remplir docs de justification (délai 48h)"><i class="bi bi-clipboard-check-fill"></i></button>` : ''}
-                    ${st === 'realisee' && report.justification_at && !report.solde_paye_at ? `<button class="btn btn-sm btn-outline-success me-1" onclick="event.stopPropagation();enregistrerSolde('${rid}')" title="Confirmer le versement du solde 20%"><i class="bi bi-cash-coin"></i></button>` : ''}
+                    ${st === 'realisee' && report.justification_at && !report.solde_paye_at ? `<button class="btn btn-sm btn-outline-success me-1" onclick="event.stopPropagation();enregistrerSolde('${rid}')" title="Confirmer le versement du solde"><i class="bi bi-cash-coin"></i></button>` : ''}
                     ${rid ? `<button class="btn btn-sm btn-outline-primary me-1" onclick="event.stopPropagation();editReport('${rid}')" title="Modifier le rapport"><i class="bi bi-pencil-fill"></i></button>` : ''}
                     ${report.liquidation_number ? `<button class="btn btn-sm btn-outline-dark me-1" onclick="event.stopPropagation();reprintBordereau('${rid}')" title="Bordereau N°\u00a0${escapeHtml(report.liquidation_number)}"><i class="bi bi-file-earmark-text"></i></button>` : ''}
                     ${report.justification_at ? `<button class="btn btn-sm btn-outline-dark me-1" onclick="event.stopPropagation();reprintJustificationDocs('${rid}')" title="Réimprimer docs de justification"><i class="bi bi-file-earmark-check"></i></button>` : ''}
@@ -2256,8 +2256,10 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
   const totMontant = Number(m.montant_usd||0);
   const totAutres  = Number(m.autres_frais_usd||0);
   const totGeneral = Number(m.total_usd||0);
-  const avance     = Number(m.avance_usd||0);
-  const solde      = Number(m.solde_usd||0);
+  const avanceRate = Number(m.avance_rate || 0.8);
+  const avanceCalculee = Math.round(totMontant * avanceRate * 100) / 100;
+  const avance     = Number(m.avance_usd || 0) || avanceCalculee;
+  const solde      = Number(m.solde_usd || 0) || Math.round((totMontant - avance) * 100) / 100;
 
   const lbl = escapeHtml(m.territoire_label || m.territoire_name || '—');
   const fraisVoyage = Number(m.frais_voyage_usd || 0);
@@ -2324,7 +2326,7 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
     ${autresRows}
     <tr class="bold bg"><td colspan="4">Total frais à justifier</td><td class="tr">${_docFmt(totAutres)}</td></tr>
     <tr class="bold bg"><td colspan="4">Montant total</td><td class="tr">${_docFmt(totGeneral)}</td></tr>
-    <tr><td colspan="4"> Avance versée (80% FM)</td><td class="tr bold">${_docFmt(avance)}</td></tr>
+    <tr><td colspan="4"> Avance versée (${Math.round(avanceRate * 100)}% FM)</td><td class="tr bold">${_docFmt(avance)}</td></tr>
     <tr><td colspan="4">Solde à payer au retour de la mission</td><td class="tr">${_docFmt(solde)}</td></tr>
     <tr class="bold bg"><td colspan="4">Total perçu (FM + FJ)</td><td class="tr">${_docFmt(avance + totAutres)}</td></tr>
   </tbody>
@@ -2680,8 +2682,17 @@ function reprintJustificationDocs(reportId) {
 function renderJustificationBlock(report, rm) {
   const jat  = report.justification_at;
   const spat = report.solde_paye_at;
-  const totalSoldeR  = rm.reduce((s, m) => s + Number(m.solde_usd  || 0), 0);
-  const totalAvanceR = rm.reduce((s, m) => s + Number(m.avance_usd || 0), 0);
+  const totalAvanceR = rm.reduce((s, m) => {
+    const fm = Number(m.montant_usd || 0);
+    const rate = Number(m.avance_rate || 0.8);
+    return s + (Number(m.avance_usd || 0) || Math.round(fm * rate * 100) / 100);
+  }, 0);
+  const totalSoldeR  = rm.reduce((s, m) => {
+    const fm = Number(m.montant_usd || 0);
+    const rate = Number(m.avance_rate || 0.8);
+    const avance = Number(m.avance_usd || 0) || Math.round(fm * rate * 100) / 100;
+    return s + (Number(m.solde_usd || 0) || Math.round((fm - avance) * 100) / 100);
+  }, 0);
   const totalR       = rm.reduce((s, m) => s + Number(m.total_usd  || 0), 0);
 
   let latestDateFin = null;
@@ -2705,8 +2716,8 @@ function renderJustificationBlock(report, rm) {
       : '';
     return '<div class="mt-2 pt-2 border-top small">'
       + '<span class="badge bg-secondary"><i class="bi bi-clipboard me-1"></i>Justificatifs non encore reçus</span>' + deadlineBadge
-      + '<span class="ms-3 text-muted">Avance versée (80%) : <strong>' + formatCurrency(totalAvanceR) + ' USD</strong>'
-      + ' — Solde (20%) à verser : <strong class="text-warning">' + formatCurrency(totalSoldeR) + ' USD</strong></span>'
+      + '<span class="ms-3 text-muted">Avance versée : <strong>' + formatCurrency(totalAvanceR) + ' USD</strong>'
+      + ' — Solde à verser : <strong class="text-warning">' + formatCurrency(totalSoldeR) + ' USD</strong></span>'
       + '</div>';
   }
 
@@ -2719,7 +2730,7 @@ function renderJustificationBlock(report, rm) {
     ? '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Solde versé le <strong>' + fmtDt(spat) + '</strong>'
       + (report.solde_paye_by ? ' par <em>' + escapeHtml(report.solde_paye_by) + '</em>' : '')
       + ' — <strong>' + formatCurrency(totalSoldeR) + ' USD</strong></span>'
-    : '<span class="text-warning"><i class="bi bi-hourglass-split me-1"></i>Solde (20%) en attente : <strong>' + formatCurrency(totalSoldeR) + ' USD</strong></span>';
+    : '<span class="text-warning"><i class="bi bi-hourglass-split me-1"></i>Solde en attente : <strong>' + formatCurrency(totalSoldeR) + ' USD</strong></span>';
 
   return '<div class="mt-2 pt-2 border-top small">'
     + '<div class="d-flex gap-4 flex-wrap">'
@@ -2727,7 +2738,7 @@ function renderJustificationBlock(report, rm) {
     + 'Justificatifs reçus le <strong>' + fmtDtH(jat) + '</strong>' + delaiB + jByStr + '</div>'
     + '<div>' + soldeHtml + '</div>'
     + '</div>'
-    + '<div class="mt-1 text-muted">Récapitulatif : Avance (80%) : <strong>' + formatCurrency(totalAvanceR) + ' USD</strong>'
+    + '<div class="mt-1 text-muted">Récapitulatif : Avance versée : <strong>' + formatCurrency(totalAvanceR) + ' USD</strong>'
     + ' · Total mission : <strong>' + formatCurrency(totalR) + ' USD</strong></div>'
     + '</div>';
 }
@@ -2977,7 +2988,7 @@ async function enregistrerSolde(reportId) {
   const rm = report?.missions || [];
   const totalSolde = rm.reduce((s, m) => s + Number(m.solde_usd || 0), 0);
   askConfirm(
-    'Confirmer le versement du solde <strong>' + formatCurrency(totalSolde) + ' USD</strong> (20%) au missionnaire ?',
+    'Confirmer le versement du solde <strong>' + formatCurrency(totalSolde) + ' USD</strong> au missionnaire ?',
     async () => {
       try {
         const session = getSession();
@@ -2986,7 +2997,7 @@ async function enregistrerSolde(reportId) {
           solde_paye_by: session?.user?.email || session?.user || null
         }).eq('id', reportId);
         if (error) throw error;
-        showToast('✓ Versement du solde (20%) enregistré.');
+        showToast('✓ Versement du solde enregistré.');
         await refreshDashboard();
       } catch (e) { console.error(e); showToast('Erreur lors de l\'enregistrement.'); }
     },

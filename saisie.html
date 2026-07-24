@@ -210,8 +210,8 @@
         <div>Frais de mission (FM) : <span class="val" id="tot-montant">0,00</span> USD</div>
         <div>Frais à justifier (FJ) : <span class="val" id="tot-autres">0,00</span> USD</div>
         <div>Montant total (FM + FJ) : <span class="val" id="tot-total">0,00</span> USD</div>
-        <div>Avance (perdiem) versée (80% FM) : <span class="val" id="tot-avance">0,00</span> USD</div>
-        <div>Solde à payer (20% FM) : <span class="val" id="tot-solde">0,00</span> USD</div>
+        <div>Avance (perdiem) versée : <span class="val" id="tot-avance">0,00</span> USD</div>
+        <div>Solde à payer : <span class="val" id="tot-solde">0,00</span> USD</div>
         <div>Total perçu (Avance + FJ) : <span class="val" id="tot-percu">0,00</span> USD</div>
       </div>
     </div>
@@ -598,10 +598,17 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
         <input type="hidden" class="f-repas-soir-enabled" value="0">
       </div>
       <div class="col-md-2">
+        <label class="form-label-sm">Taux avance</label>
+        <select class="form-select form-select-sm f-avance-rate" onchange="setAvance80('${id}')">
+          <option value="0.8" selected>80% (défaut)</option>
+          <option value="1">100%</option>
+        </select>
+      </div>
+      <div class="col-md-2">
         <label class="form-label-sm">Avance versée</label>
         <div class="input-group input-group-sm">
-          <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="0" readonly title="Calcul automatique à 80% du FM">
-          <button type="button" class="btn btn-outline-secondary" onclick="setAvance80('${id}')" title="Recalculer à 80% du FM">80%</button>
+          <input type="number" min="0" step="0.01" class="form-control form-control-sm f-avance" value="0" readonly title="Calcul automatique selon le taux d'avance">
+          <button type="button" class="btn btn-outline-secondary" onclick="setAvance80('${id}')" title="Recalculer selon le taux">↻</button>
         </div>
       </div>
     </div>
@@ -638,8 +645,8 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
       <div>FM : <strong class="row-montant">0,00</strong></div>
       <div>FJ : <strong class="row-autres-sum">0,00</strong></div>
       <div>Total (FM+FJ) : <strong class="row-total">0,00</strong></div>
-      <div>Avance (80% FM) : <strong class="row-avance">0,00</strong></div>
-      <div>Solde (20% FM) : <strong class="row-solde">0,00</strong></div>
+      <div>Avance versée : <strong class="row-avance">0,00</strong></div>
+      <div>Solde à payer : <strong class="row-solde">0,00</strong></div>
       <div>Perçu (Avance+FJ) : <strong class="row-percu">0,00</strong></div>
     </div>
   `;
@@ -662,6 +669,7 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
     wrap.querySelector('.f-repas-soir-taux').value = Number(m.repas_soir_taux_usd || 0);
     setRepasSoirEnabledByRow(wrap, !!m.repas_soir_enabled || Number(m.repas_soir_taux_usd || 0) > 0, false);
     wrap.querySelector('.f-avance').value = m.avance_usd || 0;
+    wrap.querySelector('.f-avance-rate').value = Number(m.avance_rate || 0.8);
     wrap.querySelector('.f-observation').value = m.observation || '';
 
     if (Array.isArray(m.perdiem_breakdown) && m.perdiem_breakdown.length) {
@@ -685,7 +693,7 @@ function createMissionRow({ groupId, copyFromGroupId, prefillNom, prefillMission
     addAutresFraisItem(id);
   }
 
-  // Calcul forcé (garantit l'avance à 80% même si les champs sont déjà remplis)
+  // Calcul forcé (garantit l'avance selon le taux choisi même si les champs sont déjà remplis)
   setTimeout(() => {
     setAvance80(id);
   }, 10);
@@ -922,8 +930,8 @@ function recalcRow(rowId) {
     fm = nuitees * taux + fraisVoyage + repasSoirMontant;
   }
 
-  // Le workflow métier impose une avance de 80% du FM et un solde de 20% du FM.
-  const avance = roundMoney(fm * 0.8);
+  const rate = Number(row.querySelector('.f-avance-rate')?.value || 0.8);
+  const avance = roundMoney(fm * rate);
   const solde = roundMoney(fm - avance);
   const total = roundMoney(fm + fj);
   const percu = roundMoney(avance + fj);
@@ -955,7 +963,8 @@ function setAvance80(rowId) {
     : Number(row.querySelector('.f-nuitees').value || 0) * Number(row.querySelector('.f-taux').value || 0);
   const fm = perdiem + fraisVoyage + repasSoirMontant;
 
-  const avance = roundMoney(fm * 0.8);
+  const rate = Number(row.querySelector('.f-avance-rate')?.value || 0.8);
+  const avance = roundMoney(fm * rate);
   row.querySelector('.f-avance').value = avance.toFixed(2);
   recalcRow(rowId);
 }
@@ -974,7 +983,8 @@ function recalcTotals() {
       ? computePerdiemBreakdown(row).totalMontant
       : Number(row.querySelector('.f-nuitees')?.value || 0) * Number(row.querySelector('.f-taux')?.value || 0);
     const fm = roundMoney(perdiem + fraisVoyage + repasSoirMontant);
-    const avance = roundMoney(fm * 0.8);
+    const rate = Number(row.querySelector('.f-avance-rate')?.value || 0.8);
+    const avance = roundMoney(fm * rate);
     const solde = roundMoney(fm - avance);
     const total = roundMoney(fm + fj);
     const percu = roundMoney(avance + fj);
@@ -1076,7 +1086,8 @@ function collectMissions() {
       ? (nuitees > 0 ? Math.round((perdiemMontant / nuitees) * 100) / 100 : 0)
       : Number(row.querySelector('.f-taux').value || 0);
     const fm = roundMoney((breakdownActive ? perdiemMontant : nuitees * taux) + fraisVoyage + repasSoirMontant);
-    const avance  = roundMoney(fm * 0.8);
+    const avanceRate = Number(row.querySelector('.f-avance-rate')?.value || 0.8);
+    const avance  = roundMoney(fm * avanceRate);
 
     const details = Array.from(row.querySelectorAll('.autres-frais-item')).map((item) => ({
       libelle: item.querySelector('.f-item-libelle').value.trim(),
@@ -1111,6 +1122,7 @@ function collectMissions() {
       autres_frais_details: details,
       total_usd: total,
       avance_usd: avance,
+      avance_rate: avanceRate,
       solde_usd: solde,
       observation
     });
