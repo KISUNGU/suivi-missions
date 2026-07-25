@@ -2361,15 +2361,16 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   const num      = report.fld_number || '___/___/____';
   const motif    = m.nature || '';
 
-  const avanceBase = Number(m.prevu_avance_usd || m.avance_usd || 0);
-  const totPercu = Number(
-    m.avis_montant_percu !== undefined && m.avis_montant_percu !== null
-      ? m.avis_montant_percu
-      : avanceBase
-  );
-  const totJustifie = Number(m.total_usd || 0);
-  const totValable = totJustifie;
-  const remboursementEcart = totValable - totPercu;
+  // --- CALCUL CORRIGÉ ICI ---
+  // Le montant de la provision à justifier est le "Total perçu" = Avance (perdiem) + Frais à justifier (FJ)
+  // Nous utilisons la valeur la plus proche de la saisie (avance_usd + autres_frais_usd) si disponible.
+  const avancePerdiem = Number(m.avance_usd || 0); // Avance versée (80% FM)
+  const autresFrais = Number(m.autres_frais_usd || 0); // Frais à justifier (FJ)
+  const totPercu = avancePerdiem + autresFrais; // C'est le "Total perçu" qui est à justifier
+
+  const totJustifie = Number(m.total_usd || 0); // Montant total des justificatifs présentés (FM + FJ)
+  const totValable = totJustifie; // On considère que tout est valable
+  const remboursementEcart = totJustifie - totPercu;
   const sens  = m.avis_sens || (remboursementEcart > 0 ? 'projet_rembourse' : (remboursementEcart < 0 ? 'agent_rembourse' : 'aucun'));
   const favorable = m.avis_comptable ? m.avis_comptable === 'favorable' : true;
 
@@ -2380,7 +2381,6 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   ${autresItems.map((d) => `<div style="margin:2px 0 2px 12px">${d.checked === false ? '☐' : '☑'}&nbsp; ${escapeHtml(d.libelle || 'Frais')} — ${_docFmt(d.montant)} USD</div>`).join('')}
 </div>`
     : '';
-
 
   let remboursementLabel;
   let remboursementMontant;
@@ -2938,15 +2938,11 @@ async function finalizeJustificatifs(reportId) {
     const autresFraisUsd = finalDetails.reduce((s, d) => s + Number(d.montant || 0), 0);
     const totalJustifie  = perDiemFinal + autresFraisUsd;
 
-    // "Montant de la provision à justifier" = tout ce qui a été remis au
-    // missionnaire avant la mission : l'avance perdiem (80% du FM déclaré)
-    // + la provision pour les autres frais (donnée en totalité, à charge
-    // pour lui de la justifier). avis_montant_percu porte désormais ce total
-    // combiné (et plus la seule avance perdiem) — recalculé à chaque avis à
-    // partir des montants déclarés, pas réutilisé d'un avis précédent.
-    const avancePerdiemDeclare    = Number(m.prevu_avance_usd || m.avance_usd || 0);
-    const autresFraisDeclareTotal = items.slice(1).reduce((s, it) => s + Number(it.montant || 0), 0);
-    const percu = Math.round((avancePerdiemDeclare + autresFraisDeclareTotal) * 100) / 100;
+    // --- CALCUL CORRIGÉ ICI ---
+    // Le montant de la provision à justifier est le "Total perçu" = Avance (perdiem) + Frais à justifier (FJ)
+    const avancePerdiem = Number(m.avance_usd || 0);
+    const autresFrais = Number(m.autres_frais_usd || 0);
+    const percu = Math.round((avancePerdiem + autresFrais) * 100) / 100;
     const ecart = Math.round((totalJustifie - percu) * 100) / 100;
     const sens  = ecart > 0 ? 'projet_rembourse' : (ecart < 0 ? 'agent_rembourse' : 'aucun');
     const confirmChk = document.querySelector(`.avis-confirm-check[data-idx="${i}"]`);
@@ -2964,7 +2960,7 @@ async function finalizeJustificatifs(reportId) {
       autres_frais_details: finalDetails,
       autres_frais_usd: autresFraisUsd,
       total_usd: totalJustifie,
-      avis_montant_percu: percu,
+      avis_montant_percu: percu, // Maintenant c'est le "Total perçu"
       avis_ecart: ecart,
       avis_sens: sens,
       avis_confirmation_agent: confirmed,
