@@ -2806,6 +2806,36 @@ function recalcAvisMontantJustifie(missionIdx) {
   updateAvisDecision(missionIdx);
 }
 
+// Ajoute une ligne de dépense supplémentaire (saisie comptable) dans l'avis.
+// Elle est toujours prise en compte dans le total des justificatifs.
+function addAvisExpenseRow(missionIdx) {
+  const container = document.querySelector(`.avis-extra-items[data-idx="${missionIdx}"]`);
+  if (!container) return;
+  let maxIdx = -1;
+  document.querySelectorAll(`.avis-item-row[data-idx="${missionIdx}"]`).forEach((r) => {
+    maxIdx = Math.max(maxIdx, Number(r.dataset.itemIdx));
+  });
+  const j = maxIdx + 1;
+  const row = document.createElement('div');
+  row.className = 'avis-item-row d-flex align-items-center gap-2 mb-1';
+  row.dataset.idx = missionIdx;
+  row.dataset.itemIdx = String(j);
+  row.dataset.perdiem = '0';
+  row.dataset.extra = '1';
+  row.innerHTML = `
+    <input type="checkbox" class="form-check-input avis-item-check" data-idx="${missionIdx}" data-item-idx="${j}" checked disabled title="Dépense ajoutée par le comptable">
+    <input type="text" class="form-control form-control-sm avis-item-libelle-input" data-idx="${missionIdx}" data-item-idx="${j}" placeholder="Libellé de la dépense">
+    <input type="number" step="0.01" class="form-control form-control-sm avis-item-montant" style="max-width:110px" data-idx="${missionIdx}" data-item-idx="${j}" value="0">
+    <button type="button" class="btn btn-sm btn-outline-danger avis-remove-expense" title="Retirer cette dépense"><i class="bi bi-x-lg"></i></button>`;
+  container.appendChild(row);
+  row.querySelector('.avis-item-montant').addEventListener('input', () => recalcAvisMontantJustifie(missionIdx));
+  row.querySelector('.avis-remove-expense').addEventListener('click', () => {
+    row.remove();
+    recalcAvisMontantJustifie(missionIdx);
+  });
+  row.querySelector('.avis-item-libelle-input').focus();
+}
+
 function updateAvisDecision(missionIdx) {
   const totalInput  = document.querySelector(`.avis-justifie-input[data-idx="${missionIdx}"]`);
   const percuInput  = document.querySelector(`.avis-percu-input[data-idx="${missionIdx}"]`);
@@ -2867,9 +2897,9 @@ function openAvisReviewModal(reportId) {
     const nom = m.missionnaire_nom || resolveMissionnaireName(report);
     const items = resolveAvisItems(m);
     const itemsHtml = items.map((it, j) => `
-        <div class="d-flex align-items-center gap-2 mb-1">
+        <div class="avis-item-row d-flex align-items-center gap-2 mb-1" data-idx="${i}" data-item-idx="${j}" data-perdiem="${it.isPerDiem ? '1' : '0'}">
           <input type="checkbox" class="form-check-input avis-item-check" data-idx="${i}" data-item-idx="${j}" checked>
-          <span class="small flex-grow-1${it.isPerDiem ? ' fw-semibold' : ''}">${escapeHtml(it.libelle)}${it.isPerDiem ? ' <span class="text-muted fw-normal">(validé à l\'activation)</span>' : ''}</span>
+          <span class="avis-item-libelle small flex-grow-1${it.isPerDiem ? ' fw-semibold' : ''}">${escapeHtml(it.libelle)}${it.isPerDiem ? ' <span class="text-muted fw-normal">(validé à l\'activation)</span>' : ''}</span>
           <input type="number" step="0.01" class="form-control form-control-sm avis-item-montant" style="max-width:110px" data-idx="${i}" data-item-idx="${j}" value="${Number(it.montant || 0)}" disabled>
         </div>`).join('');
     const justifieInit = items.reduce((s, it) => s + Number(it.montant || 0), 0);
@@ -2890,6 +2920,8 @@ function openAvisReviewModal(reportId) {
       <div class="mt-1">
         <label class="form-label small mb-1 text-muted">Éléments à justifier — cocher pour valider le montant déclaré, décocher pour corriger</label>
         ${itemsHtml}
+        <div class="avis-extra-items" data-idx="${i}"></div>
+        <button type="button" class="btn btn-sm btn-outline-secondary mt-1 avis-add-expense" data-idx="${i}"><i class="bi bi-plus-circle me-1"></i>Ajouter une dépense</button>
       </div>
       <div class="row g-2 mt-1">
         <div class="col-6">
@@ -2937,6 +2969,9 @@ function openAvisReviewModal(reportId) {
   document.querySelectorAll('.avis-item-montant').forEach((inp) => {
     inp.addEventListener('input', () => recalcAvisMontantJustifie(inp.dataset.idx));
   });
+  document.querySelectorAll('.avis-add-expense').forEach((btn) => {
+    btn.addEventListener('click', () => addAvisExpenseRow(btn.dataset.idx));
+  });
   document.querySelectorAll('.avis-confirm-check').forEach((chk) => {
     chk.addEventListener('change', () => updateAvisDecision(chk.dataset.idx));
   });
@@ -2953,22 +2988,35 @@ async function finalizeJustificatifs(reportId) {
   const rm = report.missions || [];
 
   const editedMissions = rm.map((m, i) => {
-    const items = resolveAvisItems(m);
-    const finalItems = items.map((it, j) => {
-      const chk = document.querySelector(`.avis-item-check[data-idx="${i}"][data-item-idx="${j}"]`);
-      const amountInput = document.querySelector(`.avis-item-montant[data-idx="${i}"][data-item-idx="${j}"]`);
+    const baseItems = resolveAvisItems(m);
+    const rowEls = Array.from(document.querySelectorAll(`.avis-item-row[data-idx="${i}"]`));
+    const finalItems = rowEls.map((rowEl) => {
+      const j = Number(rowEl.dataset.itemIdx);
+      const isPerDiem = rowEl.dataset.perdiem === '1';
+      const isExtra = rowEl.dataset.extra === '1';
+      const chk = rowEl.querySelector('.avis-item-check');
+      const amountInput = rowEl.querySelector('.avis-item-montant');
+      const libelleInput = rowEl.querySelector('.avis-item-libelle-input');
+      const libelleSpan = rowEl.querySelector('.avis-item-libelle');
+      const base = baseItems[j];
       const isChecked = chk ? !!chk.checked : true;
-      const montant = !isChecked ? Number(amountInput?.value || 0) : Number(it.montant || 0);
-      return { libelle: it.libelle, montant, isPerDiem: it.isPerDiem, checked: isChecked };
+      const libelle = libelleInput
+        ? libelleInput.value.trim()
+        : (base ? base.libelle : (libelleSpan ? libelleSpan.textContent.trim() : 'Frais'));
+      // Dépense ajoutée ou item décoché => montant saisi ; item coché => montant déclaré
+      const montant = (isExtra || !isChecked)
+        ? Number(amountInput?.value || 0)
+        : Number(base ? base.montant : (amountInput?.value || 0));
+      return { libelle, montant, isPerDiem, checked: isChecked };
     });
-    
+
     // Calcul des totaux
-    const perDiemFinal = Number(finalItems[0]?.montant || 0);
-    const finalDetails = finalItems.slice(1).map((d) => ({ 
-      libelle: d.libelle, 
-      montant: d.montant, 
-      checked: d.checked 
-    }));
+    const perDiemItem = finalItems.find((it) => it.isPerDiem);
+    const perDiemFinal = Number(perDiemItem?.montant || 0);
+    const finalDetails = finalItems
+      .filter((it) => !it.isPerDiem)
+      .map((d) => ({ libelle: d.libelle, montant: d.montant, checked: d.checked }))
+      .filter((d) => (d.libelle || '').trim() || Number(d.montant || 0) !== 0);
     const autresFraisUsd = finalDetails.reduce((s, d) => s + Number(d.montant || 0), 0);
     const totalJustificatifs = perDiemFinal + autresFraisUsd;
 
