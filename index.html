@@ -1546,6 +1546,8 @@ function getFilteredReports(options = {}) {
       .join(' ');
   }
 
+  const uncpSession = isUncpComptableSession(getSession());
+
   return REPORTS_CACHE.filter((report) => {
     const provinceName = getReportProvinceName(report);
     const missions = report?.missions || [];
@@ -1579,7 +1581,8 @@ function getFilteredReports(options = {}) {
 
     const reportStatut = report.statut || 'activee';
 
-    if (selectedProvince && provinceName !== selectedProvince) return false;
+    const uncpRafBypass = uncpSession && isRafOrRnseReport(report);
+    if (selectedProvince && provinceName !== selectedProvince && !uncpRafBypass) return false;
     if (rapporteurFilter && !reporteur.includes(normalizeText(rapporteurFilter))) return false;
     if (chefFilter && !chefMission.includes(normalizeText(chefFilter))) return false;
     if (missionFilter && !missionText.includes(normalizeText(missionFilter))) return false;
@@ -1673,7 +1676,15 @@ async function getStoredReports() {
     
     if (session?.role === 'comptable') {
       const userProvs = getCanonicalSessionProvinces(session);
-      if (Array.isArray(userProvs) && userProvs.length) {
+      if (isUncpComptableSession(session)) {
+        // Le comptable UNCP voit aussi les rapports élaborés par le RAF (admin)
+        // et le RNSE (super_admin), quelle que soit la province du rapport.
+        const provinceList = userProvs.map((p) => `"${p}"`).join(',');
+        const orClauses = [];
+        if (provinceList) orClauses.push(`province.in.(${provinceList})`);
+        orClauses.push('rapporteur_role.in.("admin","super_admin")');
+        query = query.or(orClauses.join(','));
+      } else if (Array.isArray(userProvs) && userProvs.length) {
         query = query.in('province', userProvs);
       }
     }
@@ -1892,7 +1903,11 @@ function buildGeneralPanel(reports = getFilteredReports()) {
 function buildProvincePanel(province, reportsSource = getFilteredReports()) {
   const session = getSession();
   const isSuperAdmin = session?.role === 'super_admin';
-  const reports = reportsSource.filter((report) => getReportProvinceName(report) === province.name);
+  const uncpUnPanel = isUncpComptableSession(session) && province.name === 'UN';
+  const reports = reportsSource.filter((report) =>
+    getReportProvinceName(report) === province.name
+    || (uncpUnPanel && isRafOrRnseReport(report))
+  );
   const missions = reports.flatMap((report) => report.missions || []);
   const totalMontant = missions.reduce((s, m) => s + Number(m.montant_usd || 0), 0);
   const totalAutres  = missions.reduce((s, m) => s + Number(m.autres_frais_usd || 0), 0);
