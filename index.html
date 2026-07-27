@@ -3037,7 +3037,7 @@ async function finalizeJustificatifs(reportId) {
     return {
       ...m,
       prevu_montant_usd: Number(m.prevu_montant_usd || m.montant_usd || 0),
-      prevu_autres_frais_details: m.prevu_autres_frais_details || items.slice(1).map((it) => ({ libelle: it.libelle, montant: it.montant })),
+      prevu_autres_frais_details: m.prevu_autres_frais_details || baseItems.slice(1).map((it) => ({ libelle: it.libelle, montant: it.montant })),
       prevu_total_usd: Number(m.prevu_total_usd || m.total_usd || 0),
       prevu_avance_usd: Number(m.prevu_avance_usd || m.avance_usd || 0),
       montant_usd: perDiemFinal,
