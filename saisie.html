@@ -981,7 +981,7 @@ function recalcRow(rowId) {
 
   const rate = Number(row.querySelector('.f-avance-rate')?.value || 0.8);
   const avance = roundMoney(fm * rate);
-  const solde = roundMoney(fm - avance + fj);
+  const solde = roundMoney(fm - avance);
   const total = roundMoney(fm + fj);
   const percu = roundMoney(avance + fj);
 
@@ -1034,7 +1034,7 @@ function recalcTotals() {
     const fm = roundMoney(perdiem + fraisVoyage + repasSoirMontant);
     const rate = Number(row.querySelector('.f-avance-rate')?.value || 0.8);
     const avance = roundMoney(fm * rate);
-    const solde = roundMoney(fm - avance + fj);
+    const solde = roundMoney(fm - avance);
     const total = roundMoney(fm + fj);
     const percu = roundMoney(avance + fj);
 
@@ -1144,7 +1144,7 @@ function collectMissions() {
     })).filter((d) => d.libelle || d.montant);
     const fj = details.reduce((s, d) => s + Number(d.montant || 0), 0);
     const total = roundMoney(fm + fj);
-    const solde = roundMoney(fm - avance + fj);
+    const solde = roundMoney(fm - avance);
 
     missions.push({
       numero,

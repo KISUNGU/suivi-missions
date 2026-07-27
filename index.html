@@ -1249,13 +1249,20 @@ function getStatusBadge(status) {
   return `<span class="statut-badge ${cfg.class}"><i class="bi bi-${cfg.icon} me-1"></i>${cfg.label}</span>`;
 }
 
+// Solde perdiem à payer au retour = 20% du FM (montant frais de mission − avance perdiem)
+function missionSolde(m) {
+  const fm = Number(m.montant_usd || 0);
+  const avance = Number(m.avance_usd || 0) || Math.round(fm * Number(m.avance_rate || 0.8) * 100) / 100;
+  return Math.round((fm - avance) * 100) / 100;
+}
+
 // Montant réellement en litige (solde non soldé) pour un rapport
 function calculateReportLitige(report) {
   if (report.solde_paye_at) return 0;
   return (report.missions || []).reduce((sum, mission) => {
     const ecart = (mission.avis_ecart !== undefined && mission.avis_ecart !== null)
       ? Number(mission.avis_ecart)
-      : Number(mission.solde_usd || 0);
+      : missionSolde(mission);
     return sum + Math.abs(ecart);
   }, 0);
 }
@@ -2021,7 +2028,7 @@ function buildProvincePanel(province, reportsSource = getFilteredReports()) {
                             <td class="text-end">${formatCurrency(Number(m.autres_frais_usd||0))}</td>
                             <td class="text-end fw-bold">${formatCurrency(Number(m.total_usd||0))}</td>
                             <td class="text-end">${formatCurrency(Number(m.avance_usd||0))}</td>
-                            <td class="text-end">${formatCurrency(Number(m.solde_usd||0))}</td>
+                            <td class="text-end">${formatCurrency(missionSolde(m))}</td>
                             <td>${escapeHtml(m.section||'—')}</td>
                             <td class="small">${escapeHtml(buildObservationText(m))}</td>
                           </tr>`; }).join('')}</tbody>
@@ -2274,7 +2281,7 @@ function buildBordereauPageHtml(report, m, rm, isLast) {
   const avanceRate = Number(m.avance_rate || 0.8);
   const avanceCalculee = Math.round(totMontant * avanceRate * 100) / 100;
   const avance     = Number(m.avance_usd || 0) || avanceCalculee;
-  const solde      = Number(m.solde_usd || 0) || Math.round((totMontant - avance) * 100) / 100;
+  const solde      = Math.round((totMontant - avance) * 100) / 100;
 
   const lbl = escapeHtml(m.territoire_label || m.territoire_name || '—');
   const fraisVoyage = Number(m.frais_voyage_usd || 0);
@@ -2376,17 +2383,26 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   const num      = report.fld_number || '___/___/____';
   const motif    = m.nature || '';
 
-  // --- LOGIQUE CORRECTE ---
-  // 1. Provision à justifier = Avance (perdiem) + Frais à justifier (FJ)
-  const avancePerdiem = Number(m.avance_usd || 0);
-  const fraisAJustifier = Number(m.autres_frais_usd || 0);
-  const provisionAJustifier = avancePerdiem + fraisAJustifier; // 693,60 USD
+  // --- LOGIQUE PROVISION / JUSTIFICATIFS ---
+  // 1. Provision restant à justifier = Avance perdiem + FJ PROVISIONNÉ (montants
+  //    d'origine, avant correction des justificatifs). On privilégie la valeur
+  //    figée à la validation de l'avis (avis_montant_percu) pour qu'un dépassement
+  //    de FJ ne gonfle pas la provision.
+  const avancePerdiem = Number(m.prevu_avance_usd || m.avance_usd || 0);
+  const fjProvision = Array.isArray(m.prevu_autres_frais_details) && m.prevu_autres_frais_details.length
+    ? m.prevu_autres_frais_details.reduce((s, d) => s + Number(d.montant || 0), 0)
+    : Number(m.autres_frais_usd || 0);
+  const provisionAJustifier = (m.avis_montant_percu !== undefined && m.avis_montant_percu !== null)
+    ? Number(m.avis_montant_percu)
+    : Math.round((avancePerdiem + fjProvision) * 100) / 100;
 
-  // 2. Montant des justificatifs présentés = Total mission (FM + FJ)
-  const totalJustificatifs = Number(m.total_usd || 0); // 822,00 ou 827,00 USD
+  // 2. Montant des justificatifs présentés = per diem FM + FJ justifié (incl. dépassement)
+  const totalJustificatifs = Number(m.total_usd || 0);
 
-  // 3. Solde à rembourser = Justificatifs - Provision
-  const soldeRemboursement = Math.round((totalJustificatifs - provisionAJustifier) * 100) / 100; // 133,40 USD
+  // 3. Montant à rembourser = Justificatifs − Provision (valeur figée si disponible)
+  const soldeRemboursement = (m.avis_ecart !== undefined && m.avis_ecart !== null)
+    ? Number(m.avis_ecart)
+    : Math.round((totalJustificatifs - provisionAJustifier) * 100) / 100;
 
   // 4. Détection du sens du remboursement
   let sens, remboursementLabel, remboursementMontant;
@@ -2707,12 +2723,7 @@ function renderJustificationBlock(report, rm) {
     const rate = Number(m.avance_rate || 0.8);
     return s + (Number(m.avance_usd || 0) || Math.round(fm * rate * 100) / 100);
   }, 0);
-  const totalSoldeR  = rm.reduce((s, m) => {
-    const fm = Number(m.montant_usd || 0);
-    const rate = Number(m.avance_rate || 0.8);
-    const avance = Number(m.avance_usd || 0) || Math.round(fm * rate * 100) / 100;
-    return s + (Number(m.solde_usd || 0) || Math.round((fm - avance) * 100) / 100);
-  }, 0);
+  const totalSoldeR  = rm.reduce((s, m) => s + missionSolde(m), 0);
   const totalR       = rm.reduce((s, m) => s + Number(m.total_usd  || 0), 0);
 
   let latestDateFin = null;
@@ -3033,7 +3044,7 @@ async function finalizeJustificatifs(reportId) {
 async function enregistrerSolde(reportId) {
   const report = REPORTS_CACHE.find((r) => r.id === reportId);
   const rm = report?.missions || [];
-  const totalSolde = rm.reduce((s, m) => s + Number(m.solde_usd || 0), 0);
+  const totalSolde = rm.reduce((s, m) => s + missionSolde(m), 0);
   askConfirm(
     'Confirmer le versement du solde <strong>' + formatCurrency(totalSolde) + ' USD</strong> au missionnaire ?',
     async () => {
@@ -3399,7 +3410,7 @@ function buildMissionExportRows(reports) {
         autres: Number(m.autres_frais_usd || 0),
         total: Number(m.total_usd || 0),
         avance: Number(m.avance_usd || 0),
-        solde: Number(m.solde_usd || 0),
+        solde: missionSolde(m),
         statut: getStatusLabel(report.statut || 'activee').replace(/[⏳⚡✓↩]/g, '').trim()
       });
     });
