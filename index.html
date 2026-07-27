@@ -2361,17 +2361,34 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   const num      = report.fld_number || '___/___/____';
   const motif    = m.nature || '';
 
-  // --- CALCUL CORRIGÉ ICI ---
-  // Le montant de la provision à justifier est le "Total perçu" = Avance (perdiem) + Frais à justifier (FJ)
-  // Nous utilisons la valeur la plus proche de la saisie (avance_usd + autres_frais_usd) si disponible.
-  const avancePerdiem = Number(m.avance_usd || 0); // Avance versée (80% FM)
-  const autresFrais = Number(m.autres_frais_usd || 0); // Frais à justifier (FJ)
-  const totPercu = avancePerdiem + autresFrais; // C'est le "Total perçu" qui est à justifier
+  // --- LOGIQUE CORRECTE ---
+  // 1. Provision à justifier = Avance (perdiem) + Frais à justifier (FJ)
+  const avancePerdiem = Number(m.avance_usd || 0);
+  const fraisAJustifier = Number(m.autres_frais_usd || 0);
+  const provisionAJustifier = avancePerdiem + fraisAJustifier; // 693,60 USD
 
-  const totJustifie = Number(m.total_usd || 0); // Montant total des justificatifs présentés (FM + FJ)
-  const totValable = totJustifie; // On considère que tout est valable
-  const remboursementEcart = totJustifie - totPercu;
-  const sens  = m.avis_sens || (remboursementEcart > 0 ? 'projet_rembourse' : (remboursementEcart < 0 ? 'agent_rembourse' : 'aucun'));
+  // 2. Montant des justificatifs présentés = Total mission (FM + FJ)
+  const totalJustificatifs = Number(m.total_usd || 0); // 822,00 ou 827,00 USD
+
+  // 3. Solde à rembourser = Justificatifs - Provision
+  const soldeRemboursement = Math.round((totalJustificatifs - provisionAJustifier) * 100) / 100; // 133,40 USD
+
+  // 4. Détection du sens du remboursement
+  let sens, remboursementLabel, remboursementMontant;
+  if (soldeRemboursement > 0) {
+    sens = 'projet_rembourse';
+    remboursementLabel = `A REMBOURSER A&nbsp;: ${escapeHtml(nom)}`;
+    remboursementMontant = soldeRemboursement;
+  } else if (soldeRemboursement < 0) {
+    sens = 'agent_rembourse';
+    remboursementLabel = 'A REMBOURSER A&nbsp;: PROJET';
+    remboursementMontant = Math.abs(soldeRemboursement);
+  } else {
+    sens = 'aucun';
+    remboursementLabel = 'A REMBOURSER A&nbsp;: NEANT';
+    remboursementMontant = 0;
+  }
+
   const favorable = m.avis_comptable ? m.avis_comptable === 'favorable' : true;
 
   const autresItems = Array.isArray(m.autres_frais_details) ? m.autres_frais_details : [];
@@ -2381,20 +2398,6 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
   ${autresItems.map((d) => `<div style="margin:2px 0 2px 12px">${d.checked === false ? '☐' : '☑'}&nbsp; ${escapeHtml(d.libelle || 'Frais')} — ${_docFmt(d.montant)} USD</div>`).join('')}
 </div>`
     : '';
-
-  let remboursementLabel;
-  let remboursementMontant;
-  if (sens === 'projet_rembourse') {
-    remboursementLabel = `A REMBOURSER A&nbsp;: ${escapeHtml(nom)}`;
-    remboursementMontant = Math.abs(remboursementEcart);
-  } else if (sens === 'agent_rembourse') {
-    remboursementLabel = 'A REMBOURSER A&nbsp;: PROJET';
-    remboursementMontant = Math.abs(remboursementEcart);
-  } else {
-    remboursementLabel = 'A REMBOURSER A&nbsp;: NEANT';
-    remboursementMontant = 0;
-  }
-  const remboursementNote = '';
 
   const comptableName = resolveAccountDisplayName(report.justification_by) || '';
   const dateAvis = report.justification_at ? _docDate(report.justification_at) : _docDate(new Date());
@@ -2409,9 +2412,8 @@ function buildAvisJustificatifsPageHtml(report, m, rm, isLast) {
 <div class="avis-field"><span class="avis-label">MOTIF&nbsp;:</span><span class="avis-value">${escapeHtml(motif)}</span></div>
 <div class="avis-field"><span class="avis-label">FINANCEMENT&nbsp;:</span><span class="avis-value">PNDA</span></div>
 
-<div class="avis-amount-row"><span>MONTANT DE LA PROVISION A JUSTIFIER&nbsp;:</span><span class="avis-box">${_docFmt(totPercu)}</span></div>
-<div class="avis-amount-row"><span>MONTANT DES JUSTIFICATIFS PRESENTES&nbsp;:</span><span class="avis-box">${_docFmt(totJustifie)}</span></div>
-<div class="avis-amount-row"><span>SOLDE A REMBOURSER AU MISSIONNAIRE&nbsp;:</span><span class="avis-box">${_docFmt(remboursementMontant)}</span></div>
+<div class="avis-amount-row"><span>MONTANT DE LA PROVISION RESTANT A JUSTIFIER&nbsp;:</span><span class="avis-box">${_docFmt(provisionAJustifier)}</span></div>
+<div class="avis-amount-row"><span>MONTANT DES JUSTIFICATIFS PRESENTES&nbsp;:</span><span class="avis-box">${_docFmt(totalJustificatifs)}</span></div>
 ${autresItemsHtml}
 
 <hr style="border:none;border-top:2px solid #000;margin:18px 0">
@@ -2419,8 +2421,8 @@ ${autresItemsHtml}
 <p class="avis-title-avis">AVIS</p>
 <p style="margin:4px 0 10px"><strong>Avis du Comptable</strong>${!favorable ? '&nbsp;<span style="text-decoration:underline">(SOUS RÉSERVE)</span>' : ''}</p>
 
-<div class="avis-amount-row"><span>Justificatifs valables pour (montant)&nbsp;:</span><span class="avis-box">${_docFmt(totValable)}</span></div>
-<div class="avis-amount-row"><span>${remboursementLabel}${remboursementNote}</span><span class="avis-box">${_docFmt(remboursementMontant)}</span></div>
+<div class="avis-amount-row"><span>Justificatifs valables pour (montant)&nbsp;:</span><span class="avis-box">${_docFmt(totalJustificatifs)}</span></div>
+<div class="avis-amount-row"><span>${remboursementLabel}</span><span class="avis-box">${_docFmt(remboursementMontant)}</span></div>
 
 ${m.avis_observation ? `<p style="margin:8px 0"><strong>Observation&nbsp;:</strong> ${escapeHtml(m.avis_observation)}</p>` : ''}
 
@@ -2933,21 +2935,29 @@ async function finalizeJustificatifs(reportId) {
       const montant = !isChecked ? Number(amountInput?.value || 0) : Number(it.montant || 0);
       return { libelle: it.libelle, montant, isPerDiem: it.isPerDiem, checked: isChecked };
     });
-    const perDiemFinal   = Number(finalItems[0]?.montant || 0);
-    const finalDetails   = finalItems.slice(1).map((d) => ({ libelle: d.libelle, montant: d.montant, checked: d.checked }));
+    
+    // Calcul des totaux
+    const perDiemFinal = Number(finalItems[0]?.montant || 0);
+    const finalDetails = finalItems.slice(1).map((d) => ({ 
+      libelle: d.libelle, 
+      montant: d.montant, 
+      checked: d.checked 
+    }));
     const autresFraisUsd = finalDetails.reduce((s, d) => s + Number(d.montant || 0), 0);
-    const totalJustifie  = perDiemFinal + autresFraisUsd;
+    const totalJustificatifs = perDiemFinal + autresFraisUsd;
 
-    // --- CALCUL CORRIGÉ ICI ---
-    // Le montant de la provision à justifier est le "Total perçu" = Avance (perdiem) + Frais à justifier (FJ)
+    // --- PROVISION A JUSTIFIER = Avance + FJ ---
     const avancePerdiem = Number(m.avance_usd || 0);
-    const autresFrais = Number(m.autres_frais_usd || 0);
-    const percu = Math.round((avancePerdiem + autresFrais) * 100) / 100;
-    const ecart = Math.round((totalJustifie - percu) * 100) / 100;
-    const sens  = ecart > 0 ? 'projet_rembourse' : (ecart < 0 ? 'agent_rembourse' : 'aucun');
+    const fraisAJustifier = Number(m.autres_frais_usd || 0);
+    const provisionAJustifier = Math.round((avancePerdiem + fraisAJustifier) * 100) / 100;
+
+    // Calcul du solde
+    const soldeRemboursement = Math.round((totalJustificatifs - provisionAJustifier) * 100) / 100;
+    const sens = soldeRemboursement > 0 ? 'projet_rembourse' : (soldeRemboursement < 0 ? 'agent_rembourse' : 'aucun');
+    
     const confirmChk = document.querySelector(`.avis-confirm-check[data-idx="${i}"]`);
-    const confirmed  = sens === 'agent_rembourse' ? !!(confirmChk && confirmChk.checked) : false;
-    const favorable  = sens !== 'agent_rembourse' || confirmed;
+    const confirmed = sens === 'agent_rembourse' ? !!(confirmChk && confirmChk.checked) : false;
+    const favorable = sens !== 'agent_rembourse' || confirmed;
     const observation = document.querySelector(`.avis-observation[data-idx="${i}"]`)?.value?.trim() || '';
 
     return {
@@ -2959,9 +2969,9 @@ async function finalizeJustificatifs(reportId) {
       montant_usd: perDiemFinal,
       autres_frais_details: finalDetails,
       autres_frais_usd: autresFraisUsd,
-      total_usd: totalJustifie,
-      avis_montant_percu: percu, // Maintenant c'est le "Total perçu"
-      avis_ecart: ecart,
+      total_usd: totalJustificatifs,
+      avis_montant_percu: provisionAJustifier, // Provision à justifier
+      avis_ecart: soldeRemboursement,
       avis_sens: sens,
       avis_confirmation_agent: confirmed,
       avis_observation: observation,
@@ -2973,27 +2983,36 @@ async function finalizeJustificatifs(reportId) {
     const session = getSession();
     const now2 = new Date();
     const month = String(now2.getMonth() + 1).padStart(2, '0');
-    const year  = now2.getFullYear();
+    const year = now2.getFullYear();
     const nowIso = now2.toISOString();
     let fldNumber = report.fld_number;
+    
     if (!fldNumber) {
       const { data: fldSeq, error: fldErr } = await db.rpc('next_fld_seq', { p_year: year, p_month: parseInt(month) });
       if (fldErr) throw fldErr;
       fldNumber = 'FLD ' + String(fldSeq).padStart(3, '0') + '/' + month + '/' + year;
     }
+    
     const { error } = await db.from('reports').update({
       justification_at: nowIso,
       justification_by: session?.user?.email || session?.user || null,
       fld_number: fldNumber,
       missions: editedMissions
     }).eq('id', reportId);
+    
     if (error) throw error;
+    
     _avisReviewModal.hide();
     showToast('✓ Avis accepté — justificatifs enregistrés — ' + fldNumber);
     await refreshDashboard();
+    
     const updated = { ...report, justification_at: nowIso, fld_number: fldNumber, missions: editedMissions };
     openPrintWindow(buildAvisAndJustificationHtml(updated));
-  } catch (e) { console.error(e); showToast('Erreur lors de l\'enregistrement.'); }
+    
+  } catch (e) { 
+    console.error(e); 
+    showToast('Erreur lors de l\'enregistrement.'); 
+  }
 }
 
 async function enregistrerSolde(reportId) {
